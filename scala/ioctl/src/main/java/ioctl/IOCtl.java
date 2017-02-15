@@ -3,26 +3,21 @@ package ioctl;
 import com.sun.jna.*;
 
 public class IOCtl {
-    static {
-        Native.register("c");
-        Native.setPreserveLastError(true);
-    }
+    public int O_RDWR = 2;
 
-    public static int O_RDWR = 2;
+    public native int open(String path, int flags) throws LastErrorException;
 
-    public static native int open(String path, int flags) throws LastErrorException;
+    public native int close(int fd) throws LastErrorException;
 
-    public static native int close(int fd) throws LastErrorException;
-
-    public static int errno() {
+    public int errno() {
         return Native.getLastError();
     }
 
     // Errno codes
 
-    public static int ENOENT = 2;
+    public int ENOENT = 2;
 
-    public static int EBADF = 9;
+    public int EBADF = 9;
 
-    public static int EACCES = 13;
+    public int EACCES = 13;
 }
