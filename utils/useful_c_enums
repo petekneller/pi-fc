@@ -1,0 +1,9 @@
+#! /usr/bin/env sh
+
+if [ -d target  ]
+then 
+  rm -rf target
+fi
+mkdir -p target
+gcc -o target/useful_c_enums.out useful_c_enums.c
+target/useful_c_enums.out
