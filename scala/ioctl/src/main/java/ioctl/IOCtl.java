@@ -3,6 +3,8 @@ package ioctl;
 import com.sun.jna.*;
 
 public class IOCtl {
+    public int O_RDONLY = 0;
+
     public int O_RDWR = 2;
 
     public native int open(String path, int flags) throws LastErrorException;
@@ -20,4 +22,8 @@ public class IOCtl {
     public int EBADF = 9;
 
     public int EACCES = 13;
+
+    public native int ioctl(int fd, NativeLong request, byte[] data) throws LastErrorException;
+
+    // ioctl codes
 }

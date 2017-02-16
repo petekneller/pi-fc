@@ -16,6 +16,7 @@ int main(int argc, char* argv) {
     { "O_RDWR", O_RDWR },
     // linux/fs.h
     { "BLKGETSIZE64", BLKGETSIZE64 },
+    { "FS_IOC_GETVERSION", FS_IOC_GETVERSION },
     // spi/spidev.h
     { "SPI_IOC_RD_MODE", SPI_IOC_RD_MODE },
     { "SPI_IOC_WR_MODE", SPI_IOC_WR_MODE },
