@@ -1,6 +1,7 @@
 package ioctl;
 
 import com.sun.jna.*;
+import java.nio.ByteBuffer;
 
 public class IOCtl {
     public int O_RDONLY = 0;
@@ -23,7 +24,7 @@ public class IOCtl {
 
     public int EACCES = 13;
 
-    public native int ioctl(int fd, NativeLong request, byte[] data) throws LastErrorException;
+    public native int ioctl(int fd, NativeLong request, ByteBuffer data) throws LastErrorException;
 
     // ioctl codes
 }
