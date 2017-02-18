@@ -1,10 +1,11 @@
 package ioctl
 
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalactic.TypeCheckedTripleEquals
 import com.sun.jna.LastErrorException
 import java.io.File
 
-class OpenCloseTest extends FlatSpec with Matchers {
+class OpenCloseTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "open" should "throw error upon specifying a non-existent file" in {
     intercept[LastErrorException] {

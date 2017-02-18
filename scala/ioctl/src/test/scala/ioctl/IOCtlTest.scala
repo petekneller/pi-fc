@@ -1,12 +1,13 @@
 package ioctl
 
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalactic.TypeCheckedTripleEquals
 import com.sun.jna.{NativeLong, Native}
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
 
-class IOCtlTest extends FlatSpec with Matchers {
+class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "ioctl" should "succeed with FS_IOC_GETVERSION on a valid file" in {
     val tempfile = File.createTempFile("aaaa", "bbbb").getCanonicalPath

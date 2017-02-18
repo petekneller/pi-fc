@@ -1,8 +1,9 @@
 package ioctl
 
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalactic.TypeCheckedTripleEquals
 
-class UnsignedConversionsTest extends FlatSpec with Matchers {
+class UnsignedConversionsTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "unsigned conversion of a short" should "widen to int, preserving the original number" in {
     val doesntFitInAShort = 0x8000.toShort
