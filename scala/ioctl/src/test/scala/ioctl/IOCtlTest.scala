@@ -14,11 +14,11 @@ class IOCtlTest extends FlatSpec with Matchers {
 
     val FS_IOC_GETVERSION = 0x80087601L
 
-    val bb = ByteBuffer.allocate(Native.getNativeSize(classOf[Long]))
+    val bb = ByteBuffer.allocate(Native.getNativeSize(classOf[Int]))
     bb.order(LITTLE_ENDIAN)
     IOCtl.ioctl(fd, new NativeLong(FS_IOC_GETVERSION), bb) should === (0)
 
-    val version = bb.asLongBuffer.get
+    val version = bb.asIntBuffer.get.unsigned
     version should be >(0L)
   }
 
