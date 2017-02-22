@@ -21,7 +21,8 @@ ensimeIgnoreMissingDirectories in ThisBuild := true
 
 lazy val ioctl = project.in(file("ioctl"))
 
-lazy val spidev = project.in(file("spidev"))
+lazy val spidev = project.in(file("spidev")).
+  dependsOn(ioctl)
 
 lazy val root = project.in(file(".")).
   aggregate(ioctl, spidev)
