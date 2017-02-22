@@ -19,18 +19,18 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     data1.order(LITTLE_ENDIAN)
     ioctl(fd, new NativeLong(SPI_IOC_RD_MODE.toLong), data1)
 
-    val existingMode = data1.asIntBuffer.get.toByte
+    val existingMode = data1.get
     existingMode should === (SPI_MODE_0)
 
     val data2 = ByteBuffer.allocate(Native.getNativeSize(classOf[Byte]))
     data2.order(LITTLE_ENDIAN)
-    data2.asIntBuffer.put(SPI_MODE_2.toInt)
+    data2.put(SPI_MODE_2)
     ioctl(fd, new NativeLong(SPI_IOC_WR_MODE.toLong), data2)
 
     val data3 = ByteBuffer.allocate(Native.getNativeSize(classOf[Byte]))
     data3.order(LITTLE_ENDIAN)
     ioctl(fd, new NativeLong(SPI_IOC_RD_MODE.toLong), data3)
-    data3.asIntBuffer.get.toByte should === (SPI_MODE_2)
+    data3.get should === (SPI_MODE_2)
 
     ioctl(fd, new NativeLong(SPI_IOC_WR_MODE.toLong), data1)
   }
