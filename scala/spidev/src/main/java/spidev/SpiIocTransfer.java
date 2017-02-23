@@ -7,18 +7,18 @@ import com.sun.jna.Structure;
 import com.sun.jna.NativeLong;
 
 public class SpiIocTransfer extends Structure {
-    ByteBuffer tx_buf;
-    ByteBuffer rx_buf;
+    public ByteBuffer tx_buf;
+    public ByteBuffer rx_buf;
 
-    int len;
-    int speed_hz;
+    public int len;
+    public int speed_hz;
 
-    short delay_usecs;
-    byte bits_per_word;
-    byte cs_change;
-    byte tx_nbits;
-    byte rx_nbits;
-    short pad;
+    public short delay_usecs;
+    public byte bits_per_word;
+    public byte cs_change;
+    public byte tx_nbits;
+    public byte rx_nbits;
+    public short pad;
 
     @Override
     protected List getFieldOrder() {
