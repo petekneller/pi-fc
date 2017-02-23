@@ -1,6 +1,7 @@
 package spidev;
 
 import com.sun.jna.NativeLong;
+import com.sun.jna.LastErrorException;
 
 public class IOCtl {
 
