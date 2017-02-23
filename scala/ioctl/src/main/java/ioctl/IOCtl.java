@@ -25,6 +25,4 @@ public class IOCtl {
     public int EACCES = 13;
 
     public native int ioctl(int fd, NativeLong request, ByteBuffer data) throws LastErrorException;
-
-    // ioctl codes
 }
