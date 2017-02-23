@@ -21,7 +21,7 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
   }
 
   it should "support fetch of SPI bit justification" in {
-    fetchCommandValue(SPI_IOC_RD_LSB_FIRST, classOf[Byte]).get should === (SPI_LSB_FIRST)
+    fetchCommandValue(SPI_IOC_RD_LSB_FIRST, classOf[Byte]).get should === (0.toByte)
   }
 
   it should "support fetch of SPI word size" in {
