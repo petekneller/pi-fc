@@ -1,5 +1,8 @@
 package spidev
 
+import java.nio.ByteBuffer
+import com.sun.jna.{Native, NativeLong, Pointer}
+import ioctl._
 import ioctl.macros._
 
 object Spidev {
@@ -30,22 +33,23 @@ object Spidev {
   val SPI_IOC_MAGIC: Byte = 'k'
 
   /* Read / Write of SPI mode (SPI_MODE_0..SPI_MODE_3) (limited to 8 bits) */
-  val SPI_IOC_RD_MODE = IOR(SPI_IOC_MAGIC, 1, classOf[Byte])
-  val SPI_IOC_WR_MODE = IOW(SPI_IOC_MAGIC, 1, classOf[Byte])
+  val SPI_IOC_RD_MODE = IOR(SPI_IOC_MAGIC, 1.toByte, classOf[Byte])
+  val SPI_IOC_WR_MODE = IOW(SPI_IOC_MAGIC, 1.toByte, classOf[Byte])
 
   /* Read / Write SPI bit justification */
-  val SPI_IOC_RD_LSB_FIRST = IOR(SPI_IOC_MAGIC, 2, classOf[Byte])
-  val SPI_IOC_WR_LSB_FIRST = IOW(SPI_IOC_MAGIC, 2, classOf[Byte])
+  val SPI_IOC_RD_LSB_FIRST = IOR(SPI_IOC_MAGIC, 2.toByte, classOf[Byte])
+  val SPI_IOC_WR_LSB_FIRST = IOW(SPI_IOC_MAGIC, 2.toByte, classOf[Byte])
 
   /* Read / Write SPI device word length (1..N) */
-  val SPI_IOC_RD_BITS_PER_WORD = IOR(SPI_IOC_MAGIC, 3, classOf[Byte])
-  val SPI_IOC_WR_BITS_PER_WORD = IOW(SPI_IOC_MAGIC, 3, classOf[Byte])
+  val SPI_IOC_RD_BITS_PER_WORD = IOR(SPI_IOC_MAGIC, 3.toByte, classOf[Byte])
+  val SPI_IOC_WR_BITS_PER_WORD = IOW(SPI_IOC_MAGIC, 3.toByte, classOf[Byte])
 
   /* Read / Write SPI device default max speed hz */
-  val SPI_IOC_RD_MAX_SPEED_HZ = IOR(SPI_IOC_MAGIC, 4, classOf[Int])
-  val SPI_IOC_WR_MAX_SPEED_HZ = IOW(SPI_IOC_MAGIC, 4, classOf[Int])
+  val SPI_IOC_RD_MAX_SPEED_HZ = IOR(SPI_IOC_MAGIC, 4.toByte, classOf[Int])
+  val SPI_IOC_WR_MAX_SPEED_HZ = IOW(SPI_IOC_MAGIC, 4.toByte, classOf[Int])
 
   /* Read / Write of the SPI mode field */
-  val SPI_IOC_RD_MODE32 = IOR(SPI_IOC_MAGIC, 5, classOf[Int])
-  val SPI_IOC_WR_MODE32 = IOW(SPI_IOC_MAGIC, 5, classOf[Int])
+  val SPI_IOC_RD_MODE32 = IOR(SPI_IOC_MAGIC, 5.toByte, classOf[Int])
+  val SPI_IOC_WR_MODE32 = IOW(SPI_IOC_MAGIC, 5.toByte, classOf[Int])
+
 }

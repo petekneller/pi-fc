@@ -4,22 +4,26 @@ import com.sun.jna.Native
 
 object macros {
 
-  def IOR[A](`type`: Byte, nr: Byte, dataType: Class[A]): Int = IOC(IOC_READ, `type`, nr, dataType)
+  def IOR[A](`type`: Byte, nr: Byte, dataType: Class[A]): Int = IOR(`type`, nr, Native.getNativeSize(dataType))
 
-  def IOW[A](`type`: Byte, nr: Byte, dataType: Class[A]): Int = IOC(IOC_WRITE, `type`, nr, dataType)
+  def IOR(`type`: Byte, nr: Byte, dataSize: Int): Int = IOC(IOC_READ, `type`, nr, dataSize)
+
+  def IOW[A](`type`: Byte, nr: Byte, dataType: Class[A]): Int = IOW(`type`, nr, Native.getNativeSize(dataType))
+
+  def IOW(`type`: Byte, nr: Byte, dataSize: Int): Int = IOC(IOC_WRITE, `type`, nr, dataSize)
 
   val IOC_NONE: Byte = 0
   val IOC_WRITE: Byte = 1
   val IOC_READ: Byte = 2
 
-  def IOC[A](dir: Byte, `type`: Byte, nr: Byte, dataType: Class[A]): Int =
+  def IOC[A](dir: Byte, `type`: Byte, nr: Byte, dataSize: Int): Int =
     (dir.unsigned << IOC_DIRSHIFT) |
-    (IOC_SIZEOF(dataType).unsigned << IOC_SIZESHIFT) |
+    (IOC_SIZED(dataSize).unsigned << IOC_SIZESHIFT) |
     (`type`.unsigned << IOC_TYPESHIFT) |
     (nr.unsigned << IOC_NRSHIFT)
 
   // the masking of the 2 highest bits is necessary to prevent overlap with the 'direction' field
-  def IOC_SIZEOF[A](dataType: Class[A]): Short = (Native.getNativeSize(dataType) & 0x3FFF).toShort
+  def IOC_SIZED[A](dataSize: Int): Short = (dataSize & 0x3FFF).toShort
 
   val IOC_NRBITS = 8
   val IOC_TYPEBITS = 8
