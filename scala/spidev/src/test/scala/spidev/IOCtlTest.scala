@@ -16,7 +16,7 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     fetchCommandValue(SPI_IOC_RD_MODE, classOf[Byte]).get should === (SPI_MODE_0)
   }
 
-  "ioctl" should "support fetch of SPI mode (32 bit value)" in {
+  it should "support fetch of SPI mode (32 bit value)" in {
     fetchCommandValue(SPI_IOC_RD_MODE32, classOf[Int]).asIntBuffer.get should === (0)
   }
 
