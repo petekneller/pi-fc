@@ -5,10 +5,11 @@ import java.util.Arrays;
 import java.nio.ByteBuffer;
 import com.sun.jna.Structure;
 import com.sun.jna.NativeLong;
+import com.sun.jna.Pointer;
 
 public class SpiIocTransfer extends Structure {
-    public ByteBuffer tx_buf;
-    public ByteBuffer rx_buf;
+    public long tx_buf;
+    public long rx_buf;
 
     public int len;
     public int speed_hz;
