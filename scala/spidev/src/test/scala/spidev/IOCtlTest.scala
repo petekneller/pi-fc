@@ -50,6 +50,8 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     data.clear()
     data.asIntBuffer.put(0, originalSpeed)
     ioctl(fd, new NativeLong(SPI_IOC_WR_MAX_SPEED_HZ.unsigned), data)
+
+    close(fd)
   }
 
 

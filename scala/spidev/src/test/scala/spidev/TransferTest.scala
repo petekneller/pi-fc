@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.io.File
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
-import ioctl.IOCtl.{open, O_RDONLY}
+import ioctl.IOCtl.{open, close, O_RDONLY}
 import Spidev._
 
 class TransferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
@@ -20,6 +20,7 @@ class TransferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     val whoamiAddress = 0x76.toByte
     tx.put(0, (readFlag | whoamiAddress).toByte)
     val bytesTransferred = transfer(fd, tx, rx, 2, 100000)
+    close(fd)
 
     bytesTransferred should === (2)
     rx.get(1) should === (113.toByte)
