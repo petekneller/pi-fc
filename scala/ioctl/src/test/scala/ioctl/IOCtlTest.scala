@@ -6,6 +6,7 @@ import com.sun.jna.{NativeLong, Native}
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
+import unsigned._
 import IOCtl._
 
 class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
