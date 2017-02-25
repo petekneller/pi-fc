@@ -30,8 +30,8 @@ class TransferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     val tx = ByteBuffer.allocateDirect(2)
     val rx = ByteBuffer.allocateDirect(2)
 
-    val readFlag = 0x8.toByte
-    val whoamiAddress = 0x76.toByte
+    val readFlag = 0x80.toByte
+    val whoamiAddress = 0x75.toByte
     tx.put(0, (readFlag | whoamiAddress).toByte)
     val bytesTransferred = transfer(fd, tx, rx, 2, 100000)
     close(fd)
