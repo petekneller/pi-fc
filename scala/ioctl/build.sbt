@@ -4,5 +4,5 @@ import Dependencies._
 
 libraryDependencies ++= Seq(
   jna,
-  scalaTest % "test"
+  scalaTest % Test
 )
