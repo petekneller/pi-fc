@@ -1,6 +1,6 @@
 package spidev
 
-import java.nio.ByteBuffer
+import java.nio.{ByteBuffer, ByteOrder}
 import com.sun.jna.{Native, NativeLong, Pointer}
 import ioctl._
 import ioctl.macros._
@@ -51,5 +51,43 @@ object Spidev {
   /* Read / Write of the SPI mode field */
   val SPI_IOC_RD_MODE32 = IOR(SPI_IOC_MAGIC, 5.toByte, classOf[Int])
   val SPI_IOC_WR_MODE32 = IOW(SPI_IOC_MAGIC, 5.toByte, classOf[Int])
+
+  def SPI_IOC_MESSAGE(n: Int): Int = IOW(SPI_IOC_MAGIC, 0.toByte, SPI_MSGSIZE(n))
+
+  def SPI_MSGSIZE(n: Int): Int = {
+    val nativeSize = Native.getNativeSize(classOf[SpiIocTransfer])
+    val maxRepresentableSize = 1 << IOC_SIZEBITS
+    if (n * nativeSize >= maxRepresentableSize) 0 else n * nativeSize
+  }
+
+  def transfer(fd: Int, tx: ByteBuffer, rx: ByteBuffer, transferSize: Int, clockSpeedHz: Int): Int = {
+    if (tx.limit < transferSize) throw new SpiTransferException(TxBufferTooSmall)
+    if (!tx.isDirect) throw new SpiTransferException(TxBufferNotDirect)
+    if (rx.limit < transferSize) throw new SpiTransferException(RxBufferTooSmall)
+    if (!rx.isDirect) throw new SpiTransferException(RxBufferNotDirect)
+    if (clockSpeedHz <= 0) throw new SpiTransferException(ClockSpeedInvalid)
+
+    val transfer = new SpiIocTransfer()
+    transfer.bits_per_word = 8
+    transfer.speed_hz = clockSpeedHz
+    transfer.len = transferSize
+
+    tx.order(ByteOrder.LITTLE_ENDIAN)
+    transfer.tx_buf = Pointer.nativeValue(Native.getDirectBufferPointer(tx))
+
+    rx.order(ByteOrder.LITTLE_ENDIAN)
+    transfer.rx_buf = Pointer.nativeValue(Native.getDirectBufferPointer(rx))
+
+    IOCtl.ioctl(fd, new NativeLong(SPI_IOC_MESSAGE(1).unsigned), transfer)
+  }
+
+  case class SpiTransferException(cause: SpiFailureCause) extends RuntimeException
+
+  sealed trait SpiFailureCause { def message: String }
+  object TxBufferTooSmall extends SpiFailureCause { def message = "the 'limit' of the tx buffer must exceed the specified transfer size 'len'" }
+  object RxBufferTooSmall extends SpiFailureCause { def message = "the 'limit' of the rx buffer must exceed the specified transfer size 'len'" }
+  object ClockSpeedInvalid extends SpiFailureCause { def message = "the specified 'clockSpeedHz' must be > 0" }
+  object TxBufferNotDirect extends SpiFailureCause { def message = "the tx buffer must be allocated 'direct'" }
+  object RxBufferNotDirect extends SpiFailureCause { def message = "the rx buffer must be allocated 'direct'" }
 
 }
