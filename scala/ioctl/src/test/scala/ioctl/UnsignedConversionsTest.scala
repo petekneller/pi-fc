@@ -2,7 +2,7 @@ package ioctl
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
-import unsigned._
+import syntax._
 
 class UnsignedConversionsTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 

@@ -2,7 +2,7 @@ package ioctl
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
-import unsigned._
+import syntax._
 import macros._
 
 class MacrosTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {

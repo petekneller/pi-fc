@@ -1,7 +1,7 @@
 package ioctl
 
 import com.sun.jna.Native
-import unsigned._
+import syntax._
 
 object macros {
 

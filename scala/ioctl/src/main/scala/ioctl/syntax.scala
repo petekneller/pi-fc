@@ -1,6 +1,8 @@
 package ioctl
 
-package object unsigned {
+import java.nio.ByteBuffer
+
+package object syntax {
 
   implicit class ToUnsignedInt(i: Int) {
     def unsigned: Long = i.toLong & 0xFFFFFFFFL
@@ -12,6 +14,10 @@ package object unsigned {
 
   implicit class ToUnsignedByte(b: Byte) {
     def unsigned: Short = (b.toInt & 0xFF).toShort
+  }
+
+  implicit class ByteBufferOps(bb: ByteBuffer) {
+    def toSeq: Seq[Byte] = (0 until bb.limit) map (bb.get(_))
   }
 
 }

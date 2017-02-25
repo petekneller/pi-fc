@@ -2,7 +2,7 @@ package spidev
 
 import java.nio.{ByteBuffer, ByteOrder}
 import com.sun.jna.{Native, NativeLong, Pointer}
-import ioctl.unsigned._
+import ioctl.syntax._
 import ioctl.macros._
 
 object Spidev {

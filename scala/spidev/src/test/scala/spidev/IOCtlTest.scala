@@ -6,7 +6,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
 import com.sun.jna.{Native, NativeLong}
-import ioctl.unsigned._
+import ioctl.syntax._
 import ioctl.IOCtl._
 import Spidev._
 
