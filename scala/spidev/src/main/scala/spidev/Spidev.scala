@@ -55,7 +55,7 @@ object Spidev {
   def SPI_IOC_MESSAGE(n: Int): Int = IOW(SPI_IOC_MAGIC, 0.toByte, SPI_MSGSIZE(n))
 
   def SPI_MSGSIZE(n: Int): Int = {
-    val nativeSize = Native.getNativeSize(classOf[SpiIocTransfer])
+    val nativeSize = Native.getNativeSize(classOf[SpiIocTransfer.ByValue])
     val maxRepresentableSize = 1 << IOC_SIZEBITS
     if (n * nativeSize >= maxRepresentableSize) 0 else n * nativeSize
   }

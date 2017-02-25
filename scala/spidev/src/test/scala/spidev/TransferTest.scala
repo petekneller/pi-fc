@@ -9,6 +9,20 @@ import Spidev._
 
 class TransferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 
+  "SPI_MSGSIZE" should "return sizes in multiples of 32 bit" in {
+    SPI_MSGSIZE(0) should === (0)
+    SPI_MSGSIZE(1) should === (32)
+    SPI_MSGSIZE(2) should === (64)
+  }
+
+  "SPI_IOC_MESSAGE" should "return values equivalent to the macros in spidev.h" in {
+    hex(SPI_IOC_MESSAGE(1)) should === ("0x40206b00")
+    hex(SPI_IOC_MESSAGE(2)) should === ("0x40406b00")
+    hex(SPI_IOC_MESSAGE(3)) should === ("0x40606b00")
+
+    def hex(i: Int): String = "0x%8x".format(i)
+  }
+
   "transfer" should "succeed in fetching the WHOAMI from the MPU9250 on the navio2" in {
     assert(new File("/dev/spidev0.1").exists)
     val fd = open("/dev/spidev0.1", O_RDONLY)

@@ -36,4 +36,6 @@ public class SpiIocTransfer extends Structure {
                              "pad"
         );
     }
+
+    public static class ByValue extends SpiIocTransfer implements Structure.ByValue {}
 }
