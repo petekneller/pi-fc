@@ -12,6 +12,8 @@ package object device {
 
   def readConfiguration(device: DeviceAddress, config: Configuration)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, config.T] = config.read(device)(controller)
 
+  def writeConfiguration(device: DeviceAddress, config: Configuration)(value: config.T)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Unit] = config.write(device, value)(controller)
+
 }
 
 package device {
@@ -40,6 +42,7 @@ package device {
   trait Configuration {
     type T
     def read(device: DeviceAddress)(controller: Controller { type Bus = device.Bus }): Either[DeviceError, T]
+    def write(device: DeviceAddress, value: T)(controller: Controller { type Bus = device.Bus }): Either[DeviceError, Unit]
   }
 
 }
