@@ -23,6 +23,7 @@ package device {
   trait DeviceError
   case class DeviceUnavailableError(device: DeviceAddress, cause: Throwable) extends DeviceError
   case class TransferFailedError(cause: Throwable) extends DeviceError
+  case class IncompleteDataError(expected: Int, actual: Int) extends DeviceError
 
 }
 
@@ -30,7 +31,7 @@ package object device {
 
   def readRegister(device: DeviceAddress, register: DeviceRegister)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Byte] = controller.read(device, register, 1) map (_.head)
 
-  def readRegisterBytes(device: DeviceAddress, register: DeviceRegister, numBytes: Int)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Seq[Byte]] = controller.read(device, register, numBytes)
+  def readRegisterN(device: DeviceAddress, register: DeviceRegister, numBytes: Int)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Seq[Byte]] = controller.read(device, register, numBytes)
 
   def writeRegister(device: DeviceAddress, register: DeviceRegister, data: Byte)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Unit] = controller.write(device, register, data)
 

@@ -14,7 +14,6 @@ case class SpiAddress(busNumber: Int, chipSelect: Int) extends DeviceAddress {
   def toFilename: String = s"/dev/spidev${busNumber}.${chipSelect}"
 }
 
-// TODO a better api to the transfer function? that gives me better types or at least param names?
 class SpiController(api: SpiApi) extends Controller { self =>
   type Bus = SpiBus
 
@@ -28,18 +27,32 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
       txBuffer.put(0, (0x80 | register.value).toByte)
       for {
-        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, numBytes, clockSpeed)
+        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
+        _ <- assertCompleteData(numBytes, bytesTransferred - 1)
       } yield {
-        // TODO assert bytestransferred == expected
         rxBuffer.toSeq.drop(1) // first byte of receive buffer lines up with tx command, and so is empty
       }
     })
 
-  def write(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, data: Byte): Either[DeviceError, Unit] = {
-    ???
-  }
+  def write(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, data: Byte): Either[DeviceError, Unit] =
+    withFileDescriptor(device, { fd =>
+      val requisiteBufferSize = 2
+      val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
+      val rxBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
+
+      txBuffer.put(0, register.value)
+      txBuffer.put(1, data)
+      for {
+        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
+        _ <- assertCompleteData(requisiteBufferSize, bytesTransferred)
+      } yield {
+        ()
+      }
+    })
 
   // Internal API from here on down
+
+  private def assertCompleteData(expected: Int, actual: Int): Either[IncompleteDataError, Unit] = if (expected == actual) Right(()) else Left(IncompleteDataError(expected, actual))
 
   private def open(device: DeviceAddress): Either[DeviceUnavailableError, Int] =
     Either.catchNonFatal{ api.open(device.toFilename, O_RDWR) }.leftMap(DeviceUnavailableError(device, _))

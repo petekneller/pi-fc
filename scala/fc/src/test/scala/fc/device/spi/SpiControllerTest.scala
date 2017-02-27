@@ -68,6 +68,52 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.close _).verify(*).once()
   }
 
+  "read register N" should "allocate at least N+1 bytes in both the transmit and receive buffer" in {
+    val _ = readRegisterN(device, register, 3)(controller)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit >= 4 && rxBuffer.limit >= 4
+    })
+  }
+
+  it should "return the requested number of bytes" in {
+    (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
+      rxBuffer.put(0x1.toByte).put(0x2.toByte).put(0x3.toByte).put(0x4.toByte)
+      4
+    }
+    readRegisterN(device, register, 3)(controller) should === (Right(Seq(0x2.toByte, 0x3.toByte, 0x4.toByte)))
+  }
+
+  it should "attempt to transfer N+1 bytes" in {
+    readRegisterN(device, register, 3)(controller)
+
+    (mockApi.transfer _).verify(*, *, *, 4, *)
+  }
+
+  it should "return an 'incomplete data' error if less than N bytes could be fetched" in {
+    val expectedNumBytes = 2
+    val actualNumBytes = 1
+    (mockApi.transfer _).when(*, *, *, expectedNumBytes+1, *).onCall{ (_, _, rxBuffer, _, _) =>
+      rxBuffer.put(0x1.toByte).put(0x2.toByte)
+      actualNumBytes + 1
+    }
+
+    readRegisterN(device, register, expectedNumBytes)(controller) should === (Left(IncompleteDataError(expectedNumBytes, actualNumBytes)))
+  }
+
+  "write register" should "not set a read flag in the first byte of the transmit buffer" in {
+    val _ = writeRegister(device, register, 0x55)(controller)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => !hasReadFlag(txBuffer) })
+  }
+
+  it should "set the data byte in the second byte of the transmit buffer" in {
+    val data = 0x55.toByte
+    val _ = writeRegister(device, register, data)(controller)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => txBuffer.get(1) == data })
+  }
+
   def hasReadFlag(buffer: ByteBuffer): Boolean = buffer.get(0).unsigned >> 7 === 1
 
   def hasRegister(buffer: ByteBuffer, register: Byte): Boolean = (buffer.get(0).unsigned & 0x7).toByte === register
