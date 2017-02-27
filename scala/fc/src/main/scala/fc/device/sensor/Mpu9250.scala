@@ -7,13 +7,15 @@ trait Mpu9250 {
   val address: DeviceAddress
   implicit val controller: Controller { type Bus = address.Bus }
 
+  import Mpu9250._
+
   def checkCommunication(): Either[DeviceError, Unit] = readRegister(address, registers.WHOAMI).map(_ == 0x71.toByte)
 
 }
 
 object Mpu9250 {
 
-  def apply(a: DeviceAddress)(implicit c: Controller { type Bus = address.Bus }) = new Mpu9250 {
+  def apply[A](a: DeviceAddress { type Bus = A })(implicit c: Controller { type Bus = A }) = new Mpu9250 {
     val address = a
     implicit val controller = c
   }

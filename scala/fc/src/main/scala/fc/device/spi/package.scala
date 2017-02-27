@@ -2,8 +2,10 @@ package fc.device.spi
 
 import java.nio.ByteBuffer
 import cats.syntax.either._
-import ioctl.IOCtl.O_RDWR
+import ioctl.IOCtl
+import IOCtl.O_RDWR
 import ioctl.syntax._
+import spidev.Spidev
 import fc.device._
 
 trait SpiBus
@@ -71,4 +73,12 @@ trait SpiApi {
   def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int): Int
   def open(filename: String, flags: Int): Int
   def close(fileDescriptor: Int): Int
+}
+
+object SpiController {
+  def apply() = new SpiController(new SpiApi {
+    def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int) = Spidev.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz)
+    def open(filename: String, flags: Int) = IOCtl.open(filename, flags)
+    def close(fileDescriptor: Int) = IOCtl.close(fileDescriptor)
+  })
 }
