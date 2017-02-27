@@ -8,4 +8,6 @@ object Dependencies {
 
   val jna = "net.java.dev.jna" % "jna" % "4.3.0"
 
+  val cats = "org.typelevel" %% "cats" % "0.9.0"
+
 }
