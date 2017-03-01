@@ -16,7 +16,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val config = ByteConfiguration(register)
 
     (mockController.receive _).when(*, *, *).returns(Right(Seq(configValue)))
-    config.receive(device)
+    config.read(device)
     (mockController.receive _).verify(*, register, 1)
   }
 
@@ -25,14 +25,14 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val config = ByteConfiguration(register)
 
     (mockController.receive _).when(*, *, *).returns(Right(Seq(configValue)))
-    config.receive(device) should === (Right(configValue))
+    config.read(device) should === (Right(configValue))
   }
 
   "ByteConfiguration.transmit" should "set the whole register value" in {
     val config = ByteConfiguration(register)
     val configValue = 0x33.toByte
 
-    config.transmit(device, configValue)
+    config.write(device, configValue)
     (mockController.transmit _).verify(*, register, configValue)
   }
 
@@ -42,8 +42,8 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val bit2Flag = FlagConfiguration(register, 2)
 
     (mockController.receive _).when(*, *, *).returns(Right(Seq(registerValue)))
-    bit1Flag.receive(device) should === (Right(false))
-    bit2Flag.receive(device) should === (Right(true))
+    bit1Flag.read(device) should === (Right(false))
+    bit2Flag.read(device) should === (Right(true))
   }
 
   "FlagConfiguration.transmit" should "not affect bits in the register outside of that defined for the configuration" in {
@@ -52,7 +52,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
 
     (mockController.receive _).when(*, *, 1).returns(Right(Seq(originalValue)))
     (mockController.transmit _).when(*, *, *)returns(Right(Unit))
-    bit1Flag.transmit(device, true)
+    bit1Flag.write(device, true)
     (mockController.transmit _).verify(*, register, 0x73.toByte)
   }
 
