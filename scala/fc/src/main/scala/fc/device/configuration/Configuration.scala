@@ -24,7 +24,11 @@ case class BitFlagConfiguration(register: Register, bit: Int) extends Configurat
 
   def write(device: Address, value: Boolean)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Unit] = for {
     originalValue <- Rx.byte(register).read(device)
-    newValue = (((if (value) 0x1 else 0x0) << bit) | originalValue).toByte
-    _ <- Tx.byte(register).write(device, newValue)
+    bitMask = 0x1 << bit
+    newValue = if (value)
+      (bitMask | originalValue)
+    else
+      (~bitMask & originalValue)
+    _ <- Tx.byte(register).write(device, newValue.toByte)
   } yield ()
 }

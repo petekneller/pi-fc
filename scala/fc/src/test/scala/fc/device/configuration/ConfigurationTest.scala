@@ -48,11 +48,19 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
 
   "FlagConfiguration.transmit" should "not affect bits in the register outside of that defined for the configuration" in {
     val bit1Flag = BitFlagConfiguration(register, 1)
-    val originalValue = 0x71.toByte
 
-    (mockController.receive _).when(*, *, 1).returns(Right(Seq(originalValue)))
+    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x71.toByte)))
     (mockController.transmit _).when(*, *, *)returns(Right(Unit))
     bit1Flag.write(device, true)
     (mockController.transmit _).verify(*, register, 0x73.toByte)
+  }
+
+  "FlagConfiguration.transmit" should "be able to also unset bits" in {
+    val bit1Flag = BitFlagConfiguration(register, 1)
+
+    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x73.toByte)))
+    (mockController.transmit _).when(*, *, *)returns(Right(Unit))
+    bit1Flag.write(device, false)
+    (mockController.transmit _).verify(*, register, 0x71.toByte)
   }
 }
