@@ -1,6 +1,7 @@
 package fc.device
 
 import cats.syntax.either._
+import ioctl.syntax._
 
 /*
  Rx and Tx represent _things_ that can be transferred to/from a device. eg. a bit, byte, word, sequence of bytes, configuration parameter/s.
@@ -22,6 +23,15 @@ object Rx {
   def bytes(sourceRegister: Register, numBytes: Int) = new Rx {
     type T = Seq[Byte]
     def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
+  }
+
+  def short(loByteRegister: Register, hiByteRegister: Register) = new Rx {
+    type T = Short
+    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Short] = for {
+      hiByte <- Rx.byte(hiByteRegister).read(device)
+      loByte <- Rx.byte(loByteRegister).read(device)
+    } yield ((hiByte << 8) | loByte.unsigned).toShort // if the low byte isn't unsigned before widening, any signing high bits will
+                                                      // wipe away the data in the high register, but this isn't true the other way around
   }
 }
 

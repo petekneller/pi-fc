@@ -5,7 +5,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import fc.device._
 
-class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 
   val device = new MockDeviceAddress
   implicit val mockController = stub[MockController]
@@ -55,11 +55,4 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     bit1Flag.write(device, true)
     (mockController.transmit _).verify(*, register, 0x73.toByte)
   }
-
-  class MockDeviceAddress extends Address {
-    type Bus = Boolean
-    def toFilename = "unused"
-  }
-
-  trait MockController extends Controller { type Bus = Boolean }
 }
