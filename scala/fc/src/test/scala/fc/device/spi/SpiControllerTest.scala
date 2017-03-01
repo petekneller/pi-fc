@@ -16,7 +16,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     implicit val controller = new SpiController(mockApi)
   }
 
-  val register = DeviceRegister(3)
+  val register = Register(3)
 
   "Rx.byte" should "set a read flag in the first byte of the transmit buffer" in {
     val _ = device.receive(Rx.byte(register))

@@ -10,7 +10,7 @@ import fc.device._
 
 trait SpiBus
 
-case class SpiAddress(busNumber: Int, chipSelect: Int) extends DeviceAddress {
+case class SpiAddress(busNumber: Int, chipSelect: Int) extends Address {
   type Bus = SpiBus
 
   def toFilename: String = s"/dev/spidev${busNumber}.${chipSelect}"
@@ -21,7 +21,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
   private val clockSpeed: Int = 100000
 
-  def receive(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, numBytes: Int): Either[DeviceError, Seq[Byte]] =
+  def receive(device: Address { type Bus = self.Bus }, register: Register, numBytes: Int): Either[DeviceException, Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = numBytes + 1
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
@@ -36,7 +36,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
       }
     })
 
-  def transmit(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, data: Byte): Either[DeviceError, Unit] =
+  def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Byte): Either[DeviceException, Unit] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = 2
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
@@ -56,13 +56,13 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
   private def assertCompleteData(expected: Int, actual: Int): Either[IncompleteDataError, Unit] = if (expected == actual) Right(()) else Left(IncompleteDataError(expected, actual))
 
-  private def open(device: DeviceAddress): Either[DeviceUnavailableError, Int] =
+  private def open(device: Address): Either[DeviceUnavailableError, Int] =
     Either.catchNonFatal{ api.open(device.toFilename, O_RDWR) }.leftMap(DeviceUnavailableError(device, _))
 
   private def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int): Either[TransferFailedError, Int] =
     Either.catchNonFatal{ api.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz) }.leftMap(TransferFailedError(_))
 
-  private def withFileDescriptor[A](device: DeviceAddress, f: Int => Either[DeviceError, A]): Either[DeviceError, A] = for {
+  private def withFileDescriptor[A](device: Address, f: Int => Either[DeviceException, A]): Either[DeviceException, A] = for {
     fd <- open(device)
     result <- f(fd).bimap({ l => api.close(fd); l }, { r => api.close(fd); r })
   } yield result

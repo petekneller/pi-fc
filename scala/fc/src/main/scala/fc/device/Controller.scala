@@ -9,20 +9,20 @@ package fc.device
 trait Controller { self =>
   type Bus
 
-  def receive(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, numBytes: Int): Either[DeviceError, Seq[Byte]]
+  def receive(device: Address { type Bus = self.Bus }, register: Register, numBytes: Int): Either[DeviceException, Seq[Byte]]
 
-  def transmit(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, data: Byte): Either[DeviceError, Unit]
+  def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Byte): Either[DeviceException, Unit]
 }
 
-case class DeviceRegister(value: Byte)
+case class Register(value: Byte)
 
-trait DeviceAddress {
+trait Address {
   type Bus
 
   def toFilename: String
 }
 
-trait DeviceError
-case class DeviceUnavailableError(device: DeviceAddress, cause: Throwable) extends DeviceError
-case class TransferFailedError(cause: Throwable) extends DeviceError
-case class IncompleteDataError(expected: Int, actual: Int) extends DeviceError
+trait DeviceException
+case class DeviceUnavailableError(device: Address, cause: Throwable) extends DeviceException
+case class TransferFailedError(cause: Throwable) extends DeviceException
+case class IncompleteDataError(expected: Int, actual: Int) extends DeviceException
