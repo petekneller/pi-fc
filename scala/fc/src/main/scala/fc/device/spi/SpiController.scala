@@ -21,7 +21,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
   private val clockSpeed: Int = 100000
 
-  def read(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, numBytes: Int): Either[DeviceError, Seq[Byte]] =
+  def receive(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, numBytes: Int): Either[DeviceError, Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = numBytes + 1
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
@@ -36,7 +36,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
       }
     })
 
-  def write(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, data: Byte): Either[DeviceError, Unit] =
+  def transmit(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, data: Byte): Either[DeviceError, Unit] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = 2
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)

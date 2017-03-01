@@ -15,16 +15,16 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val configValue = 0x12.toByte
     val config = ByteConfiguration(register)
 
-    (mockController.read _).when(*, *, *).returns(Right(Seq(configValue)))
+    (mockController.receive _).when(*, *, *).returns(Right(Seq(configValue)))
     config.receive(device)
-    (mockController.read _).verify(*, register, 1)
+    (mockController.receive _).verify(*, register, 1)
   }
 
   it should "return the whole register value" in {
     val configValue = 0x12.toByte
     val config = ByteConfiguration(register)
 
-    (mockController.read _).when(*, *, *).returns(Right(Seq(configValue)))
+    (mockController.receive _).when(*, *, *).returns(Right(Seq(configValue)))
     config.receive(device) should === (Right(configValue))
   }
 
@@ -33,7 +33,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val configValue = 0x33.toByte
 
     config.transmit(device, configValue)
-    (mockController.write _).verify(*, register, configValue)
+    (mockController.transmit _).verify(*, register, configValue)
   }
 
   "FlagConfiguration.receive" should "return a boolean that reflects the value of the bit specified in the configuration arguments" in {
@@ -41,7 +41,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val bit1Flag = FlagConfiguration(register, 1)
     val bit2Flag = FlagConfiguration(register, 2)
 
-    (mockController.read _).when(*, *, *).returns(Right(Seq(registerValue)))
+    (mockController.receive _).when(*, *, *).returns(Right(Seq(registerValue)))
     bit1Flag.receive(device) should === (Right(false))
     bit2Flag.receive(device) should === (Right(true))
   }
@@ -50,10 +50,10 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val bit1Flag = FlagConfiguration(register, 1)
     val originalValue = 0x71.toByte
 
-    (mockController.read _).when(*, *, 1).returns(Right(Seq(originalValue)))
-    (mockController.write _).when(*, *, *)returns(Right(Unit))
+    (mockController.receive _).when(*, *, 1).returns(Right(Seq(originalValue)))
+    (mockController.transmit _).when(*, *, *)returns(Right(Unit))
     bit1Flag.transmit(device, true)
-    (mockController.write _).verify(*, register, 0x73.toByte)
+    (mockController.transmit _).verify(*, register, 0x73.toByte)
   }
 
   class MockDeviceAddress extends DeviceAddress {

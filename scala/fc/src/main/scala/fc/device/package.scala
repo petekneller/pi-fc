@@ -25,7 +25,7 @@ trait Tx {
 object Tx {
   def byte[A](destinationRegister: DeviceRegister) = new Tx {
     type T = Byte
-    def transmit(device: DeviceAddress, value: Byte)(implicit controller: Controller { type Bus = device.Bus }) = controller.write(device, destinationRegister, value)
+    def transmit(device: DeviceAddress, value: Byte)(implicit controller: Controller { type Bus = device.Bus }) = controller.transmit(device, destinationRegister, value)
   }
 }
 
@@ -37,11 +37,11 @@ trait Rx {
 object Rx {
   def byte(sourceRegister: DeviceRegister) = new Rx {
     type T = Byte
-    def receive(device: DeviceAddress)(implicit controller: Controller { type Bus = device.Bus }) = controller.read(device, sourceRegister, 1) map (_.head)
+    def receive(device: DeviceAddress)(implicit controller: Controller { type Bus = device.Bus }) = controller.receive(device, sourceRegister, 1) map (_.head)
   }
 
   def bytes(sourceRegister: DeviceRegister, numBytes: Int) = new Rx {
     type T = Seq[Byte]
-    def receive(device: DeviceAddress)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Seq[Byte]] = controller.read(device, sourceRegister, numBytes)
+    def receive(device: DeviceAddress)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
   }
 }
