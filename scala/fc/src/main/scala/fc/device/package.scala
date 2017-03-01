@@ -2,14 +2,6 @@ package fc.device
 
 import cats.syntax.either._
 
-case class DeviceRegister(value: Byte)
-
-trait DeviceAddress {
-  type Bus
-
-  def toFilename: String
-}
-
 trait Device {
   val address: DeviceAddress
   implicit val controller: Controller { type Bus = address.Bus }
@@ -53,18 +45,3 @@ object Rx {
     def receive(device: DeviceAddress)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceError, Seq[Byte]] = controller.read(device, sourceRegister, numBytes)
   }
 }
-
-trait Controller { self =>
-  type Bus
-
-  def read(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, numBytes: Int): Either[DeviceError, Seq[Byte]]
-
-  def write(device: DeviceAddress { type Bus = self.Bus }, register: DeviceRegister, data: Byte): Either[DeviceError, Unit]
-}
-
-trait DeviceError
-case class DeviceUnavailableError(device: DeviceAddress, cause: Throwable) extends DeviceError
-case class TransferFailedError(cause: Throwable) extends DeviceError
-case class IncompleteDataError(expected: Int, actual: Int) extends DeviceError
-
-trait Configuration extends Rx with Tx

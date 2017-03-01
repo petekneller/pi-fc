@@ -4,6 +4,8 @@ import cats.syntax.either._
 import ioctl.syntax._
 import fc.device._
 
+trait Configuration extends Rx with Tx
+
 case class ByteConfiguration(register: DeviceRegister) extends Configuration {
   type T = Byte
 
