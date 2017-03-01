@@ -32,6 +32,6 @@ trait Address {
 }
 
 trait DeviceException
-case class DeviceUnavailableError(device: Address, cause: Throwable) extends DeviceException
-case class TransferFailedError(cause: Throwable) extends DeviceException
-case class IncompleteDataError(expected: Int, actual: Int) extends DeviceException
+case class DeviceUnavailableException(device: Address, cause: Throwable) extends DeviceException
+case class TransferFailedException(cause: Throwable) extends DeviceException
+case class IncompleteDataException(expected: Int, actual: Int) extends DeviceException

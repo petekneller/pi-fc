@@ -54,13 +54,13 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
   // Internal API from here on down
 
-  private def assertCompleteData(expected: Int, actual: Int): Either[IncompleteDataError, Unit] = if (expected == actual) Right(()) else Left(IncompleteDataError(expected, actual))
+  private def assertCompleteData(expected: Int, actual: Int): Either[IncompleteDataException, Unit] = if (expected == actual) Right(()) else Left(IncompleteDataException(expected, actual))
 
-  private def open(device: Address): Either[DeviceUnavailableError, Int] =
-    Either.catchNonFatal{ api.open(device.toFilename, O_RDWR) }.leftMap(DeviceUnavailableError(device, _))
+  private def open(device: Address): Either[DeviceUnavailableException, Int] =
+    Either.catchNonFatal{ api.open(device.toFilename, O_RDWR) }.leftMap(DeviceUnavailableException(device, _))
 
-  private def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int): Either[TransferFailedError, Int] =
-    Either.catchNonFatal{ api.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz) }.leftMap(TransferFailedError(_))
+  private def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int): Either[TransferFailedException, Int] =
+    Either.catchNonFatal{ api.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz) }.leftMap(TransferFailedException(_))
 
   private def withFileDescriptor[A](device: Address, f: Int => Either[DeviceException, A]): Either[DeviceException, A] = for {
     fd <- open(device)

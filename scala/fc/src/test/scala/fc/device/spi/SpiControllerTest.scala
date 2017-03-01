@@ -54,14 +54,14 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val errorCause = new RuntimeException("")
     (mockApi.open _) when(*, *) throws errorCause
 
-    device.receive(Rx.byte(register)) should === (Left(DeviceUnavailableError(device.address, errorCause)))
+    device.receive(Rx.byte(register)) should === (Left(DeviceUnavailableException(device.address, errorCause)))
   }
 
   it should "return a 'transfer failed' error if the underlying 'transfer' call fails" in {
     val errorCause = new RuntimeException("")
     (mockApi.transfer _) when(*, *, *, *, *) throws errorCause
 
-    device.receive(Rx.byte(register)) should === (Left(TransferFailedError(errorCause)))
+    device.receive(Rx.byte(register)) should === (Left(TransferFailedException(errorCause)))
   }
 
   it should "call 'close' even if the underlying 'transfer' call fails" in {
@@ -102,7 +102,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
       actualNumBytes + 1
     }
 
-    device.receive(Rx.bytes(register, expectedNumBytes)) should === (Left(IncompleteDataError(expectedNumBytes, actualNumBytes)))
+    device.receive(Rx.bytes(register, expectedNumBytes)) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
   }
 
   "Tx.byte" should "not set a read flag in the first byte of the transmit buffer" in {
