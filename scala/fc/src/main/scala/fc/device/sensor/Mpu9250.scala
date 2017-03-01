@@ -12,6 +12,7 @@ trait Mpu9250 extends Device {
 
   def checkCommunication(): Either[DeviceException, Boolean] = Rx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
 
+  // NB. upon power-on the MPU is AWAKE and will generate measurements immediately
   def enable(value: Boolean = true): Either[DeviceException, Unit] = config.SLEEP.write(address, !value)
   def disable(): Either[DeviceException, Unit] = enable(false)
 
