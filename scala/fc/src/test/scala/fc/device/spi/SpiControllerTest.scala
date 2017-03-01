@@ -11,24 +11,27 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
 
   val mockApi = stub[SpiApi]
   val controller = new SpiController(mockApi)
+  val device = new Device {
+    val address = SpiAddress(0, 0)
+    implicit val controller = new SpiController(mockApi)
+  }
 
-  val device = SpiAddress(0, 0)
   val register = DeviceRegister(3)
 
-  "readRegister" should "set a read flag in the first byte of the transmit buffer" in {
-    val _ = readRegister(device, register)(controller)
+  "Rx.byte" should "set a read flag in the first byte of the transmit buffer" in {
+    val _ = device.receive(Rx.byte(register))
 
     (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasReadFlag(txBuffer) })
   }
 
   it should "set the register address in the lower 7 bits of the first byte of the transmit buffer" in {
-    val _ = readRegister(device, register)(controller)
+    val _ = device.receive(Rx.byte(register))
 
     (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasRegister(txBuffer, register.value) })
   }
 
   it should "allocate at least 2 bytes in both the transmit and receive buffers" in {
-    val _ = readRegister(device, register)(controller)
+    val _ = device.receive(Rx.byte(register))
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
       txBuffer.limit >= 2 && rxBuffer.limit >= 2
@@ -36,13 +39,13 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   it should "write the second byte of the transmit buffer as 0x0" in {
-    val _ = readRegister(device, register)(controller)
+    val _ = device.receive(Rx.byte(register))
 
     (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => txBuffer.get(1) == 0x0 })
   }
 
   it should "pass a receive buffer full of 0x0" in {
-    val _ = readRegister(device, register)(controller)
+    val _ = device.receive(Rx.byte(register))
 
     (mockApi.transfer _).verify(where { (_, _, rxBuffer, _, _) => rxBuffer.toSeq.forall(_ == 0x0) })
   }
@@ -51,25 +54,25 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val errorCause = new RuntimeException("")
     (mockApi.open _) when(*, *) throws errorCause
 
-    readRegister(device, register)(controller) should === (Left(DeviceUnavailableError(device, errorCause)))
+    device.receive(Rx.byte(register)) should === (Left(DeviceUnavailableError(device.address, errorCause)))
   }
 
   it should "return a 'transfer failed' error if the underlying 'transfer' call fails" in {
     val errorCause = new RuntimeException("")
     (mockApi.transfer _) when(*, *, *, *, *) throws errorCause
 
-    val _ = readRegister(device, register)(controller) should === (Left(TransferFailedError(errorCause)))
+    device.receive(Rx.byte(register)) should === (Left(TransferFailedError(errorCause)))
   }
 
   it should "call 'close' even if the underlying 'transfer' call fails" in {
     (mockApi.transfer _) when(*, *, *, *, *) throws new RuntimeException("")
 
-    val _ = readRegister(device, register)(controller)
+    val _ = device.receive(Rx.byte(register))
     (mockApi.close _).verify(*).once()
   }
 
-  "readRegisterN" should "allocate at least N+1 bytes in both the transmit and receive buffer" in {
-    val _ = readRegisterN(device, register, 3)(controller)
+  "Rx.bytes" should "allocate at least N+1 bytes in both the transmit and receive buffer" in {
+    val _ = device.receive(Rx.bytes(register, 3))
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
       txBuffer.limit >= 4 && rxBuffer.limit >= 4
@@ -81,11 +84,12 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
       rxBuffer.put(0x1.toByte).put(0x2.toByte).put(0x3.toByte).put(0x4.toByte)
       4
     }
-    readRegisterN(device, register, 3)(controller) should === (Right(Seq(0x2.toByte, 0x3.toByte, 0x4.toByte)))
+
+    device.receive(Rx.bytes(register, 3)) should === (Right(Seq(0x2.toByte, 0x3.toByte, 0x4.toByte)))
   }
 
   it should "attempt to transfer N+1 bytes" in {
-    readRegisterN(device, register, 3)(controller)
+    device.receive(Rx.bytes(register, 3))
 
     (mockApi.transfer _).verify(*, *, *, 4, *)
   }
@@ -98,18 +102,18 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
       actualNumBytes + 1
     }
 
-    readRegisterN(device, register, expectedNumBytes)(controller) should === (Left(IncompleteDataError(expectedNumBytes, actualNumBytes)))
+    device.receive(Rx.bytes(register, expectedNumBytes)) should === (Left(IncompleteDataError(expectedNumBytes, actualNumBytes)))
   }
 
-  "writeRegister" should "not set a read flag in the first byte of the transmit buffer" in {
-    val _ = writeRegister(device, register, 0x55)(controller)
+  "Tx.byte" should "not set a read flag in the first byte of the transmit buffer" in {
+    val _ = device.transmit(Tx.byte(register))(0x55)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => !hasReadFlag(txBuffer) })
   }
 
   it should "set the data byte in the second byte of the transmit buffer" in {
     val data = 0x55.toByte
-    val _ = writeRegister(device, register, data)(controller)
+    val _ = device.transmit(Tx.byte(register))(data)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => txBuffer.get(1) == data })
   }
