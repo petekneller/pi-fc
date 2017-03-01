@@ -16,7 +16,7 @@ case class ByteConfiguration(register: Register) extends Configuration {
     Tx.byte(register).write(device, value)
 }
 
-case class FlagConfiguration(register: Register, bit: Int) extends Configuration {
+case class BitFlagConfiguration(register: Register, bit: Int) extends Configuration {
   type T = Boolean
 
   def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Boolean] =

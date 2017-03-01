@@ -38,8 +38,8 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
 
   "FlagConfiguration.receive" should "return a boolean that reflects the value of the bit specified in the configuration arguments" in {
     val registerValue = 0x04.toByte
-    val bit1Flag = FlagConfiguration(register, 1)
-    val bit2Flag = FlagConfiguration(register, 2)
+    val bit1Flag = BitFlagConfiguration(register, 1)
+    val bit2Flag = BitFlagConfiguration(register, 2)
 
     (mockController.receive _).when(*, *, *).returns(Right(Seq(registerValue)))
     bit1Flag.read(device) should === (Right(false))
@@ -47,7 +47,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   "FlagConfiguration.transmit" should "not affect bits in the register outside of that defined for the configuration" in {
-    val bit1Flag = FlagConfiguration(register, 1)
+    val bit1Flag = BitFlagConfiguration(register, 1)
     val originalValue = 0x71.toByte
 
     (mockController.receive _).when(*, *, 1).returns(Right(Seq(originalValue)))
