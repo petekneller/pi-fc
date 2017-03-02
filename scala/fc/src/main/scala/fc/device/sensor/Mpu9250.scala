@@ -34,8 +34,9 @@ object Mpu9250 {
   }
 
   object config {
-    val SLEEP =   SingleBitFlag(registers.PWR_MGMT_1, 6)
-    val H_RESET = SingleBitFlag(registers.PWR_MGMT_1, 7) // hardware reset - all config registers go to their default values
+    val GYRO_FS_SEL = MultiBitFlag(registers.GYRO_CONFIG, 4, 2, GyroFullScale)
+    val SLEEP =       SingleBitFlag(registers.PWR_MGMT_1, 6)
+    val H_RESET =     SingleBitFlag(registers.PWR_MGMT_1, 7) // hardware reset - all config registers go to their default values
   }
 
   object constants {
@@ -43,6 +44,7 @@ object Mpu9250 {
   }
 
   object registers {
+    val GYRO_CONFIG = Register(0x1B)
     val GYRO_XOUT_H = Register(0x43)
     val GYRO_XOUT_L = Register(0x44)
     val GYRO_YOUT_H = Register(0x45)
@@ -51,6 +53,18 @@ object Mpu9250 {
     val GYRO_ZOUT_L = Register(0x48)
     val PWR_MGMT_1 =  Register(0x6B)
     val WHOAMI =      Register(0x75)
+  }
+
+  object GyroFullScale extends FlagEnumeration {
+    type T = Val
+
+    sealed trait Val extends Flag
+    object dps250 extends Val { val value = 0x0.toByte }
+    object dps500 extends Val { val value = 0x1.toByte }
+    object dps1000 extends Val { val value = 0x2.toByte }
+    object dps2000 extends Val { val value = 0x3.toByte }
+
+    def values = Set(dps250, dps500, dps1000, dps2000)
   }
 
 }
