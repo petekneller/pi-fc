@@ -18,11 +18,12 @@ trait Mpu9250 extends Device {
 
   def reset(): Either[DeviceException, Unit] = config.H_RESET.write(address, true)
 
-  def readGyro(): Either[DeviceException, (Short, Short, Short)] = for {
-    x <- Rx.short(registers.GYRO_XOUT_L, registers.GYRO_XOUT_H).read(address)
-    y <- Rx.short(registers.GYRO_YOUT_L, registers.GYRO_YOUT_H).read(address)
-    z <- Rx.short(registers.GYRO_ZOUT_L, registers.GYRO_ZOUT_H).read(address)
-  } yield (x, y, z)
+  def readGyro(): Either[DeviceException, (Short, Short, Short)] =
+    Measurement(
+      Rx.short(registers.GYRO_XOUT_L, registers.GYRO_XOUT_H),
+      Rx.short(registers.GYRO_YOUT_L, registers.GYRO_YOUT_H),
+      Rx.short(registers.GYRO_ZOUT_L, registers.GYRO_ZOUT_H)
+    ).read(address)
 
 }
 
