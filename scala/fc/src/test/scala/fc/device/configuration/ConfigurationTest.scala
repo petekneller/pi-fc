@@ -11,7 +11,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   implicit val mockController = stub[MockController]
   val register = Register(0x35)
 
-  "ByteConfiguration.receive" should "make a read request for that register" in {
+  "ByteConfiguration.read" should "make a read request for that register" in {
     val configValue = 0x12.toByte
     val config = ByteConfiguration(register)
 
@@ -28,7 +28,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     config.read(device) should === (Right(configValue))
   }
 
-  "ByteConfiguration.transmit" should "set the whole register value" in {
+  "ByteConfiguration.write" should "set the whole register value" in {
     val config = ByteConfiguration(register)
     val configValue = 0x33.toByte
 
@@ -36,7 +36,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockController.transmit _).verify(*, register, configValue)
   }
 
-  "SingleBitFlag.receive" should "return a boolean that reflects the value of the bit specified in the configuration arguments" in {
+  "SingleBitFlag.read" should "return a boolean that reflects the value of the bit specified in the configuration arguments" in {
     val registerValue = 0x04.toByte
     val bit1Flag = SingleBitFlag(register, 1)
     val bit2Flag = SingleBitFlag(register, 2)
@@ -46,7 +46,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     bit2Flag.read(device) should === (Right(true))
   }
 
-  "SingleBitFlag.transmit" should "not affect bits in the register outside of that defined for the configuration" in {
+  "SingleBitFlag.write" should "not affect bits in the register outside of that defined for the configuration" in {
     val bit1Flag = SingleBitFlag(register, 1)
 
     (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x71.toByte)))
@@ -55,7 +55,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockController.transmit _).verify(*, register, 0x73.toByte)
   }
 
-  "SingleBitFlag.transmit" should "be able to also unset bits" in {
+  it should "be able to also unset bits" in {
     val bit1Flag = SingleBitFlag(register, 1)
 
     (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x73.toByte)))
