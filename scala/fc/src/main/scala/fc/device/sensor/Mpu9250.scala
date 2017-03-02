@@ -34,8 +34,8 @@ object Mpu9250 {
   }
 
   object config {
-    val SLEEP =   BitFlagConfiguration(registers.PWR_MGMT_1, 6)
-    val H_RESET = BitFlagConfiguration(registers.PWR_MGMT_1, 7) // hardware reset - all config registers go to their default values
+    val SLEEP =   SingleBitFlag(registers.PWR_MGMT_1, 6)
+    val H_RESET = SingleBitFlag(registers.PWR_MGMT_1, 7) // hardware reset - all config registers go to their default values
   }
 
   object constants {
