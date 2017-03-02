@@ -63,4 +63,53 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     bit1Flag.write(device, false)
     (mockController.transmit _).verify(*, register, 0x71.toByte)
   }
+
+  "MultiBitFlag.receive" should "return only the specified bits" in {
+    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x03.toByte)))
+
+    MultiBitFlag(register, 1, 2, TestEnum).read(device)  should === (Right(TestEnum.Three))
+    MultiBitFlag(register, 2, 2, TestEnum).read(device)  should === (Right(TestEnum.One))
+    MultiBitFlag(register, 3, 2, TestEnum).read(device)  should === (Right(TestEnum.Zero))
+  }
+
+  it should "return a FlagException if a values is found that does not correspond with one of the specified options" in {
+    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x02.toByte)))
+
+    MultiBitFlag(register, 1, 2, TestEnum).read(device) should === (Left(FlagException(2.toByte, TestEnum.values)))
+  }
+
+
+  "MultiBitFlag.transmit" should "set the correct bits" in {
+    (mockController.receive _).when(*, *, 1)returns(Right(Seq(0x0.toByte)))
+    (mockController.transmit _).when(*, *, *).returns(Right(()))
+
+    MultiBitFlag(register, 1, 2, TestEnum).write(device, TestEnum.Three)
+    (mockController.transmit _).verify(*, register, 0x03.toByte)
+
+    MultiBitFlag(register, 2, 2, TestEnum).write(device, TestEnum.Three)
+    (mockController.transmit _).verify(*, register, 0x06.toByte)
+
+    MultiBitFlag(register, 3, 2, TestEnum).write(device, TestEnum.Three)
+    (mockController.transmit _).verify(*, register, 0x0C.toByte)
+  }
+
+  it should "not affect bits in the register outside of that defined" in {
+    (mockController.receive _).when(*, *, 1)returns(Right(Seq(0xFF.toByte)))
+    (mockController.transmit _).when(*, *, *).returns(Right(()))
+
+    MultiBitFlag(register, 4, 3, TestEnum).write(device, TestEnum.Zero)
+    (mockController.transmit _).verify(*, register, 0xE3.toByte)
+  }
+
+
+  object TestEnum extends FlagEnumeration {
+    type T = TestVal
+    case class TestVal(value: Byte) extends Flag
+
+    val Zero =  TestVal(0.toByte)
+    val One =   TestVal(1.toByte)
+    val Three = TestVal(3.toByte)
+
+    def values = Set(Zero, One, Three)
+  }
 }
