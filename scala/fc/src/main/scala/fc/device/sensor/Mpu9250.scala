@@ -47,15 +47,15 @@ object Mpu9250 {
 
   object registers {
 
-    val GYRO_CONFIG = Register(0x1B)
-    val GYRO_XOUT_H = Register(0x43)
-    val GYRO_XOUT_L = Register(0x44)
-    val GYRO_YOUT_H = Register(0x45)
-    val GYRO_YOUT_L = Register(0x46)
-    val GYRO_ZOUT_H = Register(0x47)
-    val GYRO_ZOUT_L = Register(0x48)
-    val PWR_MGMT_1 =  Register(0x6B)
-    val WHOAMI =      Register(0x75)
+    val GYRO_CONFIG = Register(27)
+    val GYRO_XOUT_H = Register(67)
+    val GYRO_XOUT_L = Register(68)
+    val GYRO_YOUT_H = Register(69)
+    val GYRO_YOUT_L = Register(70)
+    val GYRO_ZOUT_H = Register(71)
+    val GYRO_ZOUT_L = Register(72)
+    val PWR_MGMT_1 =  Register(107)
+    val WHOAMI =      Register(117)
 
   } // registers
 
