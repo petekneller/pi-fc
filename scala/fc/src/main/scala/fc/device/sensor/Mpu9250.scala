@@ -19,7 +19,7 @@ trait Mpu9250 extends Device {
   def reset(): Either[DeviceException, Unit] = config.H_RESET.write(address, true)
 
   def readGyro(fullScale: enums.GyroFullScale.Val): Either[DeviceException, (Double, Double, Double)] =
-    Measurement(
+    Measurement3Axis(
       registers.GYRO_XOUT_L, registers.GYRO_XOUT_H,
       registers.GYRO_YOUT_L, registers.GYRO_YOUT_H,
       registers.GYRO_ZOUT_L, registers.GYRO_ZOUT_H,
@@ -27,7 +27,7 @@ trait Mpu9250 extends Device {
     ).read(address)
 
   def readAccel(fullScale: enums.AccelFullScale.Val): Either[DeviceException, (Double, Double, Double)] =
-    Measurement(
+    Measurement3Axis(
       registers.ACCEL_XOUT_L, registers.ACCEL_XOUT_H,
       registers.ACCEL_YOUT_L, registers.ACCEL_YOUT_H,
       registers.ACCEL_ZOUT_L, registers.ACCEL_ZOUT_H,
