@@ -8,15 +8,15 @@ import fc.device._
 import fc.device.configuration._
 
 trait Mpu9250 extends Device {
-  import Mpu9250.{registers, constants, config, enums}
+  import Mpu9250.{registers, constants, configs, enums}
 
   def checkCommunication(): Either[DeviceException, Boolean] = Rx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
 
   // NB. upon power-on the MPU is AWAKE and will generate measurements immediately
-  def enable(value: Boolean = true): Either[DeviceException, Unit] = config.SLEEP.write(address, !value)
+  def enable(value: Boolean = true): Either[DeviceException, Unit] = configs.SLEEP.write(address, !value)
   def disable(): Either[DeviceException, Unit] = enable(false)
 
-  def reset(): Either[DeviceException, Unit] = config.H_RESET.write(address, true)
+  def reset(): Either[DeviceException, Unit] = configs.H_RESET.write(address, true)
 
   def readGyro(fullScale: enums.GyroFullScale.Val): Either[DeviceException, (Double, Double, Double)] =
     Measurement3Axis(
@@ -43,7 +43,7 @@ object Mpu9250 {
     implicit val controller: Controller { type Bus = address.Bus } = c
   }
 
-  object config {
+  object configs {
     val GYRO_FS_SEL =    MultiBitFlag(registers.GYRO_CONFIG, 4, 2, enums.GyroFullScale)
     val ACCEL_FS_SEL =   MultiBitFlag(registers.ACCEL_CONFIG_1, 4, 2, enums.AccelFullScale)
     val SLEEP =          SingleBitFlag(registers.PWR_MGMT_1, 6)
