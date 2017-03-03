@@ -3,16 +3,29 @@ package fc.device.sensor
 import cats.syntax.either._
 import fc.device._
 
+trait FullScale {
+  val factor: Double
+}
+
 case class Measurement(
-    xWord: Rx { type T = Short },
-    yWord: Rx { type T = Short },
-    zWord: Rx { type T = Short }) extends Rx {
+    xLoRegister: Register, xHiRegister: Register,
+    yLoRegister: Register, yHiRegister: Register,
+    zLoRegister: Register, zHiRegister: Register,
+    scale: FullScale) extends Rx {
 
-  type T = (Short, Short, Short)
+  type T = (Double, Double, Double)
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, T] = for {
+  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, (Double, Double, Double)] = for {
     x <- xWord.read(device)
     y <- yWord.read(device)
     z <- zWord.read(device)
-  } yield (x, y, z)
+  } yield (scale(x), scale(y), scale(z))
+
+  private val maxShort = 2 ^ 16
+
+  private def scale(fromDevice: Short): Double = (fromDevice.toDouble / maxShort) * scale.factor
+
+  private val xWord = Rx.short(xLoRegister, xHiRegister)
+  private val yWord = Rx.short(yLoRegister, yHiRegister)
+  private val zWord = Rx.short(zLoRegister, zHiRegister)
 }
