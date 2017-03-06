@@ -4,9 +4,13 @@ import com.sun.jna.*;
 import java.nio.ByteBuffer;
 
 public class IOCtl {
-    public int O_RDONLY = 0;
+    public int O_RDONLY = 0x0;
 
-    public int O_RDWR = 2;
+    public int O_WRONLY = 0x1;
+
+    public int O_RDWR = 0x2;
+
+    public int O_APPEND = 0x2000;
 
     public native int open(String path, int flags) throws LastErrorException;
 
