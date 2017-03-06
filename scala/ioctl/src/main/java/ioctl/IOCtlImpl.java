@@ -3,7 +3,8 @@ package ioctl;
 import com.sun.jna.*;
 import java.nio.ByteBuffer;
 
-public class IOCtl {
+public class IOCtlImpl {
+
     public int O_RDONLY = 0x0;
 
     public int O_WRONLY = 0x1;
