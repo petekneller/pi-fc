@@ -13,6 +13,7 @@ package device {
    */
   trait Controller { self =>
     type Bus
+    type Register
 
     /*
      @throws DeviceUnavailableException should something occur while trying to initially connect to the device
@@ -27,8 +28,6 @@ package device {
      */
     def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Byte): DeviceResult[Unit]
   }
-
-  case class Register(value: Byte)
 
   trait Address {
     type Bus

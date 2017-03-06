@@ -9,7 +9,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
 
   val device = new MockDeviceAddress
   implicit val mockController = stub[MockController]
-  val register = Register(0x35)
+  val register = 0x35.toByte
 
   "ByteConfiguration.read" should "make a read request for that register" in {
     val configValue = 0x12.toByte

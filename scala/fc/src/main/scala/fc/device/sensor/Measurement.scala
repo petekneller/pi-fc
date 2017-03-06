@@ -8,12 +8,13 @@ trait FullScale {
 }
 
 case class Measurement(
-    loRegister: Register, hiRegister: Register,
+    loRegister: Byte, hiRegister: Byte,
     scale: FullScale) extends Rx {
 
   type T = Double
+  type Register = Byte
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Double] = word.read(device).map(short => (short.toDouble / maxShort) * scale.factor)
+  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Double] = word.read(device).map(short => (short.toDouble / maxShort) * scale.factor)
 
   private val maxShort = math.pow(2, 15) // well, close enough
 
@@ -21,14 +22,15 @@ case class Measurement(
 }
 
 case class Measurement3Axis(
-    xLoRegister: Register, xHiRegister: Register,
-    yLoRegister: Register, yHiRegister: Register,
-    zLoRegister: Register, zHiRegister: Register,
+    xLoRegister: Byte, xHiRegister: Byte,
+    yLoRegister: Byte, yHiRegister: Byte,
+    zLoRegister: Byte, zHiRegister: Byte,
     scale: FullScale) extends Rx {
 
   type T = (Double, Double, Double)
+  type Register = Byte
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[(Double, Double, Double)] = for {
+  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[(Double, Double, Double)] = for {
     x <- xMeasurement.read(device)
     y <- yMeasurement.read(device)
     z <- zMeasurement.read(device)

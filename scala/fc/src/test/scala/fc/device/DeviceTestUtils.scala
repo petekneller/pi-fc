@@ -7,5 +7,5 @@ trait DeviceTestUtils {
     def toFilename = "unused"
   }
 
-  trait MockController extends Controller { type Bus = Boolean }
+  trait MockController extends Controller { type Bus = Boolean; type Register = Byte }
 }

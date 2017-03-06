@@ -9,8 +9,8 @@ class RxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEquals wi
   val device = new MockDeviceAddress
   implicit val mockController = stub[MockController]
 
-  val loByteRegister = Register(0x40)
-  val hiByteRegister = Register(0x41)
+  val loByteRegister = 0x40.toByte
+  val hiByteRegister = 0x41.toByte
 
   "Rx.short" should "fetch 2 8-bit registers and combine them into a 16-bit word" in {
     (mockController.receive _).when(*, loByteRegister, 1).returns(Right(Seq(0x34.toByte)))

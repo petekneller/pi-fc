@@ -18,16 +18,17 @@ case class SpiAddress(busNumber: Int, chipSelect: Int) extends Address {
 
 class SpiController(api: SpiApi) extends Controller { self =>
   type Bus = SpiBus
+  type Register = Byte
 
   private val clockSpeed: Int = 100000
 
-  def receive(device: Address { type Bus = self.Bus }, register: Register, numBytes: Int): DeviceResult[Seq[Byte]] =
+  def receive(device: Address { type Bus = self.Bus }, register: Byte, numBytes: Int): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = numBytes + 1
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
       val rxBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
 
-      txBuffer.put(0, (0x80 | register.value).toByte)
+      txBuffer.put(0, (0x80 | register).toByte)
       for {
         bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
         _ <- assertCompleteData(numBytes, bytesTransferred - 1)
@@ -42,7 +43,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
       val rxBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
 
-      txBuffer.put(0, register.value)
+      txBuffer.put(0, register)
       txBuffer.put(1, data)
       for {
         bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)

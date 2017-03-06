@@ -9,25 +9,29 @@ import ioctl.syntax._
  They build on the underlying Controller API and make it easier to encapsulate logical transactions that you might wish to make.
  */
 
-trait Rx {
+trait Rx { self =>
   type T
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[T]
+  type Register
+  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = self.Register }): DeviceResult[T]
 }
 
 object Rx {
-  def byte(sourceRegister: Register) = new Rx {
+  def byte(sourceRegister: Byte) = new Rx {
     type T = Byte
-    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }) = controller.receive(device, sourceRegister, 1) map (_.head)
+    type Register = Byte
+    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }) = controller.receive(device, sourceRegister, 1) map (_.head)
   }
 
-  def bytes(sourceRegister: Register, numBytes: Int) = new Rx {
+  def bytes(sourceRegister: Byte, numBytes: Int) = new Rx {
     type T = Seq[Byte]
-    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
+    type Register = Byte
+    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
   }
 
-  def short(loByteRegister: Register, hiByteRegister: Register) = new Rx {
+  def short(loByteRegister: Byte, hiByteRegister: Byte) = new Rx {
     type T = Short
-    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Short] = for {
+    type Register = Byte
+    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Short] = for {
       hiByte <- Rx.byte(hiByteRegister).read(device)
       loByte <- Rx.byte(loByteRegister).read(device)
     } yield ((hiByte << 8) | loByte.unsigned).toShort // if the low byte isn't unsigned before widening, any signing high bits will
@@ -35,14 +39,16 @@ object Rx {
   }
 }
 
-trait Tx {
+trait Tx { self =>
   type T
-  def write(device: Address, value: T)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Unit]
+  type Register
+  def write(device: Address, value: T)(implicit controller: Controller { type Bus = device.Bus; type Register = self.Register }): DeviceResult[Unit]
 }
 
 object Tx {
-  def byte[A](destinationRegister: Register) = new Tx {
+  def byte[A](destinationRegister: Byte) = new Tx {
     type T = Byte
-    def write(device: Address, value: Byte)(implicit controller: Controller { type Bus = device.Bus }) = controller.transmit(device, destinationRegister, value)
+    type Register = Byte
+    def write(device: Address, value: Byte)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }) = controller.transmit(device, destinationRegister, value)
   }
 }

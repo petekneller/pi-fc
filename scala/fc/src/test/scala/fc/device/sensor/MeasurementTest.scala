@@ -10,8 +10,8 @@ class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEqual
 
   val address = new MockDeviceAddress
   implicit val mockController = stub[MockController]
-  val register1 = Register(1)
-  val register2 = Register(2)
+  val register1 = 1.toByte
+  val register2 = 2.toByte
 
   "Meaurement.read" should "normalize the 16-bit register values before applying the scaling factor" in {
     (mockController.receive _).when(*, register1, 1).returns(Right(Seq(0xFF.toByte)))

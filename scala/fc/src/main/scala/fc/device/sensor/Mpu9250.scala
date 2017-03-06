@@ -8,6 +8,7 @@ import fc.device._
 import fc.device.configuration._
 
 trait Mpu9250 extends Device {
+  type Register = Byte
   import Mpu9250.{registers, constants, configs, enums}
 
   def checkCommunication(): DeviceResult[Boolean] = Rx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
@@ -38,9 +39,9 @@ trait Mpu9250 extends Device {
 
 object Mpu9250 {
 
-  def apply(a: Address)(implicit c: Controller { type Bus = a.Bus }) = new Mpu9250 {
+  def apply(a: Address)(implicit c: Controller { type Bus = a.Bus; type Register = Byte }) = new Mpu9250 {
     val address: Address { type Bus = a.Bus } = a
-    implicit val controller: Controller { type Bus = address.Bus } = c
+    implicit val controller: Controller { type Bus = address.Bus; type Register = Byte } = c
   }
 
   object configs {
@@ -56,22 +57,22 @@ object Mpu9250 {
 
   object registers {
 
-    val GYRO_CONFIG =      Register(27)
-    val ACCEL_CONFIG_1 =   Register(28)
-    val ACCEL_XOUT_H =     Register(59)
-    val ACCEL_XOUT_L =     Register(60)
-    val ACCEL_YOUT_H =     Register(61)
-    val ACCEL_YOUT_L =     Register(62)
-    val ACCEL_ZOUT_H =     Register(63)
-    val ACCEL_ZOUT_L =     Register(64)
-    val GYRO_XOUT_H =      Register(67)
-    val GYRO_XOUT_L =      Register(68)
-    val GYRO_YOUT_H =      Register(69)
-    val GYRO_YOUT_L =      Register(70)
-    val GYRO_ZOUT_H =      Register(71)
-    val GYRO_ZOUT_L =      Register(72)
-    val PWR_MGMT_1 =       Register(107)
-    val WHOAMI =           Register(117)
+    val GYRO_CONFIG =      27.toByte
+    val ACCEL_CONFIG_1 =   28.toByte
+    val ACCEL_XOUT_H =     59.toByte
+    val ACCEL_XOUT_L =     60.toByte
+    val ACCEL_YOUT_H =     61.toByte
+    val ACCEL_YOUT_L =     62.toByte
+    val ACCEL_ZOUT_H =     63.toByte
+    val ACCEL_ZOUT_L =     64.toByte
+    val GYRO_XOUT_H =      67.toByte
+    val GYRO_XOUT_L =      68.toByte
+    val GYRO_YOUT_H =      69.toByte
+    val GYRO_YOUT_L =      70.toByte
+    val GYRO_ZOUT_H =      71.toByte
+    val GYRO_ZOUT_L =      72.toByte
+    val PWR_MGMT_1 =       107.toByte
+    val WHOAMI =           117.toByte
 
   } // registers
 

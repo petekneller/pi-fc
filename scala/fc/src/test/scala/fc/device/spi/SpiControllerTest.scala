@@ -12,11 +12,12 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   val mockApi = stub[SpiApi]
   val controller = new SpiController(mockApi)
   val device = new Device {
+    type Register = Byte
     val address = SpiAddress(0, 0)
     implicit val controller = new SpiController(mockApi)
   }
 
-  val register = Register(3)
+  val register = 3.toByte
 
   "Rx.byte" should "set a read flag in the first byte of the transmit buffer" in {
     val _ = device.read(Rx.byte(register))
@@ -27,7 +28,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   it should "set the register address in the lower 7 bits of the first byte of the transmit buffer" in {
     val _ = device.read(Rx.byte(register))
 
-    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasRegister(txBuffer, register.value) })
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasRegister(txBuffer, register) })
   }
 
   it should "allocate at least 2 bytes in both the transmit and receive buffers" in {
