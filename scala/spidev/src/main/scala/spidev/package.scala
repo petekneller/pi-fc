@@ -4,5 +4,5 @@ package object spidev {
   Native.register(classOf[IOCtlImpl], "c")
   Native.setPreserveLastError(true)
 
-  val IOCtl = new IOCtlImp()
+  val IOCtl = new IOCtlImpl()
 }
