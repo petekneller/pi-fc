@@ -1,0 +1,22 @@
+#! /usr/bin/env sh
+
+groupadd pwm
+usermod -a -G pwm root
+usermod -a -G pwm pi
+
+echo "0" >> /sys/class/pwm/pwmchip0/export
+chmod -R g+w /sys/class/pwm/pwmchip0/pwm0
+chown -R :pwm /sys/class/pwm/pwmchip0/pwm0
+
+echo "1" >> /sys/class/pwm/pwmchip0/export
+chmod -R g+w /sys/class/pwm/pwmchip0/pwm1
+chown -R :pwm /sys/class/pwm/pwmchip0/pwm1
+
+echo "2" >> /sys/class/pwm/pwmchip0/export
+chmod -R g+w /sys/class/pwm/pwmchip0/pwm2
+chown -R :pwm /sys/class/pwm/pwmchip0/pwm2
+
+echo "3" >> /sys/class/pwm/pwmchip0/export
+chmod -R g+w /sys/class/pwm/pwmchip0/pwm3
+chown -R :pwm /sys/class/pwm/pwmchip0/pwm3
+
