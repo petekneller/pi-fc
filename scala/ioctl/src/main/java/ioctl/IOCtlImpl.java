@@ -17,6 +17,10 @@ public class IOCtlImpl {
 
     public native int close(int fd) throws LastErrorException;
 
+    public native size_t write(int fd, ByteBuffer data, size_t count) throws LastErrorException;
+
+    public native size_t read(int fd, ByteBuffer data, size_t count) throws LastErrorException;
+
     public int errno() {
         return Native.getLastError();
     }
@@ -30,4 +34,10 @@ public class IOCtlImpl {
     public int EACCES = 13;
 
     public native int ioctl(int fd, NativeLong request, ByteBuffer data) throws LastErrorException;
+
+    public static class size_t extends IntegerType {
+        public size_t() { this(0); }
+        public size_t(long value) { super(Native.SIZE_T_SIZE, value); }
+    }
+
 }
