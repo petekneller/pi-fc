@@ -13,7 +13,7 @@ case class Measurement(
 
   type T = Double
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Double] = word.read(device).map(short => (short.toDouble / maxShort) * scale.factor)
+  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Double] = word.read(device).map(short => (short.toDouble / maxShort) * scale.factor)
 
   private val maxShort = math.pow(2, 15) // well, close enough
 
@@ -28,7 +28,7 @@ case class Measurement3Axis(
 
   type T = (Double, Double, Double)
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, (Double, Double, Double)] = for {
+  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[(Double, Double, Double)] = for {
     x <- xMeasurement.read(device)
     y <- yMeasurement.read(device)
     z <- zMeasurement.read(device)

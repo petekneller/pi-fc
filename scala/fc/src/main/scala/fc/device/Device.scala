@@ -8,8 +8,8 @@ trait Device {
   val address: Address
   implicit val controller: Controller { type Bus = address.Bus }
 
-  def read(rx: Rx): Either[DeviceException, rx.T] = rx.read(address)(controller)
-  def write(tx: Tx)(value: tx.T): Either[DeviceException, Unit] = tx.write(address, value)(controller)
+  def read(rx: Rx): DeviceResult[rx.T] = rx.read(address)(controller)
+  def write(tx: Tx)(value: tx.T): DeviceResult[Unit] = tx.write(address, value)(controller)
 }
 
 object Device {

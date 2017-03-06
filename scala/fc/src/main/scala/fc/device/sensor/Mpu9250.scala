@@ -10,15 +10,15 @@ import fc.device.configuration._
 trait Mpu9250 extends Device {
   import Mpu9250.{registers, constants, configs, enums}
 
-  def checkCommunication(): Either[DeviceException, Boolean] = Rx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
+  def checkCommunication(): DeviceResult[Boolean] = Rx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
 
   // NB. upon power-on the MPU is AWAKE and will generate measurements immediately
-  def enable(value: Boolean = true): Either[DeviceException, Unit] = configs.SLEEP.write(address, !value)
-  def disable(): Either[DeviceException, Unit] = enable(false)
+  def enable(value: Boolean = true): DeviceResult[Unit] = configs.SLEEP.write(address, !value)
+  def disable(): DeviceResult[Unit] = enable(false)
 
-  def reset(): Either[DeviceException, Unit] = configs.H_RESET.write(address, true)
+  def reset(): DeviceResult[Unit] = configs.H_RESET.write(address, true)
 
-  def readGyro(fullScale: enums.GyroFullScale.Val): Either[DeviceException, (Double, Double, Double)] =
+  def readGyro(fullScale: enums.GyroFullScale.Val): DeviceResult[(Double, Double, Double)] =
     Measurement3Axis(
       registers.GYRO_XOUT_L, registers.GYRO_XOUT_H,
       registers.GYRO_YOUT_L, registers.GYRO_YOUT_H,
@@ -26,7 +26,7 @@ trait Mpu9250 extends Device {
       fullScale
     ).read(address)
 
-  def readAccel(fullScale: enums.AccelFullScale.Val): Either[DeviceException, (Double, Double, Double)] =
+  def readAccel(fullScale: enums.AccelFullScale.Val): DeviceResult[(Double, Double, Double)] =
     Measurement3Axis(
       registers.ACCEL_XOUT_L, registers.ACCEL_XOUT_H,
       registers.ACCEL_YOUT_L, registers.ACCEL_YOUT_H,

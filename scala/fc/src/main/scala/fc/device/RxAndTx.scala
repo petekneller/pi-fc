@@ -11,7 +11,7 @@ import ioctl.syntax._
 
 trait Rx {
   type T
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, T]
+  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[T]
 }
 
 object Rx {
@@ -22,12 +22,12 @@ object Rx {
 
   def bytes(sourceRegister: Register, numBytes: Int) = new Rx {
     type T = Seq[Byte]
-    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
+    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
   }
 
   def short(loByteRegister: Register, hiByteRegister: Register) = new Rx {
     type T = Short
-    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Short] = for {
+    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Short] = for {
       hiByte <- Rx.byte(hiByteRegister).read(device)
       loByte <- Rx.byte(loByteRegister).read(device)
     } yield ((hiByte << 8) | loByte.unsigned).toShort // if the low byte isn't unsigned before widening, any signing high bits will
@@ -37,7 +37,7 @@ object Rx {
 
 trait Tx {
   type T
-  def write(device: Address, value: T)(implicit controller: Controller { type Bus = device.Bus }): Either[DeviceException, Unit]
+  def write(device: Address, value: T)(implicit controller: Controller { type Bus = device.Bus }): DeviceResult[Unit]
 }
 
 object Tx {

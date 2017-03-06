@@ -21,7 +21,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
   private val clockSpeed: Int = 100000
 
-  def receive(device: Address { type Bus = self.Bus }, register: Register, numBytes: Int): Either[DeviceException, Seq[Byte]] =
+  def receive(device: Address { type Bus = self.Bus }, register: Register, numBytes: Int): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = numBytes + 1
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
@@ -36,7 +36,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
       }
     })
 
-  def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Byte): Either[DeviceException, Unit] =
+  def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Byte): DeviceResult[Unit] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = 2
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
@@ -62,7 +62,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
   private def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int): Either[TransferFailedException, Int] =
     Either.catchNonFatal{ api.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz) }.leftMap(TransferFailedException(_))
 
-  private def withFileDescriptor[A](device: Address, f: Int => Either[DeviceException, A]): Either[DeviceException, A] = for {
+  private def withFileDescriptor[A](device: Address, f: Int => DeviceResult[A]): DeviceResult[A] = for {
     fd <- open(device)
     result <- f(fd).bimap({ l => api.close(fd); l }, { r => api.close(fd); r })
   } yield result
