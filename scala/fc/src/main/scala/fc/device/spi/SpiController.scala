@@ -37,14 +37,14 @@ class SpiController(api: SpiApi) extends Controller { self =>
       }
     })
 
-  def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Byte): DeviceResult[Unit] =
+  def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Seq[Byte]): DeviceResult[Unit] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = 2
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
       val rxBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
 
       txBuffer.put(0, register)
-      txBuffer.put(1, data)
+      data.zipWithIndex foreach { case (b, i) => txBuffer.put(i + 1, b) }
       for {
         bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
         _ <- assertCompleteData(requisiteBufferSize, bytesTransferred)

@@ -33,7 +33,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val configValue = 0x33.toByte
 
     config.write(device, configValue)
-    (mockController.transmit _).verify(*, register, configValue)
+    (mockController.transmit _).verify(*, register, Seq(configValue))
   }
 
   "SingleBitFlag.read" should "return a boolean that reflects the value of the bit specified in the configuration arguments" in {
@@ -52,7 +52,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x71.toByte)))
     (mockController.transmit _).when(*, *, *)returns(Right(Unit))
     bit1Flag.write(device, true)
-    (mockController.transmit _).verify(*, register, 0x73.toByte)
+    (mockController.transmit _).verify(*, register, Seq(0x73.toByte))
   }
 
   it should "be able to also unset bits" in {
@@ -61,7 +61,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x73.toByte)))
     (mockController.transmit _).when(*, *, *)returns(Right(Unit))
     bit1Flag.write(device, false)
-    (mockController.transmit _).verify(*, register, 0x71.toByte)
+    (mockController.transmit _).verify(*, register, Seq(0x71.toByte))
   }
 
   "MultiBitFlag.receive" should "return only the specified bits" in {
@@ -84,13 +84,13 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockController.transmit _).when(*, *, *).returns(Right(()))
 
     MultiBitFlag(register, 1, 2, TestEnum).write(device, TestEnum.Three)
-    (mockController.transmit _).verify(*, register, 0x03.toByte)
+    (mockController.transmit _).verify(*, register, Seq(0x03.toByte))
 
     MultiBitFlag(register, 2, 2, TestEnum).write(device, TestEnum.Three)
-    (mockController.transmit _).verify(*, register, 0x06.toByte)
+    (mockController.transmit _).verify(*, register, Seq(0x06.toByte))
 
     MultiBitFlag(register, 3, 2, TestEnum).write(device, TestEnum.Three)
-    (mockController.transmit _).verify(*, register, 0x0C.toByte)
+    (mockController.transmit _).verify(*, register, Seq(0x0C.toByte))
   }
 
   it should "not affect bits in the register outside of that defined" in {
@@ -98,7 +98,7 @@ class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockController.transmit _).when(*, *, *).returns(Right(()))
 
     MultiBitFlag(register, 4, 3, TestEnum).write(device, TestEnum.Zero)
-    (mockController.transmit _).verify(*, register, 0xE3.toByte)
+    (mockController.transmit _).verify(*, register, Seq(0xE3.toByte))
   }
 
 

@@ -49,6 +49,6 @@ object Tx {
   def byte[A](destinationRegister: Byte) = new Tx {
     type T = Byte
     type Register = Byte
-    def write(device: Address, value: Byte)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }) = controller.transmit(device, destinationRegister, value)
+    def write(device: Address, value: Byte)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }) = controller.transmit(device, destinationRegister, Seq(value))
   }
 }

@@ -26,7 +26,7 @@ package device {
      @throws DeviceUnavailableException should something occur while trying to initially connect to the device
      @throws TransferFailedException to signal a general low-level failure within the transer
      */
-    def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Byte): DeviceResult[Unit]
+    def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Seq[Byte]): DeviceResult[Unit]
   }
 
   trait Address {
