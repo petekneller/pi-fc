@@ -1,7 +1,7 @@
 package fc
 
 import device.spi._
-import device.sensor.Mpu9250
+import device.input.Mpu9250
 
 object Navio2 {
 

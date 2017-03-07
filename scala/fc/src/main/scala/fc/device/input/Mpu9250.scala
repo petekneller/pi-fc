@@ -1,4 +1,4 @@
-package fc.device.sensor
+package fc.device.input
 
 import cats.syntax.either._
 import cats.syntax.eq._
@@ -6,6 +6,7 @@ import cats.instances.byte._
 import ioctl.syntax._
 import fc.device._
 import fc.device.configuration._
+import fc.device.sensor._
 
 trait Mpu9250 extends Device {
   type Register = Byte
