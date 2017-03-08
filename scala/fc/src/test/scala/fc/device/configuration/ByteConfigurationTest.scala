@@ -5,7 +5,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import fc.device._
 
-class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
+class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 
   val device = new MockDeviceAddress
   implicit val mockController = stub[MockByteController]

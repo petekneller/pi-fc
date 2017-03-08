@@ -4,7 +4,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 
-class RxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
+class ByteRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 
   val device = new MockDeviceAddress
   implicit val mockController = stub[MockByteController]
