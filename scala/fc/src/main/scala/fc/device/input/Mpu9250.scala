@@ -12,7 +12,7 @@ trait Mpu9250 extends Device {
   type Register = Byte
   import Mpu9250.{registers, constants, configs, enums}
 
-  def checkCommunication(): DeviceResult[Boolean] = Rx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
+  def checkCommunication(): DeviceResult[Boolean] = ByteRx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
 
   // NB. upon power-on the MPU is AWAKE and will generate measurements immediately
   def enable(value: Boolean = true): DeviceResult[Unit] = configs.SLEEP.write(address, !value)

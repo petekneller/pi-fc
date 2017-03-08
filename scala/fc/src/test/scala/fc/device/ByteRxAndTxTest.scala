@@ -16,20 +16,20 @@ class ByteRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEqual
     (mockController.receive _).when(*, loByteRegister, 1).returns(Right(Seq(0x34.toByte)))
     (mockController.receive _).when(*, hiByteRegister, 1).returns(Right(Seq(0x12.toByte)))
 
-    Rx.short(loByteRegister, hiByteRegister).read(device) should === (Right(0x1234.toShort))
+    ByteRx.short(loByteRegister, hiByteRegister).read(device) should === (Right(0x1234.toShort))
   }
 
   it should "handle properly a negative signed value in the low byte" in {
     (mockController.receive _).when(*, loByteRegister, 1).returns(Right(Seq(0x84.toByte)))
     (mockController.receive _).when(*, hiByteRegister, 1).returns(Right(Seq(0x12.toByte)))
 
-    Rx.short(loByteRegister, hiByteRegister).read(device) should === (Right(0x1284.toShort))
+    ByteRx.short(loByteRegister, hiByteRegister).read(device) should === (Right(0x1284.toShort))
   }
 
   it should "handle properly a negative signed value in the high byte" in {
     (mockController.receive _).when(*, loByteRegister, 1).returns(Right(Seq(0x34.toByte)))
     (mockController.receive _).when(*, hiByteRegister, 1).returns(Right(Seq(0x82.toByte)))
 
-    Rx.short(loByteRegister, hiByteRegister).read(device) should === (Right(0x8234.toShort))
+    ByteRx.short(loByteRegister, hiByteRegister).read(device) should === (Right(0x8234.toShort))
   }
 }

@@ -18,7 +18,7 @@ case class Measurement(
 
   private val maxShort = math.pow(2, 15) // well, close enough
 
-  private val word = Rx.short(loRegister, hiRegister)
+  private val word = ByteRx.short(loRegister, hiRegister)
 }
 
 case class Measurement3Axis(

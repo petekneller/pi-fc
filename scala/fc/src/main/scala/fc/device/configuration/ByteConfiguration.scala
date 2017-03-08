@@ -11,10 +11,10 @@ case class ByteConfiguration(register: Byte) extends Configuration {
   type Register = Byte
 
   def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Byte] =
-    Rx.byte(register).read(device)
+    ByteRx.byte(register).read(device)
 
   def write(device: Address, value: Byte)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Unit] =
-    Tx.byte(register).write(device, value)
+    ByteTx.byte(register).write(device, value)
 }
 
 case class SingleBitFlag(register: Byte, bit: Int) extends Configuration { self =>
@@ -22,16 +22,16 @@ case class SingleBitFlag(register: Byte, bit: Int) extends Configuration { self 
   type Register = Byte
 
   def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = self.Register }): DeviceResult[Boolean] =
-    Rx.byte(register).read(device).map(registerValue => ((registerValue.unsigned >> bit) & 0x1) == 0x1)
+    ByteRx.byte(register).read(device).map(registerValue => ((registerValue.unsigned >> bit) & 0x1) == 0x1)
 
   def write(device: Address, value: Boolean)(implicit controller: Controller { type Bus = device.Bus; type Register = self.Register }): DeviceResult[Unit] = for {
-    originalValue <- Rx.byte(register).read(device)
+    originalValue <- ByteRx.byte(register).read(device)
     bitMask = 0x1 << bit
     newValue = if (value)
       (bitMask | originalValue)
     else
       (~bitMask & originalValue)
-    _ <- Tx.byte(register).write(device, newValue.toByte)
+    _ <- ByteTx.byte(register).write(device, newValue.toByte)
   } yield ()
 }
 
@@ -54,17 +54,17 @@ case class MultiBitFlag[E <: FlagEnumeration](register: Byte, hiBit: Int, numBit
   val mask = (0 until loBit).fold(onesMask){ (acc, _) => acc << 1 }
 
   def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[E#T] = for {
-    registerValue <- Rx.byte(register).read(device)
+    registerValue <- ByteRx.byte(register).read(device)
     masked = registerValue.unsigned & mask
     enumOrdinal = (masked >> loBit).toByte
     enumValue <- options.values.find(_.value === enumOrdinal).toRight(FlagException(enumOrdinal, options.values))
   } yield enumValue
 
   def write(device: Address, value: E#T)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Unit] = for {
-    existingRegisterValue <- Rx.byte(register).read(device)
+    existingRegisterValue <- ByteRx.byte(register).read(device)
     existingWithConfigZeroed = existingRegisterValue.unsigned & ~mask
     newConfig = (value.value << loBit) & mask
     newRegisterValue = existingWithConfigZeroed | newConfig
-    _ <- Tx.byte(register).write(device, newRegisterValue.toByte)
+    _ <- ByteTx.byte(register).write(device, newRegisterValue.toByte)
   } yield ()
 }
