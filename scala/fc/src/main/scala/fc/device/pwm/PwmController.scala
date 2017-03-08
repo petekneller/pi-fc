@@ -2,7 +2,7 @@ package fc.device.pwm
 
 import cats.syntax.either._
 import java.nio.ByteBuffer
-import ioctl.IOCtl.O_RDWR
+import ioctl.IOCtl
 import ioctl.IOCtlImpl.size_t
 import fc.device._
 
@@ -42,7 +42,7 @@ class PwmController(api: PwmApi) extends Controller {
   // Internal API from here on down
 
   private def open(device: Address { type Bus = Pwm }, register: String): Either[PwmUnavailableException, Int] =
-    Either.catchNonFatal{ api.open(s"${device.toFilename}/${register}", O_RDWR) }.leftMap(PwmUnavailableException(device, register, _))
+    Either.catchNonFatal{ api.open(s"${device.toFilename}/${register}", IOCtl.O_RDWR) }.leftMap(PwmUnavailableException(device, register, _))
 
   private def read(fileDescriptor: Int, rxBuffer: ByteBuffer, numBytes: Int): Either[TransferFailedException, Int] =
     Either.catchNonFatal{
@@ -67,6 +67,15 @@ trait PwmApi {
   def close(fileDescriptor: Int): Int
   def read(fileDescriptor: Int, rxBuffer: ByteBuffer, maxBytes: size_t): size_t
   def write(fileDescriptor: Int, txBuffer: ByteBuffer, numBytes: size_t): size_t
+}
+
+object PwmController {
+  def apply(): PwmController = new PwmController(new PwmApi {
+    def open(filename: String, flags: Int) = IOCtl.open(filename, flags)
+    def close(fileDescriptor: Int) = IOCtl.close(fileDescriptor)
+    def read(fileDescriptor: Int, rxBuffer: ByteBuffer, maxBytes: size_t) = IOCtl.read(fileDescriptor, rxBuffer, maxBytes)
+    def write(fileDescriptor: Int, txBuffer: ByteBuffer, numBytes: size_t) = IOCtl.write(fileDescriptor, txBuffer, numBytes)
+  })
 }
 
 case class PwmUnavailableException(device: Address, register: String, cause: Throwable) extends DeviceException
