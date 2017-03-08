@@ -86,7 +86,7 @@ case class RxString(register: String, maxBytesToRead: Int = 32) extends Rx {
 
   def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[String] = for {
     data <- controller.receive(device, register, maxBytesToRead)
-  } yield data.map(_.toChar).mkString
+  } yield data.map(_.toChar).filter(_ != '\n').mkString
 }
 
 case class TxString(register: String) extends Tx {

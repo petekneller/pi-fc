@@ -89,6 +89,17 @@ class PwmControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockPwmApi.read _).verify(where { (_, _, numBytesToRead) => numBytesToRead.intValue == 3 })
   }
 
+  it should "remove any trailing newlines" in {
+    val rx = RxString(register)
+    (mockPwmApi.open _).when(*, *).returns(fd)
+    (mockPwmApi.read _).when(*, *, *).onCall{ (_, rxBuffer, _) =>
+      rxBuffer.put(0, 'f'.toByte).put(1, 'o'.toByte).put(2, 'o'.toByte).put(3, '\n')
+      new size_t(4L)
+    }
+
+    rx.read(device) should === (Right("foo"))
+  }
+
   "TxString" should "convert the input string into a sequence of bytes, where each byte is an ANSI character" in {
     val tx = TxString(register)
     (mockPwmApi.open _).when(*, *).returns(fd)
