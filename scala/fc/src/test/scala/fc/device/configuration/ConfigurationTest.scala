@@ -8,7 +8,7 @@ import fc.device._
 class ConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 
   val device = new MockDeviceAddress
-  implicit val mockController = stub[MockController]
+  implicit val mockController = stub[MockByteController]
   val register = 0x35.toByte
 
   "ByteConfiguration.read" should "make a read request for that register" in {

@@ -7,7 +7,7 @@ import org.scalamock.scalatest.MockFactory
 class RxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 
   val device = new MockDeviceAddress
-  implicit val mockController = stub[MockController]
+  implicit val mockController = stub[MockByteController]
 
   val loByteRegister = 0x40.toByte
   val hiByteRegister = 0x41.toByte

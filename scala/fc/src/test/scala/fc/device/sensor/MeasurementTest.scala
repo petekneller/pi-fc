@@ -9,7 +9,7 @@ import fc.device._
 class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 
   val address = new MockDeviceAddress
-  implicit val mockController = stub[MockController]
+  implicit val mockController = stub[MockByteController]
   val register1 = 1.toByte
   val register2 = 2.toByte
 
