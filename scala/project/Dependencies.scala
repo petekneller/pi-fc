@@ -10,4 +10,7 @@ object Dependencies {
 
   val cats = "org.typelevel" %% "cats" % "0.9.0"
 
+  val fs2Version = "0.9.4"
+  val fs2 = "co.fs2" %% "fs2-core" % fs2Version
+
 }
