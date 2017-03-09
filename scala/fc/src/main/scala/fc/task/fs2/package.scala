@@ -8,7 +8,7 @@ package object fs2 {
 
   def motorArm(esc: ESC, arm: Boolean): Stream[Task, Unit] = Stream.eval(Task.delay{ esc.arm(arm) } map (_ => ()) )
 
-  def motorRun(esc: ESC, pulseMicroseconds: Long): Stream[Task, Unit] = Stream.eval(Task.delay{ esc.setPulseWidthMicroseconds(1100) } map (_ => ()) )
+  def motorRun(esc: ESC, pulseMicroseconds: Long): Stream[Task, Unit] = Stream.eval(Task.delay{ esc.run(1100) } map (_ => ()) )
 
   def sleep(millis: Long): Stream[Task, Unit] = Stream.eval(Task.delay{ Thread.sleep(millis) })
 
