@@ -8,7 +8,7 @@ import fc.device.configuration.NumericConfiguration
 trait RcReceiver extends Device {
   type Register = String
 
-  def readChannel(channel: Channel): DeviceResult[Long] = NumericConfiguration(channel.register).read(address)
+  def readChannel(channel: RcChannel): DeviceResult[Long] = NumericConfiguration(channel.register).read(address)
 }
 
 object RcReceiver {
@@ -18,15 +18,15 @@ object RcReceiver {
   }
 
   object channels {
-    val one = Channel(1)
-    val two = Channel(2)
-    val three = Channel(3)
-    val four = Channel(4)
-    val five = Channel(5)
+    val one = RcChannel(1)
+    val two = RcChannel(2)
+    val three = RcChannel(3)
+    val four = RcChannel(4)
+    val five = RcChannel(5)
   }
 
 }
 
-case class Channel(number: Int) {
+case class RcChannel(number: Int) {
   val register: String = s"ch${number}"
 }
