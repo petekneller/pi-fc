@@ -2,6 +2,7 @@ package fc.device.output
 
 import cats.syntax.either._
 import fc.device._
+import fc.device.file.File
 import fc.device.pwm._
 import fc.device.configuration._
 
@@ -10,7 +11,7 @@ trait PwmChannel extends Device {
 }
 
 object PwmChannel {
-  def apply(chipNumber: Int, channelNumber: Int)(implicit c: Controller { type Bus = Pwm; type Register = String }): PwmChannel = new PwmChannel {
+  def apply(chipNumber: Int, channelNumber: Int)(implicit c: Controller { type Bus = File; type Register = String }): PwmChannel = new PwmChannel {
     val address = PwmAddress(chipNumber, channelNumber)
     implicit val controller = c
   }

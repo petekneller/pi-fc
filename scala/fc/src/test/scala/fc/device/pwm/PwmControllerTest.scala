@@ -10,7 +10,7 @@ import fc.device.file._
 class PwmControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val mockFileApi = stub[FileApi]
-  implicit val controller = new PwmController(mockFileApi)
+  implicit val controller = new FileController(mockFileApi)
   val device = PwmAddress(1, 2)
   val register = "foo"
   val fd = 2

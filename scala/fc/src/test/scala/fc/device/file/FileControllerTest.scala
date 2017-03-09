@@ -10,8 +10,8 @@ import fc.device._
 class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val mockFileApi = stub[FileApi]
-  implicit val controller = new FileController(mockFileApi) { type Bus = FileBus }
-  val device = new Address { type Bus = FileBus; def toFilename = "/address" }
+  implicit val controller = new FileController(mockFileApi)
+  val device = new Address { type Bus = File; def toFilename = "/address" }
   val register = "foo"
   val fd = 2
 
@@ -113,7 +113,5 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
       numBytes.intValue == 3
     })
   }
-
-  trait FileBus
 
 }

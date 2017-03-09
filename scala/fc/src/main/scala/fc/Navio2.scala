@@ -1,16 +1,14 @@
 package fc
 
 import device.spi.{SpiController, SpiAddress}
-import device.pwm.PwmController
-import device.rc.RcController
+import device.file.FileController
 import device.input.{Mpu9250, RcReceiver}
 import device.output.{PwmChannel, ESC}
 
 object Navio2 {
 
   implicit val spiController = SpiController()
-  implicit val pwmController = PwmController()
-  implicit val rcController = RcController()
+  implicit val fileController = FileController()
 
   val mpu9250 = Mpu9250(SpiAddress(busNumber = 0, chipSelect = 1))
 

@@ -6,8 +6,15 @@ import ioctl.IOCtl
 import ioctl.IOCtlImpl.size_t
 import fc.device._
 
-abstract class FileController(api: FileApi) extends Controller { self =>
+trait File
+
+trait FileAddress extends Address {
+  type Bus = File
+}
+
+class FileController(api: FileApi) extends Controller { self =>
   type Register = String
+  type Bus = File
 
   def receive(device: Address { type Bus = self.Bus }, register: String, numBytes: Int): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, register, { fd =>
@@ -60,13 +67,13 @@ trait FileApi {
   def write(fileDescriptor: Int, txBuffer: ByteBuffer, numBytes: size_t): size_t
 }
 
-object FileApi {
-  def apply(): FileApi = new FileApi {
+object FileController {
+  def apply() = new FileController(new FileApi {
     def open(filename: String, flags: Int) = IOCtl.open(filename, flags)
     def close(fileDescriptor: Int) = IOCtl.close(fileDescriptor)
     def read(fileDescriptor: Int, rxBuffer: ByteBuffer, maxBytes: size_t) = IOCtl.read(fileDescriptor, rxBuffer, maxBytes)
     def write(fileDescriptor: Int, txBuffer: ByteBuffer, numBytes: size_t) = IOCtl.write(fileDescriptor, txBuffer, numBytes)
-  }
+  })
 }
 
 case class FileUnavailableException(device: Address, register: String, cause: Throwable) extends DeviceException

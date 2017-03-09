@@ -10,7 +10,7 @@ import fc.device.file._
 class RcControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val mockFileApi = stub[FileApi]
-  implicit val controller = new RcController(mockFileApi)
+  implicit val controller = new FileController(mockFileApi)
   val device = RcAddress
   val register = "foo"
   val fd = 2

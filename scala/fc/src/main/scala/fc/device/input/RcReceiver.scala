@@ -1,6 +1,7 @@
 package fc.device.input
 
 import fc.device._
+import fc.device.file.File
 import fc.device.rc._
 import fc.device.configuration.NumericConfiguration
 
@@ -11,7 +12,7 @@ trait RcReceiver extends Device {
 }
 
 object RcReceiver {
-  def apply()(implicit c: Controller { type Bus = Rc; type Register = String }): RcReceiver = new RcReceiver {
+  def apply()(implicit c: Controller { type Bus = File; type Register = String }): RcReceiver = new RcReceiver {
     val address = RcAddress
     implicit val controller = c
   }
