@@ -3,7 +3,7 @@ package fc.device.file
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
-import ioctl.IOCtl.O_RDWR
+import ioctl.IOCtl.{O_RDONLY, O_WRONLY}
 import ioctl.IOCtlImpl.size_t
 import fc.device._
 
@@ -19,7 +19,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
     (mockFileApi.read _).when(*, *, *).returns(new size_t)
 
     controller.receive(device, "register", 1) should === (Right(Seq.empty))
-    (mockFileApi.open _).verify("/address/register", O_RDWR)
+    (mockFileApi.open _).verify("/address/register", O_RDONLY)
   }
 
   it should "close the underlying file even if an error occurs during read" in {
@@ -49,7 +49,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
     (mockFileApi.write _).when(*, *, *).returns(new size_t(1L))
 
     controller.transmit(device, "register", Seq(1.toByte)) should === (Right(()))
-    (mockFileApi.open _).verify("/address/register", O_RDWR)
+    (mockFileApi.open _).verify("/address/register", O_WRONLY)
   }
 
   it should "close the underlying file even if an error occurs during write" in {

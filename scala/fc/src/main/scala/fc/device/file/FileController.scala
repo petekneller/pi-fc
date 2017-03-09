@@ -17,7 +17,7 @@ class FileController(api: FileApi) extends Controller { self =>
   type Bus = File
 
   def receive(device: Address { type Bus = self.Bus }, register: String, numBytes: Int): DeviceResult[Seq[Byte]] =
-    withFileDescriptor(device, register, { fd =>
+    withFileDescriptor(device, register, IOCtl.O_RDONLY, { fd =>
       val rxBuffer = ByteBuffer.allocateDirect(numBytes)
       for {
         numBytesRead <- read(fd, rxBuffer, numBytes)
@@ -26,7 +26,7 @@ class FileController(api: FileApi) extends Controller { self =>
     })
 
   def transmit(device: Address { type Bus = self.Bus }, register: String, data: Seq[Byte]): DeviceResult[Unit] =
-    withFileDescriptor(device, register, { fd =>
+    withFileDescriptor(device, register, IOCtl.O_WRONLY, { fd =>
       val numBytes = data.length
       val txBuffer = ByteBuffer.allocateDirect(numBytes)
       data.zipWithIndex foreach { case (b, i) => txBuffer.put(i, b) }
@@ -39,8 +39,8 @@ class FileController(api: FileApi) extends Controller { self =>
 
   // Internal API from here on down
 
-  private def open(device: Address { type Bus = self.Bus }, register: String): Either[FileUnavailableException, Int] =
-    Either.catchNonFatal{ api.open(s"${device.toFilename}/${register}", IOCtl.O_RDWR) }.leftMap(FileUnavailableException(device, register, _))
+  private def open(device: Address { type Bus = self.Bus }, register: String, fileMode: Int): Either[FileUnavailableException, Int] =
+    Either.catchNonFatal{ api.open(s"${device.toFilename}/${register}", fileMode) }.leftMap(FileUnavailableException(device, register, _))
 
   private def read(fileDescriptor: Int, rxBuffer: ByteBuffer, numBytes: Int): Either[TransferFailedException, Int] =
     Either.catchNonFatal{
@@ -52,8 +52,8 @@ class FileController(api: FileApi) extends Controller { self =>
       api.write(fileDescriptor, txBuffer, new size_t(numBytes.toLong)).intValue
     }.leftMap(TransferFailedException(_))
 
-  private def withFileDescriptor[A](device: Address { type Bus = self.Bus }, register: String, f: Int => DeviceResult[A]): DeviceResult[A] = for {
-    fd <- open(device, register)
+  private def withFileDescriptor[A](device: Address { type Bus = self.Bus }, register: String, fileMode: Int, f: Int => DeviceResult[A]): DeviceResult[A] = for {
+    fd <- open(device, register, fileMode)
     result <- f(fd).bimap({ l => api.close(fd); l }, { r => api.close(fd); r })
   } yield result
 
