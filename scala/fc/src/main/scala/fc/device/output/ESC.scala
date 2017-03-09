@@ -20,8 +20,8 @@ case class ESC(
   def disarm(): DeviceResult[Long] = arm(false)
 
   def run(pulseWidthMicroseconds: Long): DeviceResult[Long] = {
-    val pulseToSet = pulseWidthMicroseconds.max(minPulseMicroseconds).min(maxPulseMicroseconds)
-    setPulseWidthMicroseconds(pulseToSet)
+    val boundedPulseWidth = pulseWidthMicroseconds.max(minPulseMicroseconds).min(maxPulseMicroseconds)
+    setPulseWidthMicroseconds(boundedPulseWidth)
   }
 
   private def setPulseWidthMicroseconds(pulseWidth: Long): DeviceResult[Long] = {
