@@ -36,8 +36,10 @@ package object fs2 {
         arm <- armInput
         throttle <- throttleInput
       } yield {
-        if (arm)
-          motorArm(motor, true) ++ motorRun(motor, throttle)
+        if (arm && throttle > 1000L)
+          motorRun(motor, throttle)
+        else if (arm && throttle <= 1000L)
+          motorArm(motor, true)
         else
           motorArm(motor, false)
       }
