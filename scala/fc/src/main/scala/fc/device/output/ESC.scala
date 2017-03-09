@@ -19,8 +19,13 @@ case class ESC(
   def arm(arming: Boolean = true): DeviceResult[Long] = setPulseWidthMicroseconds(if (arming) armPulseMicroseconds else disarmPulseMicroseconds)
   def disarm(): DeviceResult[Long] = arm(false)
 
-  def setPulseWidthMicroseconds(pulseWidth: Long): DeviceResult[Long] = {
-    val pulseToSet = pulseWidth.max(minPulseMicroseconds).min(maxPulseMicroseconds)
-    pwmChannel.write(PwmChannel.configs.pulseWidthNanoseconds)((pulseWidth * 1e9).round) map (_ => pulseToSet)
+  def run(pulseWidthMicroseconds: Long): DeviceResult[Long] = {
+    val pulseToSet = pulseWidthMicroseconds.max(minPulseMicroseconds).min(maxPulseMicroseconds)
+    setPulseWidthMicroseconds(pulseToSet)
   }
+
+  private def setPulseWidthMicroseconds(pulseWidth: Long): DeviceResult[Long] = {
+    pwmChannel.write(PwmChannel.configs.pulseWidthNanoseconds)((pulseWidth * 1e6).round) map (_ => pulseWidth)
+  }
+
 }
