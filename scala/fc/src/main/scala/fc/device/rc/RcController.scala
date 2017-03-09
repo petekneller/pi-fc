@@ -14,3 +14,7 @@ object RcAddress extends Address {
 class RcController(api: FileApi) extends FileController(api) {
   type Bus = Rc
 }
+
+object RcController {
+  def apply() = new RcController(FileApi())
+}
