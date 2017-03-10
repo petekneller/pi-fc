@@ -19,7 +19,7 @@ package object fs2 {
     motorRun(esc, 1100L) ++ sleep(500) ++
     motorRun(esc, 1100L) ++ sleep(500) ++
     motorRun(esc, 1100L) ++ sleep(500) ++
-    motorArm(esc, false)
+    motorArm(esc, false) ++ sleep(500)
 
   def motorsTest(escs: ESC*): Stream[Task, DeviceResult[Long]] = escs.foldLeft(Stream.empty[Task, DeviceResult[Long]])((stream, esc) => stream ++ motorTest(esc))
 
