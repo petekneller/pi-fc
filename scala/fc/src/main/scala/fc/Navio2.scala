@@ -55,7 +55,7 @@ object Navio2 {
       )
   }
 
-  val fmt = "%4f"
+  val fmt = "%4i"
 
   def formatInputs(inputs: (Boolean, Long, Long, Long, Long)): String = s"ARM: ${"%4s".format(inputs._1.toString)} -- THR: ${fmt.format(inputs._2)} -- PIT: ${fmt.format(inputs._3)} -- ROL: ${fmt.format(inputs._4)} -- YAW: ${fmt.format(inputs._5)}"
 
