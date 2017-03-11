@@ -10,6 +10,9 @@ package object fs2 {
 
   def motorArm(esc: ESC, arm: Boolean): Stream[Task, DeviceResult[Long]] = Stream.eval(Task.delay{ esc.arm(arm) })
 
+  def motorsArm(arm: Boolean, escs: ESC*): Stream[Task, DeviceResult[Long]] =
+    escs.foldLeft(Stream.empty[Task, DeviceResult[Long]])((stream, esc) => stream ++ motorArm(esc, arm))
+
   def motorRun(esc: ESC, pulseMicroseconds: Long): Stream[Task, DeviceResult[Long]] = Stream.eval(Task.delay{ esc.run(pulseMicroseconds) })
 
   def sleep(millis: Long): Stream[Task, Nothing] = Stream.eval(Task.delay{ Thread.sleep(millis) }).flatMap(_ => Stream.empty)
@@ -21,7 +24,8 @@ package object fs2 {
     motorRun(esc, 1100L) ++ sleep(500) ++
     motorArm(esc, false) ++ sleep(500)
 
-  def motorsTest(escs: ESC*): Stream[Task, DeviceResult[Long]] = escs.foldLeft(Stream.empty[Task, DeviceResult[Long]])((stream, esc) => stream ++ motorTest(esc))
+  def motorsTest(escs: ESC*): Stream[Task, DeviceResult[Long]] =
+    escs.foldLeft(Stream.empty[Task, DeviceResult[Long]])((stream, esc) => stream ++ motorTest(esc))
 
   def printToConsole(s: String): Stream[Task, Unit] = Stream.eval(Task.delay{ println(s) })
 
