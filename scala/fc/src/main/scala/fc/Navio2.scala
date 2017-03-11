@@ -47,9 +47,9 @@ object Navio2 {
       )
   }
 
-  def displayMixer(mixer: (Boolean, Long, Long, Long, Long) => (Long, Long, Long, Long)) = task.fs2.getRcInputs(receiver, arm, throttle, pitch, roll, yaw).
+  def displayMixer(mixer: ((Boolean, Long, Long, Long, Long)) => (Long, Long, Long, Long)) = task.fs2.getRcInputs(receiver, arm, throttle, pitch, roll, yaw).
     map{ _.right.map{ inputs => inputs.copy(_1 = task.fs2.isArmed(inputs._1)) } }.
-    map{ _.right.map{ inputs => inputs -> mixer.tupled(inputs) } }.
+    map{ _.right.map{ inputs => inputs -> mixer(inputs) } }.
     flatMap { dr =>
       dr.fold(
         ex => task.fs2.printToConsole(ex.toString),
