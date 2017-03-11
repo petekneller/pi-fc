@@ -94,6 +94,32 @@ object Navio2 {
     val (_, throttle, _, _, _) = inputs
     (throttle, throttle, throttle, throttle)
   }
+
+  def naiveMix(inputs: (Boolean, Long, Long, Long, Long)): (Long, Long, Long, Long) = {
+    val (_, throttleIn, pitchIn, rollIn, yawIn) = inputs
+    val throttleGain = 1.0
+    val throttle = throttleIn * throttleGain
+
+    val pitchGain = 0.1
+    // pitch is low for pitch down, high for pitch up
+    val pitchAdjustment = (pitchIn - 1500L) * pitchGain
+
+    val rollGain = 0.1
+    // roll is low for roll left, high for roll right
+    val rollAdjustment = (rollIn - 1500L) * rollGain
+
+    val yawGain = 0.1
+    // yaw is low for yaw left, high for yaw right
+    val yawAdjustment = (yawIn - 1500L) * yawGain
+
+    val motorLF = throttle + pitchAdjustment + rollAdjustment - yawAdjustment
+    val motorRF = throttle + pitchAdjustment - rollAdjustment + yawAdjustment
+    val motorLR = throttle - pitchAdjustment + rollAdjustment + yawAdjustment
+    val motorRR = throttle - pitchAdjustment - rollAdjustment - yawAdjustment
+
+    (motorLF.toLong, motorRF.toLong, motorLR.toLong, motorRR.toLong)
+  }
+
   /* End quick and nasty */
 
 }
