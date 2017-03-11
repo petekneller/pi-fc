@@ -65,4 +65,7 @@ package object fs2 {
       } yield (ch1position, ch2position, ch3position, ch4position, ch6position)
     }
   }
+
+  def isArmed(armChannel: Long): Boolean = armChannel > 1500L
+
 }
