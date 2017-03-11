@@ -1,6 +1,7 @@
 package fc
 
 import cats.syntax.either._
+import fs2.{Stream, Task}
 import device.spi.{SpiController, SpiAddress}
 import device.file.FileController
 import device.input.{Mpu9250, RcReceiver}
@@ -54,7 +55,7 @@ object Navio2 {
       dr.fold(
         ex => task.fs2.printToConsole(ex.toString),
         { case (inputs, outputs) =>
-          task.fs2.printToConsole(s"${formatInputs(inputs)} | ${formatOutputs(outputs)}")
+          getLoopTime.flatMap( time => task.fs2.printToConsole(s"Loop: ${time}ms | ${formatInputs(inputs)} | ${formatOutputs(outputs)}"))
         }
       )
   }
@@ -79,7 +80,9 @@ object Navio2 {
             else
               motorsArmAll(false)
 
-            motorTasks.flatMap(_ => fs2.Stream.empty) ++ task.fs2.printToConsole(s"${formatInputs(inputs)} | ${formatOutputs(outputs)}")
+            motorTasks.flatMap(_ => fs2.Stream.empty) ++ getLoopTime flatMap { time =>
+              task.fs2.printToConsole(s"Loop: ${time}ms | ${formatInputs(inputs)} | ${formatOutputs(outputs)}")
+            }
         }
       )
   }
@@ -100,15 +103,15 @@ object Navio2 {
     val throttleGain = 1.0
     val throttle = throttleIn * throttleGain
 
-    val pitchGain = 0.1
+    val pitchGain = 0.3
     // pitch is low for pitch down, high for pitch up
     val pitchAdjustment = (pitchIn - 1500L) * pitchGain
 
-    val rollGain = 0.1
+    val rollGain = 0.3
     // roll is low for roll left, high for roll right
     val rollAdjustment = (rollIn - 1500L) * rollGain
 
-    val yawGain = 0.1
+    val yawGain = 0.3
     // yaw is low for yaw left, high for yaw right
     val yawAdjustment = (yawIn - 1500L) * yawGain
 
@@ -119,6 +122,14 @@ object Navio2 {
 
     (motorLF.toLong, motorRF.toLong, motorLR.toLong, motorRR.toLong)
   }
+
+  @volatile var lastTime: Long = System.currentTimeMillis()
+  def getLoopTime(): Stream[Task, Long] = Stream.eval(Task.delay{
+    val now = System.currentTimeMillis
+    val elapsed = now - lastTime
+    lastTime = now
+    elapsed
+  })
 
   /* End quick and nasty */
 
