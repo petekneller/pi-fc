@@ -61,9 +61,9 @@ object Navio2 {
 
   def motorsArmAll(arm: Boolean) = task.fs2.motorsArm(arm, motorLF, motorRF, motorLR, motorRR)
 
-  def runMixer(mixer: (Boolean, Long, Long, Long, Long) => (Long, Long, Long, Long)) = task.fs2.getRcInputs(receiver, arm, throttle, pitch, roll, yaw).
+  def runMixer(mixer: ((Boolean, Long, Long, Long, Long)) => (Long, Long, Long, Long)) = task.fs2.getRcInputs(receiver, arm, throttle, pitch, roll, yaw).
     map{ _.right.map{ inputs => inputs.copy(_1 = task.fs2.isArmed(inputs._1)) } }.
-    map{ _.right.map{ inputs => inputs -> mixer.tupled(inputs) } }.
+    map{ _.right.map{ inputs => inputs -> mixer(inputs) } }.
     flatMap { dr =>
       dr.fold(
         ex => motorsArmAll(false),
