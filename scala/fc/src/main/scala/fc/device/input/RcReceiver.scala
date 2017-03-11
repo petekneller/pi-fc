@@ -18,11 +18,11 @@ object RcReceiver {
   }
 
   object channels {
-    val one = RcChannel(1)
-    val two = RcChannel(2)
-    val three = RcChannel(3)
-    val four = RcChannel(4)
-    val five = RcChannel(5)
+    val one = RcChannel(0)
+    val two = RcChannel(1)
+    val three = RcChannel(2)
+    val four = RcChannel(3)
+    val six = RcChannel(5)
   }
 
 }

@@ -31,19 +31,19 @@ object Navio2 {
     task.fs2.readChannel(receiver, channels.two) zip
     task.fs2.readChannel(receiver, channels.three) zip
     task.fs2.readChannel(receiver, channels.four) zip
-    task.fs2.readChannel(receiver, channels.five)
+    task.fs2.readChannel(receiver, channels.six)
 
-    val outputs = inputs map { case ((((ch1in, ch2in), ch3in), ch4in), ch5in) =>
+    val outputs = inputs map { case ((((ch1in, ch2in), ch3in), ch4in), ch6in) =>
       for {
         ch1position <- ch1in
         ch2position <- ch2in
         ch3position <- ch3in
         ch4position <- ch4in
-        ch5position <- ch5in
-      } yield (ch1position, ch2position, ch3position, ch4position, ch5position)
+        ch6position <- ch6in
+      } yield (ch1position, ch2position, ch3position, ch4position, ch6position)
     }
     outputs flatMap { dr => dr.fold(ex => task.fs2.printToConsole(ex.toString),
-      chs => task.fs2.printToConsole(s"ch1: ${chs._1} -- ch2: ${chs._2} -- ch3: ${chs._3} -- ch4: ${chs._4} -- ch5: ${chs._5}")) }
+      chs => task.fs2.printToConsole(s"ch1: ${chs._1} -- ch2: ${chs._2} -- ch3: ${chs._3} -- ch4: ${chs._4} -- ch6: ${chs._5}")) }
   }
 
 
