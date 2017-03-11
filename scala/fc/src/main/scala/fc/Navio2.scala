@@ -26,26 +26,19 @@ object Navio2 {
 
   import RcReceiver.channels
 
-  def displayRc() = {
-    val inputs = task.fs2.readChannel(receiver, channels.one) zip
-    task.fs2.readChannel(receiver, channels.two) zip
-    task.fs2.readChannel(receiver, channels.three) zip
-    task.fs2.readChannel(receiver, channels.four) zip
-    task.fs2.readChannel(receiver, channels.six)
+  val arm = channels.six
+  val throttle = channels.three
+  val roll = channels.one
+  val pitch = channels.two
+  val yaw = channels.four
 
-    val outputs = inputs map { case ((((ch1in, ch2in), ch3in), ch4in), ch6in) =>
-      for {
-        ch1position <- ch1in
-        ch2position <- ch2in
-        ch3position <- ch3in
-        ch4position <- ch4in
-        ch6position <- ch6in
-      } yield (ch1position, ch2position, ch3position, ch4position, ch6position)
-    }
-    outputs flatMap { dr => dr.fold(ex => task.fs2.printToConsole(ex.toString),
-      chs => task.fs2.printToConsole(s"ch1: ${chs._1} -- ch2: ${chs._2} -- ch3: ${chs._3} -- ch4: ${chs._4} -- ch6: ${chs._5}")) }
+
+  def displayRc() = task.fs2.getRcInputs(receiver, arm, throttle, pitch, roll, yaw) flatMap { dr =>
+    dr.fold(
+      ex => task.fs2.printToConsole(ex.toString),
+      chs => task.fs2.printToConsole(s"arm: ${chs._1} -- throttle: ${chs._2} -- pitch: ${chs._3} -- roll: ${chs._4} -- yaw: ${chs._5}")
+    )
   }
-
 
   /* End quick and nasty */
 

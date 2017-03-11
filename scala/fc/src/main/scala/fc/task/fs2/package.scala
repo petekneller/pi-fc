@@ -48,4 +48,21 @@ package object fs2 {
     output.flatMap{ pulseWidth => printToConsole(pulseWidth.toString) }.repeat
   }
 
+  def getRcInputs(receiver: RcReceiver, ch1: RcChannel, ch2: RcChannel, ch3: RcChannel, ch4: RcChannel, ch5: RcChannel): Stream[Task, DeviceResult[(Long, Long, Long, Long, Long)]] = {
+    val inputs = readChannel(receiver, ch1) zip
+    readChannel(receiver, ch2) zip
+    readChannel(receiver, ch3) zip
+    readChannel(receiver, ch4) zip
+    readChannel(receiver, ch5)
+
+    inputs map { case ((((ch1in, ch2in), ch3in), ch4in), ch6in) =>
+      for {
+        ch1position <- ch1in
+        ch2position <- ch2in
+        ch3position <- ch3in
+        ch4position <- ch4in
+        ch6position <- ch6in
+      } yield (ch1position, ch2position, ch3position, ch4position, ch6position)
+    }
+  }
 }
