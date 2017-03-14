@@ -4,6 +4,7 @@ import eu.timepit.refined.auto.autoRefineV
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
+import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -27,7 +28,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
   }
 
   it should "close the underlying file even if an error occurs during read" in {
-    val result = 1.toByte
+    val result = b"1"
     val errorCause = new RuntimeException("")
     (mockFileApi.open _).when(*, *).returns(fd)
     (mockFileApi.read _).when(*, *, *).throws(errorCause)
@@ -37,8 +38,8 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
   }
 
   it should "succeed if the underlying device returned less bytes than were specified" in {
-    val two = 2.toByte
-    val three = 3.toByte
+    val two = b"2"
+    val three = b"3"
     val desiredNumBytes = refineMV[Positive](3)
     (mockFileApi.open _).when(*, *).returns(fd)
     (mockFileApi.read _).when(*, *, *).onCall{ (_, rxBuffer, desiredNumBytes) =>
@@ -52,7 +53,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
   "transmit" should "open the underlying file correctly" in {
     (mockFileApi.write _).when(*, *, *).returns(new size_t(1L))
 
-    controller.transmit(device, "register", Seq(1.toByte)) should === (Right(()))
+    controller.transmit(device, "register", Seq(b"1")) should === (Right(()))
     (mockFileApi.open _).verify("/address/register", O_WRONLY)
   }
 
@@ -62,7 +63,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
     (mockFileApi.open _).when(*, *).returns(fd)
     (mockFileApi.write _).when(*, *, *).throws(errorCause)
 
-    controller.transmit(device, register, Seq(1.toByte)) should === (Left(TransferFailedException(errorCause)))
+    controller.transmit(device, register, Seq(b"1")) should === (Left(TransferFailedException(errorCause)))
     (mockFileApi.close _).verify(fd).once()
   }
 
@@ -71,7 +72,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
     val numBytesWritten = 2
     (mockFileApi.write _).when(*, *, *).returns(new size_t(numBytesWritten.toLong))
 
-    controller.transmit(device, register, Seq(1.toByte, 2.toByte, 3.toByte)) should === (Left(IncompleteDataException(desiredNumBytes, numBytesWritten)))
+    controller.transmit(device, register, Seq(b"1", b"2", b"3")) should === (Left(IncompleteDataException(desiredNumBytes, numBytesWritten)))
   }
 
   "RxString" should "consider each byte in the response to be an ANSI character" in {

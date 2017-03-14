@@ -1,6 +1,7 @@
 package fc.device.pwm
 
 import eu.timepit.refined.auto.autoRefineV
+import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -26,7 +27,7 @@ class PwmControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   "transmit" should "open the underlying file correctly" in {
     (mockFileApi.write _).when(*, *, *).returns(new size_t(1L))
 
-    controller.transmit(device, "foo", Seq(1.toByte)) should === (Right(()))
+    controller.transmit(device, "foo", Seq(b"1")) should === (Right(()))
     (mockFileApi.open _).verify("/sys/class/pwm/pwmchip1/pwm2/foo", O_WRONLY)
   }
 

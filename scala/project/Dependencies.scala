@@ -17,4 +17,6 @@ object Dependencies {
 
   val refined = "eu.timepit" %% "refined" % "0.7.0"
 
+  val spire = "org.spire-math" %% "spire" % "0.13.0"
+
 }

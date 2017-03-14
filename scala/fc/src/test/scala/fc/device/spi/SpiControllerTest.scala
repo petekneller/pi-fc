@@ -4,6 +4,7 @@ import java.nio.ByteBuffer
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
+import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -20,7 +21,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     implicit val controller = new SpiController(mockApi)
   }
 
-  val register = 3.toByte
+  val register = b"3"
 
   "Rx.byte" should "set a read flag in the first byte of the transmit buffer" in {
     val _ = device.read(ByteRx.byte(register))
@@ -85,11 +86,11 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
 
   it should "return the requested number of bytes" in {
     (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
-      rxBuffer.put(0x1.toByte).put(0x2.toByte).put(0x3.toByte).put(0x4.toByte)
+      rxBuffer.put(b"1").put(b"2").put(b"3").put(b"4")
       4
     }
 
-    device.read(ByteRx.bytes(register, 3)) should === (Right(Seq(0x2.toByte, 0x3.toByte, 0x4.toByte)))
+    device.read(ByteRx.bytes(register, 3)) should === (Right(Seq(b"2", b"3", b"4")))
   }
 
   it should "attempt to transfer N+1 bytes" in {
@@ -102,7 +103,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val expectedNumBytes = refineMV[Positive](2)
     val actualNumBytes = 1
     (mockApi.transfer _).when(*, *, *, expectedNumBytes+1, *).onCall{ (_, _, rxBuffer, _, _) =>
-      rxBuffer.put(0x1.toByte).put(0x2.toByte)
+      rxBuffer.put(b"1").put(b"2")
       actualNumBytes + 1
     }
 

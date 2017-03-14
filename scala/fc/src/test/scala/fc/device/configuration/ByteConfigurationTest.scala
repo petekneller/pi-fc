@@ -2,6 +2,7 @@ package fc.device.configuration
 
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
+import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -77,12 +78,12 @@ class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripl
   it should "return a FlagException if a values is found that does not correspond with one of the specified options" in {
     (mockController.receive _).when(*, *, refineMV[Positive](1)).returns(Right(Seq(0x02.toByte)))
 
-    MultiBitFlag(register, 1, 2, TestEnum).read(device) should === (Left(FlagException(2.toByte, TestEnum.values)))
+    MultiBitFlag(register, 1, 2, TestEnum).read(device) should === (Left(FlagException(b"2", TestEnum.values)))
   }
 
 
   "MultiBitFlag.transmit" should "set the correct bits" in {
-    (mockController.receive _).when(*, *, refineMV[Positive](1))returns(Right(Seq(0x0.toByte)))
+    (mockController.receive _).when(*, *, refineMV[Positive](1))returns(Right(Seq(b"0")))
     (mockController.transmit _).when(*, *, *).returns(Right(()))
 
     MultiBitFlag(register, 1, 2, TestEnum).write(device, TestEnum.Three)
@@ -108,9 +109,9 @@ class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripl
     type T = TestVal
     case class TestVal(value: Byte) extends Flag
 
-    val Zero =  TestVal(0.toByte)
-    val One =   TestVal(1.toByte)
-    val Three = TestVal(3.toByte)
+    val Zero =  TestVal(b"0")
+    val One =   TestVal(b"1")
+    val Three = TestVal(b"3")
 
     def values = Set(Zero, One, Three)
   }

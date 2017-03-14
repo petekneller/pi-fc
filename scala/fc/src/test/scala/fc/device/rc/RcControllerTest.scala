@@ -1,6 +1,7 @@
 package fc.device.rc
 
 import eu.timepit.refined.auto.autoRefineV
+import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -26,7 +27,7 @@ class RcControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqua
   "transmit" should "open the underlying file correctly" in {
     (mockFileApi.write _).when(*, *, *).returns(new size_t(1L))
 
-    controller.transmit(device, "foo", Seq(1.toByte)) should === (Right(()))
+    controller.transmit(device, "foo", Seq(b"1")) should === (Right(()))
     (mockFileApi.open _).verify("/sys/kernel/rcio/rcin/foo", O_WRONLY)
   }
 
