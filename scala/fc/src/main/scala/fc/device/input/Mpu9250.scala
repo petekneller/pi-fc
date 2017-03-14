@@ -3,6 +3,7 @@ package fc.device.input
 import cats.syntax.either._
 import cats.syntax.eq._
 import cats.instances.byte._
+import spire.syntax.literals._
 import ioctl.syntax._
 import fc.device._
 import fc.device.configuration._
@@ -58,22 +59,22 @@ object Mpu9250 {
 
   object registers {
 
-    val GYRO_CONFIG =      27.toByte
-    val ACCEL_CONFIG_1 =   28.toByte
-    val ACCEL_XOUT_H =     59.toByte
-    val ACCEL_XOUT_L =     60.toByte
-    val ACCEL_YOUT_H =     61.toByte
-    val ACCEL_YOUT_L =     62.toByte
-    val ACCEL_ZOUT_H =     63.toByte
-    val ACCEL_ZOUT_L =     64.toByte
-    val GYRO_XOUT_H =      67.toByte
-    val GYRO_XOUT_L =      68.toByte
-    val GYRO_YOUT_H =      69.toByte
-    val GYRO_YOUT_L =      70.toByte
-    val GYRO_ZOUT_H =      71.toByte
-    val GYRO_ZOUT_L =      72.toByte
-    val PWR_MGMT_1 =       107.toByte
-    val WHOAMI =           117.toByte
+    val GYRO_CONFIG =      b"27"
+    val ACCEL_CONFIG_1 =   b"28"
+    val ACCEL_XOUT_H =     b"59"
+    val ACCEL_XOUT_L =     b"60"
+    val ACCEL_YOUT_H =     b"61"
+    val ACCEL_YOUT_L =     b"62"
+    val ACCEL_ZOUT_H =     b"63"
+    val ACCEL_ZOUT_L =     b"64"
+    val GYRO_XOUT_H =      b"67"
+    val GYRO_XOUT_L =      b"68"
+    val GYRO_YOUT_H =      b"69"
+    val GYRO_YOUT_L =      b"70"
+    val GYRO_ZOUT_H =      b"71"
+    val GYRO_ZOUT_L =      b"72"
+    val PWR_MGMT_1 =       b"107"
+    val WHOAMI =           b"117"
 
   } // registers
 
@@ -83,10 +84,10 @@ object Mpu9250 {
       type T = Val
 
       sealed trait Val extends Flag with FullScale
-      object dps250 extends Val { val value = 0x0.toByte; val factor = 250.0 }
-      object dps500 extends Val { val value = 0x1.toByte; val factor = 500.0 }
-      object dps1000 extends Val { val value = 0x2.toByte; val factor = 1000.0 }
-      object dps2000 extends Val { val value = 0x3.toByte; val factor = 2000.0 }
+      object dps250 extends Val { val value = b"0"; val factor = 250.0 }
+      object dps500 extends Val { val value = b"1"; val factor = 500.0 }
+      object dps1000 extends Val { val value = b"2"; val factor = 1000.0 }
+      object dps2000 extends Val { val value = b"3"; val factor = 2000.0 }
 
       def values = Set(dps250, dps500, dps1000, dps2000)
     }
@@ -95,10 +96,10 @@ object Mpu9250 {
       type T = Val
 
       sealed trait Val extends Flag with FullScale
-      object g2 extends Val { val value = 0x0.toByte; val factor = 2.0 }
-      object g4 extends Val { val value = 0x1.toByte; val factor = 4.0 }
-      object g8 extends Val { val value = 0x2.toByte; val factor = 8.0 }
-      object g16 extends Val { val value = 0x3.toByte; val factor = 16.0 }
+      object g2 extends Val { val value = b"0"; val factor = 2.0 }
+      object g4 extends Val { val value = b"1"; val factor = 4.0 }
+      object g8 extends Val { val value = b"2"; val factor = 8.0 }
+      object g16 extends Val { val value = b"3"; val factor = 16.0 }
 
       def values = Set(g2, g4, g8, g16)
     }
