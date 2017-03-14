@@ -5,6 +5,7 @@ import cats.syntax.either._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.autoUnwrap
+import squants.time.{Frequency, Kilohertz}
 import ioctl.IOCtl
 import IOCtl.O_RDWR
 import ioctl.syntax._
@@ -23,7 +24,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
   type Bus = SpiBus
   type Register = Byte
 
-  private val clockSpeed: Int = 100000
+  private val clockSpeed: Frequency = Kilohertz(100)
 
   def receive(device: Address { type Bus = self.Bus }, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
@@ -33,7 +34,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
       txBuffer.put(0, (0x80 | register).toByte)
       for {
-        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
+        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed.toHertz.toInt)
         _ <- assertCompleteData(numBytes, bytesTransferred - 1)
       } yield {
         rxBuffer.toSeq.drop(1) // first byte of receive buffer lines up with tx command, and so is empty
@@ -49,7 +50,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
       txBuffer.put(0, register)
       data.zipWithIndex foreach { case (b, i) => txBuffer.put(i + 1, b) }
       for {
-        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
+        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed.toHertz.toInt)
         _ <- assertCompleteData(requisiteBufferSize, bytesTransferred)
       } yield {
         ()

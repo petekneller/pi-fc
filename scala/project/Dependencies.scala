@@ -19,4 +19,6 @@ object Dependencies {
 
   val spire = "org.spire-math" %% "spire" % "0.13.0"
 
+  val squants = "org.typelevel"  %% "squants"  % "1.2.0"
+
 }

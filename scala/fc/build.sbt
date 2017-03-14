@@ -8,6 +8,7 @@ libraryDependencies ++= Seq(
   compilerDep(scalaVersion.value),
   refined,
   spire,
+  squants,
   scalaTest % Test,
   scalaMock % Test
 )
