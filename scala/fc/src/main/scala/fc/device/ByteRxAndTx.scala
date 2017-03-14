@@ -20,10 +20,12 @@ object ByteRx {
     type T = Short
     type Register = Byte
     def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Short] = for {
-      hiByte <- ByteRx.byte(hiByteRegister).read(device)
-      loByte <- ByteRx.byte(loByteRegister).read(device)
+      hiByte <- hiRx.read(device)
+      loByte <- loRx.read(device)
     } yield ((hiByte << 8) | loByte.unsigned).toShort // if the low byte isn't unsigned before widening, any signing high bits will
                                                       // wipe away the data in the high register, but this isn't true the other way around
+    private val hiRx = ByteRx.byte(hiByteRegister)
+    private val loRx = ByteRx.byte(loByteRegister)
   }
 }
 
