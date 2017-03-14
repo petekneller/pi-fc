@@ -1,6 +1,8 @@
 package fc.device.configuration
 
 import cats.syntax.either._
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.numeric.Positive
 import fc.device._
 
 case class BooleanConfiguration(register: String) extends Rx with Tx {
@@ -18,7 +20,7 @@ case class BooleanConfiguration(register: String) extends Rx with Tx {
 
   def write(device: Address, value: Boolean)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Unit] = tx.write(device, if (value) "1" else "0")
 
-  private val rx = RxString(register, 1)
+  private val rx = RxString(register, refineMV[Positive](1))
   private val tx = TxString(register)
 }
 

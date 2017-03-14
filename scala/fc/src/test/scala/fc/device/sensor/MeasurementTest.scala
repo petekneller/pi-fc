@@ -1,5 +1,7 @@
 package fc.device.sensor
 
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.numeric.Positive
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -14,16 +16,16 @@ class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEqual
   val register2 = 2.toByte
 
   "Meaurement.read" should "normalize the 16-bit register values before applying the scaling factor" in {
-    (mockController.receive _).when(*, register1, 1).returns(Right(Seq(0xFF.toByte)))
-    (mockController.receive _).when(*, register2, 1).returns(Right(Seq(0x7F.toByte)))
+    (mockController.receive _).when(*, register1, refineMV[Positive](1)).returns(Right(Seq(0xFF.toByte)))
+    (mockController.receive _).when(*, register2, refineMV[Positive](1)).returns(Right(Seq(0x7F.toByte)))
 
     val scaleOf1 = new FullScale { val factor = 1.0 }
     Measurement(register1, register2, scaleOf1).read(address).map(between(0.99, 1.01)) should === (Right(true))
   }
 
   "Measurement.read" should "handle signed values appropriately" in {
-    (mockController.receive _).when(*, register1, 1).returns(Right(Seq(0xFF.toByte)))
-    (mockController.receive _).when(*, register2, 1).returns(Right(Seq(0xFF.toByte)))
+    (mockController.receive _).when(*, register1, refineMV[Positive](1)).returns(Right(Seq(0xFF.toByte)))
+    (mockController.receive _).when(*, register2, refineMV[Positive](1)).returns(Right(Seq(0xFF.toByte)))
 
     val unscaled = new FullScale { val factor = 32768.0 }
     Measurement(register1, register2, unscaled).read(address).map(between(-1.01, -0.99)) should === (Right(true))

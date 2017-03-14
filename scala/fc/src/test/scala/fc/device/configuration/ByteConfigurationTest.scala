@@ -1,5 +1,7 @@
 package fc.device.configuration
 
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.numeric.Positive
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -17,7 +19,7 @@ class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripl
 
     (mockController.receive _).when(*, *, *).returns(Right(Seq(configValue)))
     config.read(device)
-    (mockController.receive _).verify(*, register, 1)
+    (mockController.receive _).verify(*, register, refineMV[Positive](1))
   }
 
   it should "return the whole register value" in {
@@ -49,7 +51,7 @@ class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripl
   "SingleBitFlag.write" should "not affect bits in the register outside of that defined for the configuration" in {
     val bit1Flag = SingleBitFlag(register, 1)
 
-    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x71.toByte)))
+    (mockController.receive _).when(*, *, refineMV[Positive](1)).returns(Right(Seq(0x71.toByte)))
     (mockController.transmit _).when(*, *, *)returns(Right(Unit))
     bit1Flag.write(device, true)
     (mockController.transmit _).verify(*, register, Seq(0x73.toByte))
@@ -58,14 +60,14 @@ class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripl
   it should "be able to also unset bits" in {
     val bit1Flag = SingleBitFlag(register, 1)
 
-    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x73.toByte)))
+    (mockController.receive _).when(*, *, refineMV[Positive](1)).returns(Right(Seq(0x73.toByte)))
     (mockController.transmit _).when(*, *, *)returns(Right(Unit))
     bit1Flag.write(device, false)
     (mockController.transmit _).verify(*, register, Seq(0x71.toByte))
   }
 
   "MultiBitFlag.receive" should "return only the specified bits" in {
-    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x03.toByte)))
+    (mockController.receive _).when(*, *, refineMV[Positive](1)).returns(Right(Seq(0x03.toByte)))
 
     MultiBitFlag(register, 1, 2, TestEnum).read(device)  should === (Right(TestEnum.Three))
     MultiBitFlag(register, 2, 2, TestEnum).read(device)  should === (Right(TestEnum.One))
@@ -73,14 +75,14 @@ class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripl
   }
 
   it should "return a FlagException if a values is found that does not correspond with one of the specified options" in {
-    (mockController.receive _).when(*, *, 1).returns(Right(Seq(0x02.toByte)))
+    (mockController.receive _).when(*, *, refineMV[Positive](1)).returns(Right(Seq(0x02.toByte)))
 
     MultiBitFlag(register, 1, 2, TestEnum).read(device) should === (Left(FlagException(2.toByte, TestEnum.values)))
   }
 
 
   "MultiBitFlag.transmit" should "set the correct bits" in {
-    (mockController.receive _).when(*, *, 1)returns(Right(Seq(0x0.toByte)))
+    (mockController.receive _).when(*, *, refineMV[Positive](1))returns(Right(Seq(0x0.toByte)))
     (mockController.transmit _).when(*, *, *).returns(Right(()))
 
     MultiBitFlag(register, 1, 2, TestEnum).write(device, TestEnum.Three)
@@ -94,7 +96,7 @@ class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripl
   }
 
   it should "not affect bits in the register outside of that defined" in {
-    (mockController.receive _).when(*, *, 1)returns(Right(Seq(0xFF.toByte)))
+    (mockController.receive _).when(*, *, refineMV[Positive](1))returns(Right(Seq(0xFF.toByte)))
     (mockController.transmit _).when(*, *, *).returns(Right(()))
 
     MultiBitFlag(register, 4, 3, TestEnum).write(device, TestEnum.Zero)

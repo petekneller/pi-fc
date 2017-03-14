@@ -1,5 +1,8 @@
 package fc
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
+
 package object device {
   type DeviceResult[A] = Either[DeviceException, A]
 }
@@ -20,7 +23,7 @@ package device {
      @throws IncompleteDataException if the device failed to provide the requested number of bytes
      @throws TransferFailedException to signal a general low-level failure within the transer
      */
-    def receive(device: Address { type Bus = self.Bus }, register: Register, numBytes: Int): DeviceResult[Seq[Byte]]
+    def receive(device: Address { type Bus = self.Bus }, register: Register, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]]
 
     /*
      @throws DeviceUnavailableException should something occur while trying to initially connect to the device

@@ -1,6 +1,9 @@
 package fc.device.file
 
 import cats.syntax.either._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.auto.autoUnwrap
 import java.nio.ByteBuffer
 import ioctl.IOCtl
 import ioctl.IOCtlImpl.size_t
@@ -16,7 +19,7 @@ class FileController(api: FileApi) extends Controller { self =>
   type Register = String
   type Bus = File
 
-  def receive(device: Address { type Bus = self.Bus }, register: String, numBytes: Int): DeviceResult[Seq[Byte]] =
+  def receive(device: Address { type Bus = self.Bus }, register: String, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, register, IOCtl.O_RDONLY, { fd =>
       val rxBuffer = ByteBuffer.allocateDirect(numBytes)
       for {

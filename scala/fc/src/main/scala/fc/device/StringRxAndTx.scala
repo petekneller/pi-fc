@@ -1,8 +1,11 @@
 package fc.device
 
 import cats.syntax.either._
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
 
-case class RxString(register: String, maxBytesToRead: Int = 32) extends Rx {
+case class RxString(register: String, maxBytesToRead: Int Refined Positive = refineMV[Positive](32)) extends Rx {
   type T = String
   type Register = String
 

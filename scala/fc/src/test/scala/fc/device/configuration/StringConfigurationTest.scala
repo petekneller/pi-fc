@@ -1,5 +1,7 @@
 package fc.device.configuration
 
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.numeric.Positive
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -23,7 +25,7 @@ class StringConfigurationsTest extends FlatSpec with Matchers with TypeCheckedTr
     (mockController.receive _).when(*, *, *).returns(Right(Seq('1')))
 
     BooleanConfiguration(register).read(device)
-    (mockController.receive _).verify(*, *, 1)
+    (mockController.receive _).verify(*, *, refineMV[Positive](1))
   }
 
   it should "return an error when a value other than '1' or '0' is found" in {

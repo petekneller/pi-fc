@@ -2,6 +2,9 @@ package fc.device.spi
 
 import java.nio.ByteBuffer
 import cats.syntax.either._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.auto.autoUnwrap
 import ioctl.IOCtl
 import IOCtl.O_RDWR
 import ioctl.syntax._
@@ -22,7 +25,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
   private val clockSpeed: Int = 100000
 
-  def receive(device: Address { type Bus = self.Bus }, register: Byte, numBytes: Int): DeviceResult[Seq[Byte]] =
+  def receive(device: Address { type Bus = self.Bus }, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = numBytes + 1
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)

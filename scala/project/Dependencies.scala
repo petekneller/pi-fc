@@ -13,4 +13,8 @@ object Dependencies {
   val fs2Version = "0.9.4"
   val fs2 = "co.fs2" %% "fs2-core" % fs2Version
 
+  def compilerDep(scalaVersion: String) = "org.scala-lang" % "scala-compiler" % scalaVersion % Provided
+
+  val refined = "eu.timepit" %% "refined" % "0.7.0"
+
 }

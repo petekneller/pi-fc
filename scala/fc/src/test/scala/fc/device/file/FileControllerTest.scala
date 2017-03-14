@@ -1,5 +1,9 @@
 package fc.device.file
 
+import eu.timepit.refined.auto.autoRefineV
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -35,7 +39,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
   it should "succeed if the underlying device returned less bytes than were specified" in {
     val two = 2.toByte
     val three = 3.toByte
-    val desiredNumBytes = 3
+    val desiredNumBytes = refineMV[Positive](3)
     (mockFileApi.open _).when(*, *).returns(fd)
     (mockFileApi.read _).when(*, *, *).onCall{ (_, rxBuffer, desiredNumBytes) =>
       rxBuffer.put(0, two).put(1, three)

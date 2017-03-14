@@ -1,6 +1,9 @@
 package fc.device
 
 import cats.syntax.either._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.auto.autoRefineV
 import ioctl.syntax._
 
 object ByteRx {
@@ -10,7 +13,7 @@ object ByteRx {
     def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }) = controller.receive(device, sourceRegister, 1) map (_.head)
   }
 
-  def bytes(sourceRegister: Byte, numBytes: Int) = new Rx {
+  def bytes(sourceRegister: Byte, numBytes: Int Refined Positive) = new Rx {
     type T = Seq[Byte]
     type Register = Byte
     def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)

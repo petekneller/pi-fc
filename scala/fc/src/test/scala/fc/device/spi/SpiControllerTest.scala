@@ -1,6 +1,9 @@
 package fc.device.spi
 
 import java.nio.ByteBuffer
+import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.numeric.Positive
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -96,7 +99,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   it should "return an 'incomplete data' error if less than N bytes could be fetched" in {
-    val expectedNumBytes = 2
+    val expectedNumBytes = refineMV[Positive](2)
     val actualNumBytes = 1
     (mockApi.transfer _).when(*, *, *, expectedNumBytes+1, *).onCall{ (_, _, rxBuffer, _, _) =>
       rxBuffer.put(0x1.toByte).put(0x2.toByte)

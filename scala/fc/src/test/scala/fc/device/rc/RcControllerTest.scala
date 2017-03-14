@@ -1,5 +1,6 @@
 package fc.device.rc
 
+import eu.timepit.refined.auto.autoRefineV
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
