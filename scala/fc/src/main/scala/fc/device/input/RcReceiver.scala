@@ -3,12 +3,11 @@ package fc.device.input
 import fc.device._
 import fc.device.file.File
 import fc.device.rc._
-import fc.device.configuration.NumericConfiguration
 
 trait RcReceiver extends Device {
   type Register = String
 
-  def readChannel(channel: RcChannel): DeviceResult[Long] = NumericConfiguration(channel.register).read(address)
+  def readChannel(channel: RcChannel): DeviceResult[Long] = RxString.numeric(channel.register).read(address)
 }
 
 object RcReceiver {
