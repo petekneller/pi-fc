@@ -1,6 +1,7 @@
 package fc.device.configuration
 
 import eu.timepit.refined.refineMV
+import eu.timepit.refined.auto.autoRefineV
 import eu.timepit.refined.numeric.Positive
 import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}

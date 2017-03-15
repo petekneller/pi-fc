@@ -3,6 +3,10 @@ package fc.device.configuration
 import cats.syntax.either._
 import cats.syntax.eq._
 import cats.instances.byte._
+import eu.timepit.refined.W
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Interval
+import eu.timepit.refined.auto.autoUnwrap
 import ioctl.syntax._
 import fc.device._
 
@@ -20,7 +24,7 @@ case class ByteConfiguration(register: Byte) extends Configuration {
   private val tx = ByteTx.byte(register)
 }
 
-case class SingleBitFlag(register: Byte, bit: Int) extends Configuration { self =>
+case class SingleBitFlag(register: Byte, bit: SingleBitFlag.BetweenZeroAndSeven) extends Configuration { self =>
   type T = Boolean
   type Register = Byte
 
@@ -41,6 +45,10 @@ case class SingleBitFlag(register: Byte, bit: Int) extends Configuration { self 
   private val tx = ByteTx.byte(register)
 }
 
+object SingleBitFlag {
+  type BetweenZeroAndSeven = Int Refined Interval.Closed[W.`0`.T, W.`7`.T]
+}
+
 trait FlagEnumeration {
   type T <: Flag
   trait Flag {
@@ -51,7 +59,7 @@ trait FlagEnumeration {
 
 case class FlagException[A](valueFound: Byte, optionsAvailable: Set[A]) extends DeviceException
 
-case class MultiBitFlag[E <: FlagEnumeration](register: Byte, hiBit: Int, numBits: Int, options: E) extends Configuration { self =>
+case class MultiBitFlag[E <: FlagEnumeration](register: Byte, hiBit: SingleBitFlag.BetweenZeroAndSeven, numBits: Int Refined Interval.Closed[W.`1`.T, W.`8`.T], options: E) extends Configuration { self =>
   type T = E#T
   type Register = Byte
 

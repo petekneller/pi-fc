@@ -3,6 +3,7 @@ package fc.device.input
 import cats.syntax.either._
 import cats.syntax.eq._
 import cats.instances.byte._
+import eu.timepit.refined.auto.autoRefineV
 import spire.syntax.literals._
 import ioctl.syntax._
 import fc.device._
