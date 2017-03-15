@@ -75,8 +75,8 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
     controller.transmit(device, register, Seq(b"1", b"2", b"3")) should === (Left(IncompleteDataException(desiredNumBytes, numBytesWritten)))
   }
 
-  "RxString" should "consider each byte in the response to be an ANSI character" in {
-    val rx = RxString(register)
+  "RxString.string" should "consider each byte in the response to be an ANSI character" in {
+    val rx = RxString.string(register)
     (mockFileApi.open _).when(*, *).returns(fd)
     (mockFileApi.read _).when(*, *, *).onCall{ (_, rxBuffer, _) =>
       rxBuffer.put(0, 'f'.toByte).put(1, 'o'.toByte).put(2, 'o'.toByte)
@@ -87,7 +87,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
   }
 
   it should "read a maximum number of bytes as specified in the constructor" in {
-    val rx = RxString(register, 3)
+    val rx = RxString.string(register, 3)
     (mockFileApi.open _).when(*, *).returns(fd)
 
     rx.read(device)
@@ -95,7 +95,7 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
   }
 
   it should "remove any trailing newlines" in {
-    val rx = RxString(register)
+    val rx = RxString.string(register)
     (mockFileApi.open _).when(*, *).returns(fd)
     (mockFileApi.read _).when(*, *, *).onCall{ (_, rxBuffer, _) =>
       rxBuffer.put(0, 'f'.toByte).put(1, 'o'.toByte).put(2, 'o'.toByte).put(3, '\n')
@@ -105,8 +105,8 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
     rx.read(device) should === (Right("foo"))
   }
 
-  "TxString" should "convert the input string into a sequence of bytes, where each byte is an ANSI character" in {
-    val tx = TxString(register)
+  "TxString.string" should "convert the input string into a sequence of bytes, where each byte is an ANSI character" in {
+    val tx = TxString.string(register)
     (mockFileApi.open _).when(*, *).returns(fd)
     (mockFileApi.write _).when(*, *, *).onCall{ (_, _, numBytes) => numBytes }
 
