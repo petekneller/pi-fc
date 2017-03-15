@@ -14,6 +14,8 @@ class ByteRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEqual
   val loByteRegister = 0x40.toByte
   val hiByteRegister = 0x41.toByte
 
+  // NB. Rx and Tx .byte and .bytes are covered as part of the SPI controller tests suite
+
   "Rx.short" should "fetch 2 8-bit registers and combine them into a 16-bit word" in {
     (mockController.receive _).when(*, loByteRegister, refineMV[Positive](1)).returns(Right(Seq(0x34.toByte)))
     (mockController.receive _).when(*, hiByteRegister, refineMV[Positive](1)).returns(Right(Seq(0x12.toByte)))

@@ -44,25 +44,4 @@ class StringConfigurationsTest extends FlatSpec with Matchers with TypeCheckedTr
     (mockController.transmit _).verify(*, "bar", Seq('0'.toByte))
   }
 
-  "NumericConfiguration.read" should "transform a sequence character bytes into an long value" in {
-    (mockController.receive _).when(*, *, *).returns(Right(Seq('1'.toByte, '2'.toByte, '3'.toByte)))
-
-    NumericConfiguration(register).read(device) should === (Right(123L))
-  }
-
-  it should "return an error if the value in the register is not numeric" in {
-    (mockController.receive _).when(*, *, *).returns(Right(Seq('a'.toByte)))
-
-    NumericConfiguration(register).read(device) should === (Left(NotNumericException("a")))
-  }
-
-  "NumericConfiguration.write" should "transform a long into a sequence of character bytes" in {
-    (mockController.transmit _).when(*, *, *).returns(Right(()))
-
-    NumericConfiguration(register).write(device, 1234L)
-    (mockController.transmit _).verify(*, *, Seq('1'.toByte, '2'.toByte, '3'.toByte, '4'.toByte))
-  }
-
-  // negative numbers?
-
 }
