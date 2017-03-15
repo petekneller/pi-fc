@@ -24,7 +24,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
   type Bus = SpiBus
   type Register = Byte
 
-  private val clockSpeed: Frequency = Kilohertz(100)
+  private val clockSpeed = Kilohertz(100)
 
   def receive(device: Address { type Bus = self.Bus }, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
@@ -34,7 +34,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
       txBuffer.put(0, (0x80 | register).toByte)
       for {
-        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed.toHertz.toInt)
+        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
         _ <- assertCompleteData(numBytes, bytesTransferred - 1)
       } yield {
         rxBuffer.toSeq.drop(1) // first byte of receive buffer lines up with tx command, and so is empty
@@ -50,7 +50,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
       txBuffer.put(0, register)
       data.zipWithIndex foreach { case (b, i) => txBuffer.put(i + 1, b) }
       for {
-        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed.toHertz.toInt)
+        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
         _ <- assertCompleteData(requisiteBufferSize, bytesTransferred)
       } yield {
         ()
@@ -64,8 +64,8 @@ class SpiController(api: SpiApi) extends Controller { self =>
   private def open(device: Address): Either[DeviceUnavailableException, Int] =
     Either.catchNonFatal{ api.open(device.toFilename, O_RDWR) }.leftMap(DeviceUnavailableException(device, _))
 
-  private def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int): Either[TransferFailedException, Int] =
-    Either.catchNonFatal{ api.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz) }.leftMap(TransferFailedException(_))
+  private def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeed: Frequency): Either[TransferFailedException, Int] =
+    Either.catchNonFatal{ api.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeed.toHertz.toInt) }.leftMap(TransferFailedException(_))
 
   private def withFileDescriptor[A](device: Address, f: Int => DeviceResult[A]): DeviceResult[A] = for {
     fd <- open(device)
