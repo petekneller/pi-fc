@@ -13,7 +13,7 @@ case class ESC(
 ) {
 
   def init(): DeviceResult[Unit] = for {
-    _ <- pwmChannel.write(PwmChannel.configs.frequencyHz)(Hertz(50))
+    _ <- pwmChannel.write(PwmChannel.configs.frequency)(Hertz(50))
     _ <- disarm()
   } yield ()
 
@@ -26,7 +26,7 @@ case class ESC(
   }
 
   private def setPulseWidthMicroseconds(pulseWidth: Long): DeviceResult[Long] = {
-    pwmChannel.write(PwmChannel.configs.pulseWidthNanoseconds)(Microseconds(pulseWidth)) map (_ => pulseWidth)
+    pwmChannel.write(PwmChannel.configs.pulseWidth)(Microseconds(pulseWidth)) map (_ => pulseWidth)
   }
 
 }

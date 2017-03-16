@@ -18,14 +18,14 @@ object PwmChannel {
 
   object configs {
     val enable = BooleanConfiguration(registers.enable)
-    val periodNanoseconds = NumericConfiguration[Time](registers.period, { l => Nanoseconds(l) }, {t => t.toNanoseconds.round})
+    val period = NumericConfiguration[Time](registers.period, { l => Nanoseconds(l) }, {t => t.toNanoseconds.round})
 
     // despite the filesystem register being named 'duty_cycle' this next config really controls the
     // high-time of the pulse (ie. the pulse width)
-    val pulseWidthNanoseconds = NumericConfiguration[Time](registers.dutyCycle, { l => Nanoseconds(l) }, {t => t.toNanoseconds.round})
+    val pulseWidth = NumericConfiguration[Time](registers.dutyCycle, { l => Nanoseconds(l) }, {t => t.toNanoseconds.round})
 
     // complement to the period
-    val frequencyHz = NumericConfiguration[Frequency](registers.period, { l => Gigahertz(1/l.toDouble) }, { f => (1 / f.toGigahertz).round})
+    val frequency = NumericConfiguration[Frequency](registers.period, { l => Gigahertz(1/l.toDouble) }, { f => (1 / f.toGigahertz).round})
   }
 
   object registers {
