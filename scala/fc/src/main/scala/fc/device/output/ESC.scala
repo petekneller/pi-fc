@@ -22,13 +22,16 @@ case class ESC(
   def arm(arming: Boolean = true): DeviceResult[Int] = setValue(if (arming) armValue else disarmValue)
   def disarm(): DeviceResult[Int] = arm(false)
 
-  def run(pulseWidthMicroseconds: Long): DeviceResult[Long] = {
-    val boundedPulseWidth = pulseWidthMicroseconds.max(minPulseMicroseconds).min(maxPulseMicroseconds)
-    setPulseWidthMicroseconds(boundedPulseWidth)
+  def run(throttle: Double): DeviceResult[Int] = {
+    val boundedThrottle = throttle.min(1.0).max(0.0)
+    val ppmValue = minValue + (boundedThrottle * pulseRange).round
+    setValue(ppmValue.toInt)
   }
 
   private def setValue(pulseWidth: Int): DeviceResult[Int] = {
     pwmChannel.write(PwmChannel.configs.pulseWidth)(Microseconds(pulseWidth)) map (_ => pulseWidth)
   }
+
+  private val pulseRange = maxValue - minValue
 
 }
