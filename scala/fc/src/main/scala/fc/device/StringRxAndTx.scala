@@ -18,14 +18,14 @@ object RxString {
     } yield data.map(_.toChar).filter(_ != '\n').mkString
   }
 
-  def numeric(register: String) = new Rx {
+  def numeric[A](register: String, f: Long => A = identity[Long] _) = new Rx {
     type Register = String
-    type T = Long
+    type T = A
 
-    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Long] = for {
+    def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[T] = for {
       string <- rx.read(device)
       long <- Either.catchNonFatal { string.toLong }.leftMap(_ => NotNumericException(string))
-    } yield long
+    } yield f(long)
 
     private val rx = RxString.string(register)
   }
@@ -43,11 +43,11 @@ object TxString {
     } yield ()
   }
 
-  def numeric(register: String) = new Tx {
+  def numeric[A](register: String, f: A => Long = identity[Long] _) = new Tx {
     type Register = String
-    type T = Long
+    type T = A
 
-    def write(device: Address, value: Long)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Unit] = tx.write(device, value.toString)
+    def write(device: Address, value: T)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Unit] = tx.write(device, value.toString)
 
     private val tx = TxString.string(register)
   }

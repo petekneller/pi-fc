@@ -28,5 +28,5 @@ case class NotABooleanException(actualValue: String) extends DeviceException
 
 
 object NumericConfiguration {
-  def apply(register: String) = JointConfiguration(RxString.numeric(register))(TxString.numeric(register))
+  def apply[A](register: String, map: Long => A = identity[Long] _, contramap: A => Long = identity[Long] _) = JointConfiguration(RxString.numeric(register, map))(TxString.numeric(register, contramap))
 }
