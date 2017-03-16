@@ -1,6 +1,7 @@
 package fc.device.output
 
 import cats.syntax.either._
+import squants.time.{Hertz, Microseconds}
 import fc.device._
 
 case class ESC(
@@ -12,7 +13,7 @@ case class ESC(
 ) {
 
   def init(): DeviceResult[Unit] = for {
-    _ <- pwmChannel.write(PwmChannel.configs.frequencyHz)(50)
+    _ <- pwmChannel.write(PwmChannel.configs.frequencyHz)(Hertz(50))
     _ <- disarm()
   } yield ()
 
@@ -25,7 +26,7 @@ case class ESC(
   }
 
   private def setPulseWidthMicroseconds(pulseWidth: Long): DeviceResult[Long] = {
-    pwmChannel.write(PwmChannel.configs.pulseWidthNanoseconds)((pulseWidth * 1e3).round) map (_ => pulseWidth)
+    pwmChannel.write(PwmChannel.configs.pulseWidthNanoseconds)(Microseconds(pulseWidth)) map (_ => pulseWidth)
   }
 
 }

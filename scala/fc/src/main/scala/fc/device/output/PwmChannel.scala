@@ -1,6 +1,6 @@
 package fc.device.output
 
-import cats.syntax.either._
+import squants.time.{Time, Nanoseconds, Frequency, Gigahertz}
 import fc.device._
 import fc.device.file.File
 import fc.device.pwm._
@@ -18,21 +18,14 @@ object PwmChannel {
 
   object configs {
     val enable = BooleanConfiguration(registers.enable)
-    val periodNanoseconds = NumericConfiguration(registers.period)
+    val periodNanoseconds = NumericConfiguration[Time](registers.period, { l => Nanoseconds(l) }, {t => t.toNanoseconds.round})
 
     // despite the filesystem register being named 'duty_cycle' this next config really controls the
     // high-time of the pulse (ie. the pulse width)
-    val pulseWidthNanoseconds = NumericConfiguration(registers.dutyCycle)
+    val pulseWidthNanoseconds = NumericConfiguration[Time](registers.dutyCycle, { l => Nanoseconds(l) }, {t => t.toNanoseconds.round})
 
     // complement to the period
-    val frequencyHz = new Configuration {
-      type Register = String
-      type T = Long
-
-      def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Long] = configs.periodNanoseconds.read(device).map(period => (1e9 / period).round)
-
-      def write(device: Address, frequencyHz: Long)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Unit] = configs.periodNanoseconds.write(device, (1e9 / frequencyHz).round)
-      }
+    val frequencyHz = NumericConfiguration[Frequency](registers.period, { l => Gigahertz(1/l.toDouble) }, { f => (1 / f.toGigahertz).round})
   }
 
   object registers {
