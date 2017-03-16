@@ -7,6 +7,7 @@ import fc.device._
 import fc.device.rc.PpmValue
 
 case class ESC(
+  name: String,
   pwmChannel: PwmChannel,
   armValue: PpmValue = 900,
   disarmValue: PpmValue = 0,
