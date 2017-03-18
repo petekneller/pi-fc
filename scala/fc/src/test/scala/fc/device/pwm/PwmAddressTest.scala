@@ -14,8 +14,6 @@ class PwmControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   val mockFileApi = stub[FileApi]
   implicit val controller = new FileController(mockFileApi)
   val device = PwmAddress(1, 2)
-  val register = "foo"
-  val fd = 2
 
   "receive" should "open the underlying file correctly" in {
     (mockFileApi.read _).when(*, *, *).returns(new size_t)
