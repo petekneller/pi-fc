@@ -52,6 +52,6 @@ package object fs2 {
 
   def readChannel(receiver: RcReceiver, channel: RcChannel): Stream[Task, DeviceResult[RcInput]] = Stream.eval(Task.delay{ receiver.readChannel(channel) })
 
-  def readGyro(mpu: Mpu9250): Stream[Task, DeviceResult[(Double, Double, Double)]] = Stream.eval(Task.delay{ mpu.readGyro(Mpu9250.enums.GyroFullScale.dps500) })
+  def readGyro(mpu: Mpu9250): Stream[Task, DeviceResult[(Double, Double, Double)]] = Stream.eval(Task.delay{ mpu.readGyro(Mpu9250.enums.GyroFullScale.dps250) })
 
 }
