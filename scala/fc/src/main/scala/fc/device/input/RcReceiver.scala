@@ -15,14 +15,6 @@ object RcReceiver {
     implicit val controller: Controller { type Bus = address.Bus; type Register = String } = c
   }
 
-  object channels {
-    val one = RcChannel(0)
-    val two = RcChannel(1)
-    val three = RcChannel(2)
-    val four = RcChannel(3)
-    val six = RcChannel(5)
-  }
-
 }
 
 case class RcChannel(number: Int) {
