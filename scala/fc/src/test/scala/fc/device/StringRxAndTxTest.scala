@@ -23,6 +23,12 @@ class StringRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     RxString.numeric(register).read(device) should === (Left(NotNumericException("a")))
   }
 
+  it should "transform from Long to the desired result type" in {
+    (mockController.receive _).when(*, *, *).returns(Right(Seq('5'.toByte)))
+
+    RxString.numeric(register, toFoo).read(device) should === (Right(Bar))
+  }
+
   "TxString.numeric" should "transform a long into a sequence of character bytes" in {
     (mockController.transmit _).when(*, *, *).returns(Right(()))
 
@@ -30,6 +36,21 @@ class StringRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockController.transmit _).verify(*, *, Seq('1'.toByte, '2'.toByte, '3'.toByte, '4'.toByte))
   }
 
+  it should "transform from the specified source type to Long" in {
+    (mockController.transmit _).when(*, *, *).returns(Right(()))
+
+    TxString.numeric(register, fromFoo).write(device, Baz)
+    (mockController.transmit _).verify(*, *, Seq('1'.toByte, '0'.toByte))
+  }
+
   // negative numbers?
+
+  trait Foo
+  object Bar extends Foo
+  object Baz extends Foo
+
+  def toFoo(l: Long): Foo = if (l < 10) Bar else Baz
+
+  def fromFoo(f: Foo): Long = if (f == Bar) 5L else 10L
 
 }

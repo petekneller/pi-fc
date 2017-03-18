@@ -47,7 +47,7 @@ object TxString {
     type Register = String
     type T = A
 
-    def write(device: Address, value: T)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Unit] = tx.write(device, value.toString)
+    def write(device: Address, value: T)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Unit] = tx.write(device, f(value).toString)
 
     private val tx = TxString.string(register)
   }
