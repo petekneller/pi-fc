@@ -1,12 +1,12 @@
 package fc.device.input
 
-import squants.time.{Time, Nanoseconds}
+import squants.time.{Time, Microseconds}
 import fc.device._
 
 trait RcReceiver extends Device {
   type Register = String
 
-  def readChannel(channel: RcChannel): DeviceResult[Time] = RxString.numeric[Time](channel.register, { l => Nanoseconds(l) }).read(address)
+  def readChannel(channel: RcChannel): DeviceResult[Time] = RxString.numeric[Time](channel.register, { l => Microseconds(l) }).read(address)
 }
 
 object RcReceiver {
