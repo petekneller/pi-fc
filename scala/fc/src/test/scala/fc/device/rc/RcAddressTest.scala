@@ -9,7 +9,7 @@ import ioctl.IOCtl.{O_RDONLY, O_WRONLY}
 import ioctl.IOCtlImpl.size_t
 import fc.device.file._
 
-class RcControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class RcAddressTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val mockFileApi = stub[FileApi]
   implicit val controller = new FileController(mockFileApi)
