@@ -1,7 +1,7 @@
 package fc.task
 
 import cats.syntax.either._
-import _root_.fs2.{Stream, Task, Sink}
+import _root_.fs2.{Stream, Task, Sink, Pipe}
 import squants.time.{Time, Seconds}
 import fc.device.DeviceResult
 import fc.device.rc.RcInput
@@ -53,5 +53,15 @@ package object fs2 {
   def readChannel(receiver: RcReceiver, channel: RcChannel): Stream[Task, DeviceResult[RcInput]] = Stream.eval(Task.delay{ receiver.readChannel(channel) })
 
   def readGyro(mpu: Mpu9250): Stream[Task, DeviceResult[(Double, Double, Double)]] = Stream.eval(Task.delay{ mpu.readGyro(Mpu9250.enums.GyroFullScale.dps250) })
+
+  def addLoopTime[A]: Pipe[Task, DeviceResult[String], DeviceResult[String]] = {
+    @volatile var time = System.currentTimeMillis
+    stream => stream map { dr => dr map { string =>
+      val previous = time
+      time = System.currentTimeMillis
+      val delta = time - previous
+      s"Looptime: [$delta ms] | $string"
+    }}
+  }
 
 }
