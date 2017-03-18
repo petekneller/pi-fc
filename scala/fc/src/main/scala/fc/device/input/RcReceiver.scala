@@ -2,8 +2,6 @@ package fc.device.input
 
 import squants.time.{Time, Nanoseconds}
 import fc.device._
-import fc.device.file.File
-import fc.device.rc._
 
 trait RcReceiver extends Device {
   type Register = String
