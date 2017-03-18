@@ -1,12 +1,14 @@
 package fc.device.input
 
-import squants.time.{Time, Microseconds}
+import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import fc.device._
+import fc.device.rc.{RcInput, PpmValue}
 
 trait RcReceiver extends Device {
   type Register = String
 
-  def readChannel(channel: RcChannel): DeviceResult[Time] = RxString.numeric[Time](channel.register, { l => Microseconds(l) }).read(address)
+  def readChannel(channel: RcChannel): DeviceResult[RcInput] =
+    RxString.numeric[RcInput](channel.register, { l => RcInput.fromPpm(l.toInt, channel.min, channel.max, channel.mid) }).read(address)
 }
 
 object RcReceiver {
@@ -14,9 +16,13 @@ object RcReceiver {
     val address: Address { type Bus = a.Bus } = a
     implicit val controller: Controller { type Bus = address.Bus; type Register = String } = c
   }
-
 }
 
-case class RcChannel(number: Int) {
+case class RcChannel(
+  number: Int,
+  min: PpmValue = 1000,
+  max: PpmValue = 2000,
+  mid: PpmValue = 1500
+) {
   val register: String = s"ch${number}"
 }
