@@ -48,16 +48,16 @@ object Navio2 {
                tasks.readChannel(receiver, rcChannels.two),
                tasks.readChannel(receiver, rcChannels.three),
                tasks.readChannel(receiver, rcChannels.four),
-               tasks.readChannel(receiver, rcChannels.six)) map ( dr => dr.map {
-    case (one, two, three, four, six) =>
-      val fmt = "CH %d: [%4d]"
-      (fmt.format(1, one.ppm) :: fmt.format(2, two.ppm) :: fmt.format(3, three.ppm) :: fmt.format(4, four.ppm) :: fmt.format(6, six.ppm) :: Nil).mkString(" | ")
-  }) through tasks.addLoopTime to tasks.printToConsole
+               tasks.readChannel(receiver, rcChannels.six)) map (dr => dr.map((tasks.formatRcChannels _).tupled)) through tasks.addLoopTime to tasks.printToConsole
 
-  def displayGyro = tasks.readGyro(mpu9250) map (dr => dr map {
-    case (x, y, z) =>
-      val fmt = "%s: [%10f]"
-      (fmt.format("X", x) :: fmt.format("Y", y) :: fmt.format("Z", z) :: Nil).mkString(" | ")
-  }) through tasks.addLoopTime to tasks.printToConsole
+  def displayGyro = tasks.readGyro(mpu9250) map (dr => dr map((tasks.formatGyro _).tupled)) through tasks.addLoopTime to tasks.printToConsole
+
+  def displayFlightLoop = tasks.zip3(
+    tasks.readChannel(receiver, rcChannels.six) map (dr => dr map (tasks.isArmed _)),
+    tasks.readChannel(receiver, rcChannels.one),
+    tasks.readGyro(mpu9250)) map (dr => dr.map {
+      case (armed, throttle, gyro) =>
+        s"ARM: $armed | THR: [${"%4f".format(throttle.ppm)}] | ${(tasks.formatRcChannels _).tupled}"
+    })
 
 }

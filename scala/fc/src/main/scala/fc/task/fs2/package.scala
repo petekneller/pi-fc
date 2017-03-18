@@ -39,6 +39,15 @@ package object fs2 {
 
   def printToConsole[A]: Sink[Task, A] = s => s.flatMap(a => Stream.eval(Task.delay{ println(a.toString) }))
 
+  def zip3[A, B, C](a: Stream[Task, DeviceResult[A]], b: Stream[Task, DeviceResult[B]], c: Stream[Task, DeviceResult[C]]): Stream[Task, DeviceResult[(A, B, C)]] =
+    (a zip b zip c) map { case ((aDR, bDR), cDR) =>
+      for {
+        a <- aDR
+        b <- bDR
+        c <- cDR
+      } yield (a, b, c)
+    }
+
   def zip5[A, B, C, D, E](a: Stream[Task, DeviceResult[A]], b: Stream[Task, DeviceResult[B]], c: Stream[Task, DeviceResult[C]], d: Stream[Task, DeviceResult[D]], e: Stream[Task, DeviceResult[E]]) =
     (a zip b zip c zip d zip e) map { case ((((aDR, bDR), cDR), dDR), eDR) =>
       for {
@@ -63,5 +72,17 @@ package object fs2 {
       s"Looptime: [$delta ms] | $string"
     }}
   }
+
+  def formatRcChannels(one: RcInput, two: RcInput, three: RcInput, four: RcInput, six: RcInput):String = {
+      val fmt = "CH %d: [%4d]"
+      (fmt.format(1, one.ppm) :: fmt.format(2, two.ppm) :: fmt.format(3, three.ppm) :: fmt.format(4, four.ppm) :: fmt.format(6, six.ppm) :: Nil).mkString(" | ")
+  }
+
+  def formatGyro(x: Double, y: Double, z: Double): String = {
+      val fmt = "%s: [%10f]"
+      (fmt.format("X", x) :: fmt.format("Y", y) :: fmt.format("Z", z) :: Nil).mkString(" | ")
+  }
+
+  def isArmed(armChannel: RcInput): Boolean = armChannel.ppm > 1500
 
 }
