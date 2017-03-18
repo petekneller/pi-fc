@@ -19,23 +19,25 @@ object Navio2 {
   val receiver = RcReceiver(RcAddress("/sys/kernel/rcio/rcin"))
 
   object rcChannels {
-    val one = RcChannel(0)
-    val two = RcChannel(1)
+    val one =   RcChannel(0)
+    val two =   RcChannel(1)
     val three = RcChannel(2)
-    val four = RcChannel(3)
-    val six = RcChannel(5)
+    val four =  RcChannel(3)
+    val six =   RcChannel(5)
   }
 
   // It's convenient to have low-level access to an ESC for testing configuration
   val pwmChannel1 = PwmChannel(chipNumber = 0, channelNumber = 1)
 
-  val esc1 = ESC("1", pwmChannel1) // pin 2
-  val esc2 = ESC("2", PwmChannel(chipNumber = 0, channelNumber = 3)) // pin 4
-  val esc3 = ESC("3", PwmChannel(chipNumber = 0, channelNumber = 5)) // pin 6
-  val esc4 = ESC("4", PwmChannel(chipNumber = 0, channelNumber = 7)) // pin 8
+  object escs {
+    val one =   ESC("1", pwmChannel1) // pin 2
+    val two =   ESC("2", PwmChannel(chipNumber = 0, channelNumber = 3)) // pin 4
+    val three = ESC("3", PwmChannel(chipNumber = 0, channelNumber = 5)) // pin 6
+    val four =  ESC("4", PwmChannel(chipNumber = 0, channelNumber = 7)) // pin 8
+  }
 
   /* Tasks */
 
-  def motorsTest = tasks.motorsTest(esc1, esc2, esc3, esc4) to tasks.printToConsole
+  def motorsTest = tasks.motorsTest(escs.one, escs.two, escs.three, escs.four) to tasks.printToConsole
 
 }
