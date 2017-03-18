@@ -5,7 +5,7 @@ import _root_.fs2.{Stream, Task, Sink}
 import squants.time.{Time, Seconds}
 import fc.device.DeviceResult
 import fc.device.rc.RcInput
-import fc.device.input.{RcReceiver, RcChannel}
+import fc.device.input.{RcReceiver, RcChannel, Mpu9250}
 import fc.device.output.ESC
 
 package object fs2 {
@@ -44,5 +44,7 @@ package object fs2 {
     }
 
   def readChannel(receiver: RcReceiver, channel: RcChannel): Stream[Task, DeviceResult[RcInput]] = Stream.eval(Task.delay{ receiver.readChannel(channel) })
+
+  def readGyro(mpu: Mpu9250): Stream[Task, DeviceResult[(Double, Double, Double)]] = Stream.eval(Task.delay{ mpu.readGyro(Mpu9250.enums.GyroFullScale.dps500) })
 
 }

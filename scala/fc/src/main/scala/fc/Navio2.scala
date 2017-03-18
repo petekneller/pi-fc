@@ -52,4 +52,10 @@ object Navio2 {
       (fmt.format(1, one.ppm) :: fmt.format(2, two.ppm) :: fmt.format(3, three.ppm) :: fmt.format(4, four.ppm) :: fmt.format(6, six.ppm) :: Nil).mkString(" | ")
   }) to tasks.printToConsole
 
+  def displayGyro = tasks.readGyro(mpu9250) map (dr => dr map {
+    case (x, y, z) =>
+      val fmt = "%s: [%10f]"
+      (fmt.format("X", x) :: fmt.format("Y", y) :: fmt.format("Z", z) :: Nil).mkString(" | ")
+  }) to tasks.printToConsole
+
 }
