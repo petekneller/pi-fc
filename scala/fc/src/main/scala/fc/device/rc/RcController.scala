@@ -1,7 +1,7 @@
 package fc.device.rc
 
-import fc.device.file._
+import fc.device.file.FileAddress
 
-object RcAddress extends FileAddress {
-  def toFilename = "/sys/kernel/rcio/rcin"
+case class RcAddress(deviceFile: String) extends FileAddress {
+  def toFilename = deviceFile
 }

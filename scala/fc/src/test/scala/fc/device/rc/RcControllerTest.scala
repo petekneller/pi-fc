@@ -13,22 +13,19 @@ class RcControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqua
 
   val mockFileApi = stub[FileApi]
   implicit val controller = new FileController(mockFileApi)
-  val device = RcAddress
-  val register = "foo"
-  val fd = 2
 
   "receive" should "open the underlying file correctly" in {
     (mockFileApi.read _).when(*, *, *).returns(new size_t)
 
-    controller.receive(device, "bar", 1) should === (Right(Seq.empty))
-    (mockFileApi.open _).verify("/sys/kernel/rcio/rcin/bar", O_RDONLY)
+    controller.receive(RcAddress("/foo/bar"), "baz", 1) should === (Right(Seq.empty))
+    (mockFileApi.open _).verify("/foo/bar/baz", O_RDONLY)
   }
 
   "transmit" should "open the underlying file correctly" in {
     (mockFileApi.write _).when(*, *, *).returns(new size_t(1L))
 
-    controller.transmit(device, "foo", Seq(b"1")) should === (Right(()))
-    (mockFileApi.open _).verify("/sys/kernel/rcio/rcin/foo", O_WRONLY)
+    controller.transmit(RcAddress("/foo/bar"), "baz", Seq(b"1")) should === (Right(()))
+    (mockFileApi.open _).verify("/foo/bar/baz", O_WRONLY)
   }
 
 }

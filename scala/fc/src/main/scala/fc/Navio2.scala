@@ -2,6 +2,7 @@ package fc
 
 import device.spi.{SpiController, SpiAddress}
 import device.file.FileController
+import device.rc.RcAddress
 import device.input.{Mpu9250, RcReceiver}
 import device.output.{PwmChannel, ESC}
 import task.{fs2 => tasks}
@@ -15,7 +16,7 @@ object Navio2 {
 
   val mpu9250 = Mpu9250(SpiAddress(busNumber = 0, chipSelect = 1))
 
-  val receiver = RcReceiver()
+  val receiver = RcReceiver(RcAddress("/sys/kernel/rcio/rcin"))
 
   // It's convenient to have low-level access to an ESC for testing configuration
   val pwmChannel1 = PwmChannel(chipNumber = 0, channelNumber = 1)

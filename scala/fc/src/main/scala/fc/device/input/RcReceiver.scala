@@ -12,9 +12,9 @@ trait RcReceiver extends Device {
 }
 
 object RcReceiver {
-  def apply()(implicit c: Controller { type Bus = File; type Register = String }): RcReceiver = new RcReceiver {
-    val address = RcAddress
-    implicit val controller = c
+  def apply(a: Address)(implicit c: Controller { type Bus = a.Bus; type Register = String }): RcReceiver = new RcReceiver {
+    val address: Address { type Bus = a.Bus } = a
+    implicit val controller: Controller { type Bus = address.Bus; type Register = String } = c
   }
 
   object channels {
