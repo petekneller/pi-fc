@@ -39,6 +39,8 @@ object Navio2 {
 
   /* Tasks */
 
+  def initESCs = tasks.initESCs(escs.one, escs.two, escs.three, escs.four)
+
   def motorsTest = tasks.motorsTest(escs.one, escs.two, escs.three, escs.four) to tasks.printToConsole
 
   def displayRcChannels =

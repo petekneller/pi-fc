@@ -9,6 +9,13 @@ import fc.device.input.{RcReceiver, RcChannel, Mpu9250}
 import fc.device.output.ESC
 
 package object fs2 {
+
+  def initESCs(escs: ESC*): Stream[Task, String] = {
+    def initESC(esc: ESC): Stream[Task, String] = Stream.eval(Task.delay{ esc.init() }) map ( dr => dr.fold(_.toString, _ => s"ESC ${esc.name} initialized") )
+
+    escs.foldLeft(Stream.empty[Task, String])((stream, esc) => stream ++ initESC(esc))
+  }
+
   def motorArm(esc: ESC, arm: Boolean): Stream[Task, DeviceResult[Int]] = Stream.eval(Task.delay{ esc.arm(arm) })
 
   def motorRun(esc: ESC, throttle: Double): Stream[Task, DeviceResult[Int]] = Stream.eval(Task.delay{ esc.run(throttle) })
