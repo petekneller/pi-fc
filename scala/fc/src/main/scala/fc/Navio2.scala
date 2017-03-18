@@ -57,7 +57,7 @@ object Navio2 {
     tasks.readChannel(receiver, rcChannels.one),
     tasks.readGyro(mpu9250)) map (dr => dr.map {
       case (armed, throttle, gyro) =>
-        s"ARM: $armed | THR: [${"%4f".format(throttle.ppm)}] | ${(tasks.formatRcChannels _).tupled}"
-    })
+        s"ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)}"
+    }) through tasks.addLoopTime to tasks.printToConsole
 
 }
