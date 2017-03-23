@@ -74,15 +74,74 @@ package object fs2 {
   }
 
   def formatRcChannels(one: RcInput, two: RcInput, three: RcInput, four: RcInput, six: RcInput):String = {
-      val fmt = "CH %d: [%4d]"
-      (fmt.format(1, one.ppm) :: fmt.format(2, two.ppm) :: fmt.format(3, three.ppm) :: fmt.format(4, four.ppm) :: fmt.format(6, six.ppm) :: Nil).mkString(" | ")
+    val fmt = "CH %d: [%4d]"
+    (fmt.format(1, one.ppm) :: fmt.format(2, two.ppm) :: fmt.format(3, three.ppm) :: fmt.format(4, four.ppm) :: fmt.format(6, six.ppm) :: Nil).mkString(" | ")
   }
 
   def formatGyro(x: Double, y: Double, z: Double): String = {
-      val fmt = "%s: [%10f]"
-      (fmt.format("X", x) :: fmt.format("Y", y) :: fmt.format("Z", z) :: Nil).mkString(" | ")
+    val fmt = "%s: [%10f]"
+    (fmt.format("X", x) :: fmt.format("Y", y) :: fmt.format("Z", z) :: Nil).mkString(" | ")
   }
 
+  def formatOutputs(esc1: Long, esc2: Long, esc3: Long, esc4: Long): String = {
+    val fmt = "%s: [%4d]"
+    (fmt.format("ESC1", esc1) :: fmt.format("ESC2", esc2) :: fmt.format("ESC3", esc3) :: fmt.format("ESC4", esc4) :: Nil).mkString("|")
+  }
   def isArmed(armChannel: RcInput): Boolean = armChannel.ppm > 1500
+
+  def armingOverride(armed: Boolean, throttle: RcInput, esc1: Long, esc2: Long, esc3: Long, esc4: Long): (Long, Long, Long, Long) =
+    if (armed && throttle.ppm > 1000)
+      (esc1, esc2, esc3, esc4)
+    else if (armed && throttle.ppm <= 1000)
+      (900, 900, 900, 900)
+    else
+      (0, 0, 0, 0)
+
+}
+
+package fs2 {
+
+  trait FeedbackController {
+    def run(gx: Double, gy: Double, gz: Double): (Double, Double, Double)
+  }
+
+  case class PControllerTargetZero(gain: Double) extends FeedbackController {
+    def run(qx: Double, qy: Double, qz: Double) = {
+      val dx = qx // direction?
+      val dy = qy // direction?
+      val dz = qz // direction?
+      (dx * gain, dy * gain, dz * gain)
+    }
+  }
+
+  trait Mixer {
+    def run(throttle: Int, pitchIn: Double, rollIn: Double, yawIn: Double): (Long, Long, Long, Long)
+  }
+
+  case class BasicMixer() extends Mixer {
+    def run(throttleIn: Int, pitchIn: Double, rollIn: Double, yawIn: Double): (Long, Long, Long, Long) = {
+      val throttleGain = 1.0
+      val throttle = throttleIn * throttleGain
+
+      val pitchGain = 0.3
+      // pitch is low for pitch down, high for pitch up
+      val pitchAdjustment = (pitchIn - 1500L) * pitchGain
+
+      val rollGain = 0.3
+      // roll is low for roll left, high for roll right
+      val rollAdjustment = (rollIn - 1500L) * rollGain
+
+      val yawGain = 0.3
+      // yaw is low for yaw left, high for yaw right
+      val yawAdjustment = (yawIn - 1500L) * yawGain
+
+      val motorLF = throttle + pitchAdjustment + rollAdjustment - yawAdjustment
+      val motorRF = throttle + pitchAdjustment - rollAdjustment + yawAdjustment
+      val motorLR = throttle - pitchAdjustment + rollAdjustment + yawAdjustment
+      val motorRR = throttle - pitchAdjustment - rollAdjustment - yawAdjustment
+
+      (motorLF.toLong, motorRF.toLong, motorLR.toLong, motorRR.toLong)
+    }
+  }
 
 }

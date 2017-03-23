@@ -52,12 +52,21 @@ object Navio2 {
 
   def displayGyro = tasks.readGyro(mpu9250) map (dr => dr map((tasks.formatGyro _).tupled)) through tasks.addLoopTime to tasks.printToConsole
 
-  def displayFlightLoop = tasks.zip3(
+  def displayFlightLoop(feedbackController: tasks.FeedbackController = tasks.PControllerTargetZero(0.01), mixer: tasks.Mixer = tasks.BasicMixer()) = tasks.zip3(
     tasks.readChannel(receiver, rcChannels.six) map (dr => dr map (tasks.isArmed _)),
     tasks.readChannel(receiver, rcChannels.one),
     tasks.readGyro(mpu9250)) map (dr => dr.map {
       case (armed, throttle, gyro) =>
-        s"ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)}"
+        (armed, throttle, gyro, (feedbackController.run _).tupled(gyro))
+    }) map (dr => dr map {
+      case (armed, throttle, gyro, controlSignals@(x, y, z)) =>
+        (armed, throttle, gyro, controlSignals, mixer.run(throttle.ppm, x, y, z))
+    }) map( dr => dr map {
+      case (armed, throttle, gyro, controlSignals, escOutput@(esc1, esc2, esc3, esc4)) =>
+        (armed, throttle, gyro, controlSignals, tasks.armingOverride(armed, throttle, esc1, esc2, esc3, esc4))
+    }) map (dr => dr.map {
+      case (armed, throttle, gyro, controlSignals, escOutput) =>
+        s"ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}"
     }) through tasks.addLoopTime to tasks.printToConsole
 
 }
