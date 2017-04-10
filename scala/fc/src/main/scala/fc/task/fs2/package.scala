@@ -1,8 +1,10 @@
 package fc.task
 
 import cats.syntax.either._
-import _root_.fs2.{Stream, Task, Sink, Pipe}
-import squants.time.{Time, Seconds}
+import _root_.fs2.{Stream, Task, Sink, Pipe, Pull, Handle}
+import squants.time.{Time, Seconds, Microseconds}
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit.MICROS
 import fc.device.DeviceResult
 import fc.device.rc.RcInput
 import fc.device.input.{RcReceiver, RcChannel, Mpu9250}
@@ -59,6 +61,19 @@ package object fs2 {
       } yield (a, b, c, d, e)
     }
 
+  def zip6[A, B, C, D, E, F](a: Stream[Task, DeviceResult[A]], b: Stream[Task, DeviceResult[B]], c: Stream[Task, DeviceResult[C]], d: Stream[Task, DeviceResult[D]], e: Stream[Task, DeviceResult[E]],
+    f: Stream[Task, DeviceResult[F]]) =
+    (a zip b zip c zip d zip e zip f) map { case (((((aDR, bDR), cDR), dDR), eDR), fDR) =>
+      for {
+        a <- aDR
+        b <- bDR
+        c <- cDR
+        d <- dDR
+        e <- eDR
+        f <- fDR
+      } yield (a, b, c, d, e, f)
+    }
+
   def readChannel(receiver: RcReceiver, channel: RcChannel): Stream[Task, DeviceResult[RcInput]] = Stream.eval(Task.delay{ receiver.readChannel(channel) })
 
   def readGyro(mpu: Mpu9250): Stream[Task, DeviceResult[(Double, Double, Double)]] = Stream.eval(Task.delay{ mpu.readGyro(Mpu9250.enums.GyroFullScale.dps250) })
@@ -85,7 +100,7 @@ package object fs2 {
 
   def formatOutputs(esc1: Long, esc2: Long, esc3: Long, esc4: Long): String = {
     val fmt = "%s: [%4d]"
-    (fmt.format("ESC1", esc1) :: fmt.format("ESC2", esc2) :: fmt.format("ESC3", esc3) :: fmt.format("ESC4", esc4) :: Nil).mkString("|")
+    (fmt.format("ESC1", esc1) :: fmt.format("ESC2", esc2) :: fmt.format("ESC3", esc3) :: fmt.format("ESC4", esc4) :: Nil).mkString(" | ")
   }
   def isArmed(armChannel: RcInput): Boolean = armChannel.ppm > 1500
 
@@ -96,6 +111,21 @@ package object fs2 {
       (900, 900, 900, 900)
     else
       (0, 0, 0, 0)
+
+  def timestamp(): Stream[Task, LocalTime] = Stream.eval(Task.delay{ LocalTime.now() })
+
+  def looptime(): Stream[Task, Time] = {
+    def computeTimeDelta(tMinus1: LocalTime)(h: Handle[Task, LocalTime]): Pull[Task, Time, Nothing] =
+      for {
+        (t, h) <- h.await1
+        _ <- Pull.output1(Microseconds(tMinus1.until(t, MICROS)))
+        r <- computeTimeDelta(t)(h)
+      } yield r
+
+    timestamp().pull(computeTimeDelta(LocalTime.now()))
+  }
+
+  def formatLooptime(looptime: Time): String = s"Looptime: [${looptime.toMilliseconds.toString} ms]"
 
 }
 

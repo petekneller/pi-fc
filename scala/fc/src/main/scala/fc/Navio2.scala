@@ -44,11 +44,15 @@ object Navio2 {
   def motorsTest = tasks.motorsTest(escs.one, escs.two, escs.three, escs.four) to tasks.printToConsole
 
   def displayRcChannels =
-    tasks.zip5(tasks.readChannel(receiver, rcChannels.one),
+    tasks.zip6(tasks.looptime().map(Right(_)),
+               tasks.readChannel(receiver, rcChannels.one),
                tasks.readChannel(receiver, rcChannels.two),
                tasks.readChannel(receiver, rcChannels.three),
                tasks.readChannel(receiver, rcChannels.four),
-               tasks.readChannel(receiver, rcChannels.six)) map (dr => dr.map((tasks.formatRcChannels _).tupled)) through tasks.addLoopTime to tasks.printToConsole
+               tasks.readChannel(receiver, rcChannels.six)) map (dr => dr.map {
+    case (looptime, one, two, three, four, six) =>
+      s"${tasks.formatLooptime(looptime)} | ${tasks.formatRcChannels(one, two, three, four, six)}"
+  }) to tasks.printToConsole
 
   def displayGyro = tasks.readGyro(mpu9250) map (dr => dr map((tasks.formatGyro _).tupled)) through tasks.addLoopTime to tasks.printToConsole
 
