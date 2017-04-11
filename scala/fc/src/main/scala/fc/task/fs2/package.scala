@@ -41,6 +41,14 @@ package object fs2 {
 
   def printToConsole[A]: Sink[Task, A] = s => s.flatMap(a => Stream.eval(Task.delay{ println(a.toString) }))
 
+  def zip2[A, B](a: Stream[Task, DeviceResult[A]], b: Stream[Task, DeviceResult[B]]): Stream[Task, DeviceResult[(A, B)]] =
+    (a zip b) map { case (aDR, bDR) =>
+      for {
+        a <- aDR
+        b <- bDR
+      } yield (a, b)
+    }
+
   def zip3[A, B, C](a: Stream[Task, DeviceResult[A]], b: Stream[Task, DeviceResult[B]], c: Stream[Task, DeviceResult[C]]): Stream[Task, DeviceResult[(A, B, C)]] =
     (a zip b zip c) map { case ((aDR, bDR), cDR) =>
       for {
@@ -48,6 +56,16 @@ package object fs2 {
         b <- bDR
         c <- cDR
       } yield (a, b, c)
+    }
+
+  def zip4[A, B, C, D](a: Stream[Task, DeviceResult[A]], b: Stream[Task, DeviceResult[B]], c: Stream[Task, DeviceResult[C]], d: Stream[Task, DeviceResult[D]]) =
+    (a zip b zip c zip d) map { case (((aDR, bDR), cDR), dDR) =>
+      for {
+        a <- aDR
+        b <- bDR
+        c <- cDR
+        d <- dDR
+      } yield (a, b, c, d)
     }
 
   def zip5[A, B, C, D, E](a: Stream[Task, DeviceResult[A]], b: Stream[Task, DeviceResult[B]], c: Stream[Task, DeviceResult[C]], d: Stream[Task, DeviceResult[D]], e: Stream[Task, DeviceResult[E]]) =
