@@ -15,6 +15,8 @@ case class ESC(
   maxValue: PpmValue = 1900
 ) {
 
+  import ESC.{Command, Disarm, Arm, Run}
+
   def init(): DeviceResult[Unit] = for {
     _ <- pwmChannel.write(PwmChannel.configs.frequency)(Hertz(50))
     _ <- disarm()
@@ -29,10 +31,23 @@ case class ESC(
     setValue(ppmValue.toInt)
   }
 
+  def run(command: Command): DeviceResult[Int] = command match {
+    case Disarm => disarm()
+    case Arm => arm()
+    case Run(value) => run(value)
+  }
+
   private def setValue(pulseWidth: Int): DeviceResult[Int] = {
     pwmChannel.write(PwmChannel.configs.pulseWidth)(Microseconds(pulseWidth)) map (_ => pulseWidth)
   }
 
   private val pulseRange = maxValue - minValue
 
+}
+
+object ESC {
+  sealed trait Command
+  case object Disarm extends Command
+  case object Arm extends Command
+  case class Run(value: Double) extends Command
 }

@@ -74,9 +74,9 @@ object Navio2 {
         (looptime, armed, throttle, gyro, (feedbackController.run _).tupled(gyro))
     }) map (dr => dr map {
       case (looptime, armed, throttle, gyro, controlSignals@(x, y, z)) =>
-        (looptime, armed, throttle, gyro, controlSignals, mixer.run(throttle.ppm, x, y, z))
+        (looptime, armed, throttle, gyro, controlSignals, mixer.run(throttle, x, y, z))
     }) map( dr => dr map {
-      case (looptime, armed, throttle, gyro, controlSignals, escOutput@(esc1, esc2, esc3, esc4)) =>
+      case (looptime, armed, throttle, gyro, controlSignals, (esc1, esc2, esc3, esc4)) =>
         (looptime, armed, throttle, gyro, controlSignals, tasks.armingOverride(armed, throttle, esc1, esc2, esc3, esc4))
     }) map (dr => dr.map {
       case (looptime, armed, throttle, gyro, controlSignals, escOutput) =>

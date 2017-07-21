@@ -9,6 +9,7 @@ import fc.device.DeviceResult
 import fc.device.rc.RcInput
 import fc.device.input.{RcReceiver, RcChannel, Mpu9250}
 import fc.device.output.ESC
+import ESC.{Command, Run, Arm, Disarm}
 
 package object fs2 {
 
@@ -106,19 +107,17 @@ package object fs2 {
     (fmt.format("X", x) :: fmt.format("Y", y) :: fmt.format("Z", z) :: Nil).mkString(" | ")
   }
 
-  def formatOutputs(esc1: Long, esc2: Long, esc3: Long, esc4: Long): String = {
-    val fmt = "%s: [%4d]"
-    (fmt.format("ESC1", esc1) :: fmt.format("ESC2", esc2) :: fmt.format("ESC3", esc3) :: fmt.format("ESC4", esc4) :: Nil).mkString(" | ")
-  }
+  def formatOutputs(esc1: Command, esc2: Command, esc3: Command, esc4: Command): String =
+    s"ESC1: [$esc1] | ESC2: [$esc2] | ESC3: [$esc3] | ESC4: [$esc4]"
   def isArmed(armChannel: RcInput): Boolean = armChannel.ppm > 1500
 
-  def armingOverride(armed: Boolean, throttle: RcInput, esc1: Long, esc2: Long, esc3: Long, esc4: Long): (Long, Long, Long, Long) =
+  def armingOverride(armed: Boolean, throttle: RcInput, esc1: Command, esc2: Command, esc3: Command, esc4: Command): (Command, Command, Command, Command) =
     if (armed && throttle.ppm > 1000)
       (esc1, esc2, esc3, esc4)
     else if (armed && throttle.ppm <= 1000)
-      (900, 900, 900, 900)
+      (Arm, Arm, Arm, Arm)
     else
-      (0, 0, 0, 0)
+      (Disarm, Disarm, Disarm, Disarm)
 
   def timestamp(): Stream[Task, LocalTime] = Stream.eval(Task.delay{ LocalTime.now() }).repeat
 
@@ -151,32 +150,32 @@ package fs2 {
   }
 
   trait Mixer {
-    def run(throttle: Int, pitchIn: Double, rollIn: Double, yawIn: Double): (Long, Long, Long, Long)
+    def run(throttle: RcInput, pitchIn: Double, rollIn: Double, yawIn: Double): (Command, Command, Command, Command)
   }
 
   case class BasicMixer() extends Mixer {
-    def run(throttleIn: Int, pitchIn: Double, rollIn: Double, yawIn: Double): (Long, Long, Long, Long) = {
+    def run(throttleIn: RcInput, pitchIn: Double, rollIn: Double, yawIn: Double): (Command, Command, Command, Command) = {
       val throttleGain = 1.0
-      val throttle = throttleIn * throttleGain
+      val throttle = throttleIn.fromZero * throttleGain
 
       val pitchGain = 0.3
       // pitch is low for pitch down, high for pitch up
-      val pitchAdjustment = (pitchIn - 1500L) * pitchGain
+      val pitchAdjustment = pitchIn * pitchGain
 
       val rollGain = 0.3
       // roll is low for roll left, high for roll right
-      val rollAdjustment = (rollIn - 1500L) * rollGain
+      val rollAdjustment = rollIn * rollGain
 
       val yawGain = 0.3
       // yaw is low for yaw left, high for yaw right
-      val yawAdjustment = (yawIn - 1500L) * yawGain
+      val yawAdjustment = yawIn * yawGain
 
       val motorLF = throttle + pitchAdjustment + rollAdjustment - yawAdjustment
       val motorRF = throttle + pitchAdjustment - rollAdjustment + yawAdjustment
       val motorLR = throttle - pitchAdjustment + rollAdjustment + yawAdjustment
       val motorRR = throttle - pitchAdjustment - rollAdjustment - yawAdjustment
 
-      (motorLF.toLong, motorRF.toLong, motorLR.toLong, motorRR.toLong)
+      (Run(motorLF), Run(motorRF), Run(motorLR), Run(motorRR))
     }
   }
 
