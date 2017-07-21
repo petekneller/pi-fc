@@ -21,7 +21,7 @@ package object fs2 {
 
   def motorArm(esc: ESC, arm: Boolean): Stream[Task, DeviceResult[Int]] = Stream.eval(Task.delay{ esc.arm(arm) })
 
-  def motorRun(esc: ESC, throttle: Double): Stream[Task, DeviceResult[Int]] = Stream.eval(Task.delay{ esc.run(throttle) })
+  def motorRun(esc: ESC, command: Command): Stream[Task, DeviceResult[Int]] = Stream.eval(Task.delay{ esc.run(command) })
 
   def sleep(period: Time): Stream[Task, Nothing] = Stream.eval(Task.delay{ Thread.sleep(period.toMilliseconds.toLong) }).flatMap(_ => Stream.empty)
 
@@ -29,11 +29,12 @@ package object fs2 {
     def sleep = fs2.sleep(Seconds(0.5)).map(_ => s"sleep for 0.5 seconds")
     def throttleMessage(ppm: DeviceResult[Int]) = s"ESC [${esc.name}] ppm: ${ppm.toString}"
     def armMessage(ppm: DeviceResult[Int]) = s"ESC [${esc.name}] armed: ${ppm.toString}"
+    val throttleCommand = Run(0.05)
 
     motorArm(esc, true).map(armMessage) ++ sleep ++
-    motorRun(esc, 0.05).map(throttleMessage) ++ sleep ++
-    motorRun(esc, 0.05).map(throttleMessage) ++ sleep ++
-    motorRun(esc, 0.05).map(throttleMessage) ++ sleep ++
+    motorRun(esc, throttleCommand).map(throttleMessage) ++ sleep ++
+    motorRun(esc, throttleCommand).map(throttleMessage) ++ sleep ++
+    motorRun(esc, throttleCommand).map(throttleMessage) ++ sleep ++
     motorArm(esc, false).map(armMessage) ++ sleep
   }
 
