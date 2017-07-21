@@ -132,16 +132,14 @@ package object fs2 {
 
   def timestamp(): Stream[Task, LocalTime] = Stream.eval(Task.delay{ LocalTime.now() })
 
-  def looptime(): Stream[Task, Time] = {
-    def computeTimeDelta(tMinus1: LocalTime)(h: Handle[Task, LocalTime]): Pull[Task, Time, Nothing] =
-      for {
-        (t, h) <- h.await1
-        _ <- Pull.output1(Microseconds(tMinus1.until(t, MICROS)))
-        r <- computeTimeDelta(t)(h)
-      } yield r
+  def computeTimeDelta(tMinus1: LocalTime)(h1: Handle[Task, LocalTime]): Pull[Task, Time, Nothing] =
+    for {
+      (t, h2) <- h1.await1
+      _ <- Pull.output1(Microseconds(tMinus1.until(t, MICROS)))
+      r <- computeTimeDelta(t)(h2)
+    } yield r
 
-    timestamp().pull(computeTimeDelta(LocalTime.now()))
-  }
+  def looptime(): Stream[Task, Time] = timestamp().pull(computeTimeDelta(LocalTime.now()))
 
   def formatLooptime(looptime: Time): String = s"Looptime: [${looptime.toMilliseconds.toString} ms]"
 
