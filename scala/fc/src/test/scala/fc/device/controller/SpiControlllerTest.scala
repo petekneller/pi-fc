@@ -1,4 +1,4 @@
-package fc.device.spi
+package fc.device.controller
 
 import java.nio.ByteBuffer
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import ioctl.syntax._
-import fc.device._
+import fc.device.api._
 
 class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 

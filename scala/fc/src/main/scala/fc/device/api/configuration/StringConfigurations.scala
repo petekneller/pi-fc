@@ -1,9 +1,9 @@
-package fc.device.configuration
+package fc.device.api.configuration
 
 import cats.syntax.either._
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
-import fc.device._
+import fc.device.api._
 
 case class BooleanConfiguration(register: String) extends Rx with Tx {
   type Register = String

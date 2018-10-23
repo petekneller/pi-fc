@@ -1,4 +1,4 @@
-package fc.device.file
+package fc.device.controller
 
 import eu.timepit.refined.auto.autoRefineV
 import eu.timepit.refined.refineMV
@@ -10,7 +10,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import ioctl.IOCtl.{O_RDONLY, O_WRONLY}
 import ioctl.IOCtlImpl.size_t
-import fc.device._
+import fc.device.api._
 
 class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 

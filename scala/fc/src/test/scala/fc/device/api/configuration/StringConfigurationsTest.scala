@@ -1,11 +1,11 @@
-package fc.device.configuration
+package fc.device.api.configuration
 
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
-import fc.device.DeviceTestUtils
+import fc.device.api.DeviceTestUtils
 
 class StringConfigurationsTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with DeviceTestUtils with MockFactory {
   val device = new MockDeviceAddress()

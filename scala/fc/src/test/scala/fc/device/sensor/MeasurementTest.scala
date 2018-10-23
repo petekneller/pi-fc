@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import cats.syntax.either._
-import fc.device._
+import fc.device.api._
 
 class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 

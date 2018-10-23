@@ -1,13 +1,13 @@
-package fc
+package fc.device
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 
-package object device {
+package object api {
   type DeviceResult[A] = Either[DeviceException, A]
 }
 
-package device {
+package api {
   /*
    Controller provides an abstraction over the different bus types, eg. SPI v I2C.
 

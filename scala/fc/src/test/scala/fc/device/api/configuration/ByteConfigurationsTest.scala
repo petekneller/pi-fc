@@ -1,4 +1,4 @@
-package fc.device.configuration
+package fc.device.api.configuration
 
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.auto.autoRefineV
@@ -7,9 +7,9 @@ import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
-import fc.device._
+import fc.device.api._
 
-class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
+class ByteConfigurationsTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
 
   val device = new MockDeviceAddress
   implicit val mockController = stub[MockByteController]

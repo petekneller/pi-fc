@@ -1,4 +1,4 @@
-package fc.device.input
+package fc.device.sensor
 
 import cats.syntax.either._
 import cats.syntax.eq._
@@ -6,9 +6,8 @@ import cats.instances.byte._
 import eu.timepit.refined.auto.autoRefineV
 import spire.syntax.literals._
 import ioctl.syntax._
-import fc.device._
-import fc.device.configuration._
-import fc.device.sensor._
+import fc.device.api._
+import fc.device.api.configuration._
 
 trait Mpu9250 extends Device {
   type Register = Byte

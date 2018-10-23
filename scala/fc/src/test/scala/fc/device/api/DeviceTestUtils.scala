@@ -1,4 +1,4 @@
-package fc.device
+package fc.device.api
 
 trait DeviceTestUtils {
 

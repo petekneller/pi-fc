@@ -2,11 +2,10 @@ package fc
 
 import cats.syntax.either._
 import fs2.Stream
-import device.spi.{SpiController, SpiAddress}
-import device.file.FileController
-import device.rc.RcAddress
-import device.input.{Mpu9250, RcReceiver, RcChannel}
-import device.output.{PwmChannel, ESC}
+import device.controller.{FileController, SpiController, SpiAddress}
+import device.rc.{RcAddress, RcReceiver, RcChannel}
+import device.sensor.Mpu9250
+import device.pwm.{PwmChannel, ESC}
 import task.{fs2 => tasks}
 
 object Navio2 {

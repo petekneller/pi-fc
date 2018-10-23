@@ -1,4 +1,4 @@
-package fc.device.spi
+package fc.device.controller
 
 import java.nio.ByteBuffer
 import cats.syntax.either._
@@ -10,7 +10,7 @@ import ioctl.IOCtl
 import IOCtl.O_RDWR
 import ioctl.syntax._
 import spidev.Spidev
-import fc.device._
+import fc.device.api._
 
 trait SpiBus
 

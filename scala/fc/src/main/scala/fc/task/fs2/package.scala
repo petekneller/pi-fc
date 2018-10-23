@@ -5,10 +5,10 @@ import java.time.temporal.ChronoUnit.MICROS
 import cats.syntax.either._
 import _root_.fs2.{Stream, Task, Sink, Pipe, Pull, Handle}
 import squants.time.{Time, Seconds, Microseconds}
-import fc.device.DeviceResult
-import fc.device.rc.RcInput
-import fc.device.input.{RcReceiver, RcChannel, Mpu9250}
-import fc.device.output.ESC
+import fc.device.api.DeviceResult
+import fc.device.rc.{RcInput, RcReceiver, RcChannel}
+import fc.device.sensor.Mpu9250
+import fc.device.pwm.ESC
 import ESC.{Command, Run, Arm, Disarm}
 
 package object fs2 {

@@ -7,7 +7,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import ioctl.IOCtl.{O_RDONLY, O_WRONLY}
 import ioctl.IOCtlImpl.size_t
-import fc.device.file._
+import fc.device.controller.{FileController, FileApi}
 
 class RcAddressTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 

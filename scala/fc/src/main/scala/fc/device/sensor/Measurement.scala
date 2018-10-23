@@ -1,7 +1,7 @@
 package fc.device.sensor
 
 import cats.syntax.either._
-import fc.device._
+import fc.device.api._
 
 trait FullScale {
   val factor: Double

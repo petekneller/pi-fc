@@ -1,4 +1,4 @@
-package fc.device
+package fc.device.api
 
 import cats.syntax.either._
 import eu.timepit.refined.api.Refined

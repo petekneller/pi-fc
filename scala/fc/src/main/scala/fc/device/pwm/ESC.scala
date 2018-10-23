@@ -1,9 +1,9 @@
-package fc.device.output
+package fc.device.pwm
 
 import cats.syntax.either._
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import squants.time.{Hertz, Microseconds}
-import fc.device._
+import fc.device.api._
 import fc.device.rc.PpmValue
 
 case class ESC(

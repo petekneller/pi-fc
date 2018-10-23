@@ -1,10 +1,9 @@
-package fc.device.output
+package fc.device.pwm
 
 import squants.time.{Time, Nanoseconds, Frequency, Gigahertz}
-import fc.device._
-import fc.device.file.File
-import fc.device.pwm._
-import fc.device.configuration._
+import fc.device.api._
+import fc.device.api.configuration._
+import fc.device.controller.File
 
 trait PwmChannel extends Device {
   type Register = String

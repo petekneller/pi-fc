@@ -1,4 +1,4 @@
-package fc.device.file
+package fc.device.controller
 
 import cats.syntax.either._
 import eu.timepit.refined.api.Refined
@@ -7,7 +7,7 @@ import eu.timepit.refined.auto.autoUnwrap
 import java.nio.ByteBuffer
 import ioctl.IOCtl
 import ioctl.IOCtlImpl.size_t
-import fc.device._
+import fc.device.api._
 
 trait File
 

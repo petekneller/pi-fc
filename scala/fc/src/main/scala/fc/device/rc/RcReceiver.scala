@@ -1,8 +1,7 @@
-package fc.device.input
+package fc.device.rc
 
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
-import fc.device._
-import fc.device.rc.{RcInput, PpmValue}
+import fc.device.api._
 
 trait RcReceiver extends Device {
   type Register = String

@@ -1,4 +1,4 @@
-package fc.device
+package fc.device.api
 
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive

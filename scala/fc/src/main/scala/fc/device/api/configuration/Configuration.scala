@@ -1,6 +1,6 @@
-package fc.device.configuration
+package fc.device.api.configuration
 
-import fc.device._
+import fc.device.api._
 
 trait Configuration extends Rx with Tx
 

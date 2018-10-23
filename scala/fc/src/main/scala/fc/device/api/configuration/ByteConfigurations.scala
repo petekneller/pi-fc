@@ -1,4 +1,4 @@
-package fc.device.configuration
+package fc.device.api.configuration
 
 import cats.syntax.either._
 import cats.syntax.eq._
@@ -8,7 +8,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.auto.autoUnwrap
 import ioctl.syntax._
-import fc.device._
+import fc.device.api._
 
 case class ByteConfiguration(register: Byte) extends Configuration {
   type T = Byte

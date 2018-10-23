@@ -1,4 +1,4 @@
-package fc.device
+package fc.device.api
 
 /*
  Device is a simple convenience which bundles a device address and controller together. It's unlikely the controller
