@@ -1,10 +1,10 @@
 package fc.task
 
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit.MICROS
 import cats.syntax.either._
 import _root_.fs2.{Stream, Task, Sink, Pipe, Pull, Handle}
 import squants.time.{Time, Seconds, Microseconds}
-import java.time.LocalTime
-import java.time.temporal.ChronoUnit.MICROS
 import fc.device.DeviceResult
 import fc.device.rc.RcInput
 import fc.device.input.{RcReceiver, RcChannel, Mpu9250}

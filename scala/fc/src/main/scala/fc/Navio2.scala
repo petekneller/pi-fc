@@ -1,6 +1,7 @@
 package fc
 
 import cats.syntax.either._
+import fs2.Stream
 import device.spi.{SpiController, SpiAddress}
 import device.file.FileController
 import device.rc.RcAddress
@@ -63,7 +64,7 @@ object Navio2 {
       s"${tasks.formatLooptime(looptime)} | ${tasks.formatGyro(x, y, z)}"
   }) to tasks.printToConsole
 
-  def displayFlightLoop(feedbackController: tasks.FeedbackController = tasks.PControllerTargetZero(0.01), mixer: tasks.Mixer = tasks.BasicMixer()) =
+  def flightLoop(feedbackController: tasks.FeedbackController, mixer: tasks.Mixer) =
     tasks.zip4(
       tasks.looptime().map(Right(_)),
       tasks.readChannel(receiver, rcChannels.six) map (dr => dr map (tasks.isArmed _)),
@@ -78,33 +79,24 @@ object Navio2 {
     }) map( dr => dr map {
       case (looptime, armed, throttle, gyro, controlSignals, (esc1, esc2, esc3, esc4)) =>
         (looptime, armed, throttle, gyro, controlSignals, tasks.armingOverride(armed, throttle, esc1, esc2, esc3, esc4))
-    }) map (dr => dr.map {
+    })
+
+  def displayFlightLoop(feedbackController: tasks.FeedbackController = tasks.PControllerTargetZero(0.01), mixer: tasks.Mixer = tasks.BasicMixer()) =
+    flightLoop(feedbackController, mixer) map (dr => dr.map {
       case (looptime, armed, throttle, gyro, controlSignals, escOutput) =>
         s"${tasks.formatLooptime(looptime)} | ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}"
     }) to tasks.printToConsole
 
   def runFlightLoop(feedbackController: tasks.FeedbackController = tasks.PControllerTargetZero(0.01), mixer: tasks.Mixer = tasks.BasicMixer()) =
-    tasks.zip4(
-      tasks.looptime().map(Right(_)),
-      tasks.readChannel(receiver, rcChannels.six) map (dr => dr map (tasks.isArmed _)),
-      tasks.readChannel(receiver, rcChannels.one),
-      tasks.readGyro(mpu9250)
-    ) map (dr => dr.map {
-      case (looptime, armed, throttle, gyro) =>
-        (looptime, armed, throttle, gyro, (feedbackController.run _).tupled(gyro))
-    }) map (dr => dr map {
-      case (looptime, armed, throttle, gyro, controlSignals@(x, y, z)) =>
-        (looptime, armed, throttle, gyro, controlSignals, mixer.run(throttle, x, y, z))
-    }) map( dr => dr map {
-      case (looptime, armed, throttle, gyro, controlSignals, (esc1, esc2, esc3, esc4)) =>
-        (looptime, armed, throttle, gyro, controlSignals, tasks.armingOverride(armed, throttle, esc1, esc2, esc3, esc4))
-    }) flatMap (dr => dr.map {
-      case (looptime, armed, throttle, gyro, controlSignals, (esc1, esc2, esc3, esc4)) =>
-        tasks.motorRun(escs.one, esc1).map(_ => String.empty) ++
-        tasks.motorRun(escs.two, esc2).map(_ => String.empty) ++
-        tasks.motorRun(escs.three, esc3).map(_ => String.empty) ++
-        tasks.motorRun(escs.four, esc4).map(_ => String.empty) ++
+    flightLoop(feedbackController, mixer) flatMap (dr => dr.fold({
+      failure => Stream(failure.toString)
+    }, {
+      case (looptime, armed, throttle, gyro, controlSignals, escOutput@(esc1, esc2, esc3, esc4)) =>
+        tasks.motorRun(escs.one, esc1).map(_ => "") ++
+        tasks.motorRun(escs.two, esc2).map(_ => "") ++
+        tasks.motorRun(escs.three, esc3).map(_ => "") ++
+        tasks.motorRun(escs.four, esc4).map(_ => "") ++
         Stream(s"${tasks.formatLooptime(looptime)} | ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}")
-    }) to tasks.printToConsole
+    })) to tasks.printToConsole
 
 }
