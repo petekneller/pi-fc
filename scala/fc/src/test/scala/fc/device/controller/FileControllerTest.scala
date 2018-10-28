@@ -75,48 +75,4 @@ class FileControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEq
     controller.transmit(device, register, Seq(b"1", b"2", b"3")) should === (Left(IncompleteDataException(desiredNumBytes, numBytesWritten)))
   }
 
-  "RxString.string" should "consider each byte in the response to be an ANSI character" in {
-    val rx = RxString.string(register)
-    (mockFileApi.open _).when(*, *).returns(fd)
-    (mockFileApi.read _).when(*, *, *).onCall{ (_, rxBuffer, _) =>
-      rxBuffer.put(0, 'f'.toByte).put(1, 'o'.toByte).put(2, 'o'.toByte)
-      new size_t(3L)
-    }
-
-    rx.read(device) should === (Right("foo"))
-  }
-
-  it should "read a maximum number of bytes as specified in the constructor" in {
-    val rx = RxString.string(register, 3)
-    (mockFileApi.open _).when(*, *).returns(fd)
-
-    rx.read(device)
-    (mockFileApi.read _).verify(where { (_, _, numBytesToRead) => numBytesToRead.intValue == 3 })
-  }
-
-  it should "remove any trailing newlines" in {
-    val rx = RxString.string(register)
-    (mockFileApi.open _).when(*, *).returns(fd)
-    (mockFileApi.read _).when(*, *, *).onCall{ (_, rxBuffer, _) =>
-      rxBuffer.put(0, 'f'.toByte).put(1, 'o'.toByte).put(2, 'o'.toByte).put(3, '\n')
-      new size_t(4L)
-    }
-
-    rx.read(device) should === (Right("foo"))
-  }
-
-  "TxString.string" should "convert the input string into a sequence of bytes, where each byte is an ANSI character" in {
-    val tx = TxString.string(register)
-    (mockFileApi.open _).when(*, *).returns(fd)
-    (mockFileApi.write _).when(*, *, *).onCall{ (_, _, numBytes) => numBytes }
-
-    tx.write(device, "bar") should === (Right(()))
-    (mockFileApi.write _).verify(where { (_, txBuffer, numBytes) =>
-      txBuffer.get(0).toChar == 'b' &&
-      txBuffer.get(1).toChar == 'a' &&
-      txBuffer.get(2).toChar == 'r' &&
-      numBytes.intValue == 3
-    })
-  }
-
 }

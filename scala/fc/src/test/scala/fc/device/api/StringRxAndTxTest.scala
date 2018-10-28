@@ -1,5 +1,6 @@
 package fc.device.api
 
+import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
@@ -9,7 +10,37 @@ class StringRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   implicit val mockController = stub[MockStringController]
   val register = "foo"
 
-  // NB. RxString.string and TxString.string are covered as part of the FileController test suite.
+  "RxString.string" should "consider each byte in the response to be an ANSI character" in {
+    val rx = RxString.string(register)
+    (mockController.receive _).when(*, *, *).returns(Right(Seq('f'.toByte, 'o'.toByte, 'o'.toByte)))
+
+    rx.read(device) should === (Right("foo"))
+  }
+
+  it should "read a maximum number of bytes as specified in the constructor" in {
+    val rx = RxString.string(register, 3)
+    (mockController.receive _).when(*, *, *).returns(Right(Seq('f'.toByte, 'o'.toByte, 'o'.toByte)))
+
+    rx.read(device)
+    (mockController.receive _).verify(where { (_, _, numBytesToRead) => (numBytesToRead: Int) == 3 })
+  }
+
+  it should "remove any trailing newlines" in {
+    val rx = RxString.string(register)
+    (mockController.receive _).when(*, *, *).returns(Right(Seq('f'.toByte, 'o'.toByte, 'o'.toByte, '\n'.toByte)))
+
+    rx.read(device) should === (Right("foo"))
+  }
+
+  "TxString.string" should "convert the input string into a sequence of bytes, where each byte is an ANSI character" in {
+    val tx = TxString.string(register)
+    (mockController.transmit _).when(*, *, *).returns(Right(()))
+
+    tx.write(device, "bar") should === (Right(()))
+    (mockController.transmit _).verify(where { (_, _, bytes) =>
+      bytes === Seq('b'.toByte, 'a'.toByte, 'r'.toByte)
+    })
+  }
 
   "RxString.numeric" should "transform a sequence character bytes into an long value" in {
     (mockController.receive _).when(*, *, *).returns(Right(Seq('1'.toByte, '2'.toByte, '3'.toByte)))
