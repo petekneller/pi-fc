@@ -1,0 +1,18 @@
+* TODO figure out how to remove the concept of 'register' from controllers, since uBlox GPS isn't register-based (is message-based)
+** remove the =Register= type member
+*** move responsibility for register param from controllers to =Address='s and =Rx= / =Tx=
+**** =FileController='s
+***** +move Rx and TxString tests out of file controller+
+***** +RxString.string should take(maxBytesToBeRead)+
+**** =SpiController=
+*** remove =Register= type and param from controller
+*** =SpiControllerTest= uses a =Device= impl whereas the =FileControllerTest= uses raw =Address=, =Controller=, =Rx=, =Tx= - change =SpiControllerTest= to be consistent
+*** can I remove the =type Addr= from =Rx= and =Tx=? Can I instead refine the read/write method signatures of =StringRx/Tx= and still be valid overrides?
+*** =RcAddressTest= and =PwmAddressTest= work against the mock file api - move them up to using mock controllers?
+*** refine the types of =chip= and =channel= to be positive (and limited?) in =PwmAddress=
+* TODO refactor device/api: move impls of rx and tx into device/controller, squash device/configuration, separate file and spi controllers
+* TODO refactor spidev tests -> integration tests
+* TODO remove the =toFilename= member that appears in =Address=?
+  The contract between Controller and Address is that any controller/address pair that operate on the same bus type should be compatible. The underlying implementation works with linux device files and so the only data sharing is the ~Address.toFilename~ to indicate which file is to be acted upon by the controller. Not terribly happy with the presumption that all controllers work via the filesystem. Leave it until I need to split it? 
+
+  But the ~Rx~ and ~Tx~ now have a ~type Addr~ member as they need to (in some cases) specialise the type of address with which they can work. So maybe this should be pushed down into ~Controller~ so it has a ~type Addr~ and all methods act with type ~Addr~ instead of ~Address~? Would prob leave more room for diff impls later on.
