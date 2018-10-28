@@ -1,7 +1,7 @@
 package fc.device.api
 
 import cats.syntax.either._
-import eu.timepit.refined.auto.autoRefineV
+import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 
@@ -15,7 +15,7 @@ object RxString {
 
     def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[String] = for {
       data <- controller.receive(device, register, maxBytesToRead)
-    } yield data.map(_.toChar).filter(_ != '\n').mkString
+    } yield data.take(maxBytesToRead).map(_.toChar).filter(_ != '\n').mkString
   }
 
   def numeric[A](register: String, f: Long => A = identity[Long] _) = new Rx {

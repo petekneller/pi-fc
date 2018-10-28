@@ -18,11 +18,11 @@ class StringRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   it should "read a maximum number of bytes as specified in the constructor" in {
-    val rx = RxString.string(register, 3)
+    val rx = RxString.string(register, 2)
     (mockController.receive _).when(*, *, *).returns(Right(Seq('f'.toByte, 'o'.toByte, 'o'.toByte)))
 
-    rx.read(device)
-    (mockController.receive _).verify(where { (_, _, numBytesToRead) => (numBytesToRead: Int) == 3 })
+    rx.read(device) should === (Right("fo"))
+    (mockController.receive _).verify(where { (_, _, numBytesToRead) => (numBytesToRead: Int) == 2 })
   }
 
   it should "remove any trailing newlines" in {
