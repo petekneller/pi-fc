@@ -11,18 +11,9 @@ import fc.device.controller.filesystem.{FileSystemControllerImpl, FileApi}
 
 class PwmAddressTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
-  val mockFileApi = stub[FileApi]
-  implicit val controller = new FileSystemControllerImpl(mockFileApi)
-  val device = PwmAddress(1, 2)
-
-  "receive" should "open the correct file" in {
-    controller.receive(device, "bar", 1)
-    (mockFileApi.open _).verify("/sys/class/pwm/pwmchip1/pwm2/bar", *)
-  }
-
-  "transmit" should "open the correct file" in {
-    controller.transmit(device, "foo", Seq(b"1"))
-    (mockFileApi.open _).verify("/sys/class/pwm/pwmchip1/pwm2/foo", *)
+  "PwmAddress" should "resolve to the correct device file" in {
+    PwmAddress(1, 2).toFilename should ===("/sys/class/pwm/pwmchip1/pwm2")
+    PwmAddress(3, 4).toFilename should ===("/sys/class/pwm/pwmchip3/pwm4")
   }
 
 }
