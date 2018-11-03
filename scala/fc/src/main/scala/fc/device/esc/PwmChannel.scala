@@ -1,5 +1,8 @@
 package fc.device.esc
 
+import eu.timepit.refined.W
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.GreaterEqual
 import squants.time.{Time, Nanoseconds, Frequency, Gigahertz}
 import fc.device.api._
 import fc.device.controller.filesystem._
@@ -9,7 +12,7 @@ trait PwmChannel extends Device {
 }
 
 object PwmChannel {
-  def apply(chipNumber: Int, channelNumber: Int)(implicit c: FileSystemController): PwmChannel = new PwmChannel {
+  def apply(chipNumber: Int Refined GreaterEqual[W.`0`.T], channelNumber: Int Refined GreaterEqual[W.`0`.T])(implicit c: FileSystemController): PwmChannel = new PwmChannel {
     val address = PwmAddress(chipNumber, channelNumber)
     implicit val controller = c
   }

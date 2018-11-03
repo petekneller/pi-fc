@@ -1,10 +1,7 @@
-* TODO figure out how to remove the concept of 'register' from controllers, since uBlox GPS isn't register-based (is message-based)
+* TODO refactor spidev tests -> integration tests
+* DONE refactor device/api: move impls of rx and tx into device/controller, squash device/configuration, separate file and spi controllers
+* DONE figure out how to remove the concept of 'register' from controllers, since uBlox GPS isn't register-based (is message-based)
 ** +remove the =Register= type member+
 ** +=SpiControllerTest= uses a =Device= impl whereas the =FileControllerTest= uses raw =Address=, =Controller=, =Rx=, =Tx= - change =SpiControllerTest= to be consistent+
 ** +=RcAddressTest= and =PwmAddressTest= work against the mock file api - move them up to using mock controllers?+
-** refine the types of =chip= and =channel= to be positive (and limited?) in =PwmAddress=
-
-
-* DONE refactor device/api: move impls of rx and tx into device/controller, squash device/configuration, separate file and spi controllers
-
-* TODO refactor spidev tests -> integration tests
+** +refine the types of =chip= and =channel= to be positive (and limited?) in =PwmAddress=+
