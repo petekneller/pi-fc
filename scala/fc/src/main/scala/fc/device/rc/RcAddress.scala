@@ -1,7 +1,7 @@
 package fc.device.rc
 
-import fc.device.controller.FileAddress
+import fc.device.controller.filesystem.FileSystemAddress
 
-case class RcAddress(deviceFile: String) extends FileAddress {
+case class RcAddress(deviceFile: String) extends FileSystemAddress {
   def toFilename = deviceFile
 }

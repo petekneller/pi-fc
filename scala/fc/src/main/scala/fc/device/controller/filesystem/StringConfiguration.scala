@@ -1,4 +1,4 @@
-package fc.device.api.configuration
+package fc.device.controller.filesystem
 
 import cats.syntax.either._
 import eu.timepit.refined.refineMV
@@ -6,10 +6,10 @@ import eu.timepit.refined.numeric.Positive
 import fc.device.api._
 
 case class BooleanConfiguration(register: String) extends Rx with Tx {
-  type Register = String
   type T = Boolean
+  type Ctrl = FileSystemController
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Boolean] = for {
+  def read(device: FileSystemAddress)(implicit controller: FileSystemController): DeviceResult[Boolean] = for {
     data <- rx.read(device)
     result <- data match {
       case "1" => Right(true)
@@ -18,7 +18,7 @@ case class BooleanConfiguration(register: String) extends Rx with Tx {
     }
   } yield result
 
-  def write(device: Address, value: Boolean)(implicit controller: Controller { type Bus = device.Bus; type Register = String }): DeviceResult[Unit] = tx.write(device, if (value) "1" else "0")
+  def write(device: FileSystemAddress, value: Boolean)(implicit controller: FileSystemController): DeviceResult[Unit] = tx.write(device, if (value) "1" else "0")
 
   private val rx = RxString.string(register, refineMV[Positive](1))
   private val tx = TxString.string(register)

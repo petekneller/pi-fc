@@ -1,4 +1,4 @@
-package fc.device.api.configuration
+package fc.device.controller.spi
 
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.auto.autoRefineV
@@ -9,10 +9,10 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import fc.device.api._
 
-class ByteConfigurationsTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
+class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
-  val device = new MockDeviceAddress
-  implicit val mockController = stub[MockByteController]
+  val device = SpiAddress(0, 0)
+  implicit val mockController = stub[SpiController]
   val register = 0x35.toByte
 
   "ByteConfiguration.read" should "make a read request for that register" in {

@@ -1,0 +1,199 @@
+package fc.device.controller.spi
+
+import java.nio.ByteBuffer
+import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
+import eu.timepit.refined.refineMV
+import eu.timepit.refined.numeric.Positive
+import spire.syntax.literals._
+import org.scalatest.{FlatSpec, Matchers}
+import org.scalactic.TypeCheckedTripleEquals
+import org.scalamock.scalatest.MockFactory
+import ioctl.syntax._
+import ioctl.IOCtl.O_RDWR
+import ioctl.IOCtlImpl.size_t
+import fc.device.api._
+
+class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+
+  val mockApi = stub[SpiApi]
+  val controller = new SpiControllerImpl(mockApi)
+  val device = SpiAddress(0, 0)
+  val register = b"3"
+  val fd = 2
+
+  /*
+   Tests for basic file open/close, failure handling
+   */
+
+  "receive" should "open the correct file" in {
+    controller.receive(device, register, 1)
+    (mockApi.open _).verify("/dev/spidev0.0", *)
+  }
+
+  it should "open the underlying file read-write" in {
+    controller.receive(device, register, 1)
+    (mockApi.open _).verify(*, O_RDWR)
+  }
+
+  it should "return a 'device unavailable' error if the underlying 'open' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.open _) when(*, *) throws errorCause
+
+    controller.receive(device, register, 1) should === (Left(DeviceUnavailableException(device, errorCause)))
+  }
+
+  "transmit" should "open the correct file" in {
+    controller.transmit(device, register, Seq(b"1"))
+    (mockApi.open _).verify("/dev/spidev0.0", *)
+  }
+
+  it should "open the underlying file write-only" in {
+    controller.transmit(device, register, Seq(b"1"))
+    (mockApi.open _).verify(*, O_RDWR)
+  }
+
+  it should "return a 'device unavailable' error if the underlying 'open' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.open _) when(*, *) throws errorCause
+
+    controller.transmit(device, register, Seq(b"1")) should === (Left(DeviceUnavailableException(device, errorCause)))
+  }
+
+  "receive" should "close the underlying file even if an error occurs during transfer" in {
+    (mockApi.open _).when(*, *).returns(fd)
+    (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
+
+    controller.receive(device, register, 1)
+    (mockApi.close _).verify(fd).once()
+  }
+
+  it should "return a 'transfer failed' error if the underlying 'transfer' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
+
+    controller.receive(device, register, 1) should === (Left(TransferFailedException(errorCause)))
+  }
+
+  "transmit" should "close the underlying file even if an error occurs during transfer" in {
+    (mockApi.open _).when(*, *).returns(fd)
+    (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
+
+    controller.transmit(device, register, Seq(b"1"))
+    (mockApi.close _).verify(fd).once()
+  }
+
+  it should "return a 'transfer failed' error if the underlying 'transfer' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
+
+    controller.transmit(device, register, Seq(b"1")) should === (Left(TransferFailedException(errorCause)))
+  }
+
+  /*
+   Tests for the detail of byte transfers
+   */
+
+  "receive" should "attempt to transfer N+1 bytes" in {
+    controller.receive(device, register, 3)
+    (mockApi.transfer _).verify(*, *, *, 4, *)
+  }
+
+  it should "allocate N+1 bytes in both the transmit and receive buffers" in {
+    controller.receive(device, register, 3)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 4 && rxBuffer.limit === 4
+    })
+  }
+
+  "transmit" should "attempt to transfer N+1 bytes" in {
+    controller.transmit(device, register, Seq(b"1", b"2", b"3"))
+    (mockApi.transfer _).verify(*, *, *, 4, *)
+  }
+
+  it should "allocate N+1 bytes in both the transmit and receive buffers" in {
+    controller.transmit(device, register, Seq(b"1", b"2", b"3"))
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 4 && rxBuffer.limit === 4
+    })
+  }
+
+  "receive" should "set a read flag in the first byte of the transmit buffer" in {
+    controller.receive(device, register, 1)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasReadFlag(txBuffer) })
+  }
+
+  it should "set the register address in the lower 7 bits of the first byte of the transmit buffer" in {
+    controller.receive(device, register, 1)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasRegister(txBuffer, register) })
+  }
+
+  "transmit" should "set a write flag in the first byte of the transmit buffer" in {
+    controller.transmit(device, register, Seq(b"1"))
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasWriteFlag(txBuffer) })
+  }
+
+  it should "set the register address in the lower 7 bits of the first byte of the transmit buffer" in {
+    controller.transmit(device, register, Seq(b"1"))
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => hasRegister(txBuffer, register) })
+  }
+
+  "receive" should "write the second and subsequent bytes of the transmit buffer as 0x0" in {
+    controller.receive(device, register, 3)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => txBuffer.toSeq.tail.forall(_ == 0x0) })
+  }
+
+  it should "pass a receive buffer full of 0x0" in {
+    controller.receive(device, register, 5)
+
+    (mockApi.transfer _).verify(where { (_, _, rxBuffer, _, _) => rxBuffer.toSeq.forall(_ == 0x0) })
+  }
+
+  "transmit" should "set the data bytes in the second and subsequent bytes of the transmit buffer" in {
+    val data = Seq(0x55.toByte, 0x66.toByte)
+    controller.transmit(device, register, data)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => txBuffer.toSeq.tail == data })
+  }
+
+  "receive" should "return the requested number of bytes" in {
+    (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
+      rxBuffer.put(b"1").put(b"2").put(b"3").put(b"4")
+      4
+    }
+
+    controller.receive(device, register, 3) should === (Right(Seq(b"2", b"3", b"4")))
+  }
+
+  it should "return an 'incomplete data' error if less than N bytes could be fetched" in {
+    val expectedNumBytes = refineMV[Positive](2)
+    val actualNumBytes = 1
+    (mockApi.transfer _).when(*, *, *, expectedNumBytes+1, *).onCall{ (_, _, rxBuffer, _, _) =>
+      rxBuffer.put(b"1").put(b"2")
+      actualNumBytes + 1
+    }
+
+    controller.receive(device, register, expectedNumBytes) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
+  }
+
+  "transmit" should "return an error if less bytes were written than specified" in {
+    val desiredNumBytes = 3
+    val numBytesWritten = 3 // desired number bytes + 1 command byte
+    (mockApi.transfer _).when(*, *, *, *, *).returns(numBytesWritten)
+
+    controller.transmit(device, register, Seq(b"1", b"2", b"3")) should === (Left(IncompleteDataException(desiredNumBytes, numBytesWritten - 1)))
+  }
+
+
+  def hasReadFlag(buffer: ByteBuffer): Boolean = buffer.get(0).unsigned >> 7 === 1
+
+  def hasWriteFlag(buffer: ByteBuffer): Boolean = buffer.get(0).unsigned >> 7 === 0
+
+  def hasRegister(buffer: ByteBuffer, register: Byte): Boolean = (buffer.get(0).unsigned & 0x7).toByte === register
+}

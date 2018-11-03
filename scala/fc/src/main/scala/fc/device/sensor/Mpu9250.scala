@@ -7,10 +7,10 @@ import eu.timepit.refined.auto.autoRefineV
 import spire.syntax.literals._
 import ioctl.syntax._
 import fc.device.api._
-import fc.device.api.configuration._
+import fc.device.controller.spi._
 
 trait Mpu9250 extends Device {
-  type Register = Byte
+  type Ctrl = SpiController
   import Mpu9250.{registers, constants, configs, enums}
 
   def checkCommunication(): DeviceResult[Boolean] = ByteRx.byte(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
@@ -41,9 +41,9 @@ trait Mpu9250 extends Device {
 
 object Mpu9250 {
 
-  def apply(a: Address)(implicit c: Controller { type Bus = a.Bus; type Register = Byte }) = new Mpu9250 {
-    val address: Address { type Bus = a.Bus } = a
-    implicit val controller: Controller { type Bus = address.Bus; type Register = Byte } = c
+  def apply(a: SpiAddress)(implicit c: SpiController) = new Mpu9250 {
+    val address: SpiAddress = a
+    implicit val controller: SpiController = c
   }
 
   object configs {

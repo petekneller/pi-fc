@@ -1,13 +1,14 @@
-package fc.device.api
+package fc.device.controller.filesystem
 
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 
-class StringRxAndTxTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
-  val device = new MockDeviceAddress()
-  implicit val mockController = stub[MockStringController]
+class StringRxTxTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+
+  val device = new FileSystemAddress { def toFilename = "unused" }
+  implicit val mockController = stub[FileSystemController]
   val register = "foo"
 
   "RxString.string" should "consider each byte in the response to be an ANSI character" in {

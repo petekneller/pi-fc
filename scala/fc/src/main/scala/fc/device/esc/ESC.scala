@@ -1,4 +1,4 @@
-package fc.device.pwm
+package fc.device.esc
 
 import cats.syntax.either._
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}

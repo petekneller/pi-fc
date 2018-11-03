@@ -1,4 +1,4 @@
-package fc.device.controller
+package fc.device.controller.spi
 
 import java.nio.ByteBuffer
 import cats.syntax.either._
@@ -12,21 +12,21 @@ import ioctl.syntax._
 import spidev.Spidev
 import fc.device.api._
 
-trait SpiBus
-
 case class SpiAddress(busNumber: Int, chipSelect: Int) extends Address {
-  type Bus = SpiBus
-
   def toFilename: String = s"/dev/spidev${busNumber}.${chipSelect}"
 }
 
-class SpiController(api: SpiApi) extends Controller { self =>
-  type Bus = SpiBus
+trait SpiController extends RegisterBasedDeviceController {
+  type Addr = SpiAddress
   type Register = Byte
+}
+
+// TODO Ugh! I hate XyzImpl's. Must think of a better name
+class SpiControllerImpl(api: SpiApi) extends SpiController {
 
   private val clockSpeed = Kilohertz(100)
 
-  def receive(device: Address { type Bus = self.Bus }, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
+  def receive(device: SpiAddress, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = numBytes + 1
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
@@ -41,9 +41,9 @@ class SpiController(api: SpiApi) extends Controller { self =>
       }
     })
 
-  def transmit(device: Address { type Bus = self.Bus }, register: Register, data: Seq[Byte]): DeviceResult[Unit] =
+  def transmit(device: SpiAddress, register: Byte, data: Seq[Byte]): DeviceResult[Unit] =
     withFileDescriptor(device, { fd =>
-      val requisiteBufferSize = 2
+      val requisiteBufferSize = data.length + 1
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
       val rxBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
 
@@ -51,7 +51,7 @@ class SpiController(api: SpiApi) extends Controller { self =>
       data.zipWithIndex foreach { case (b, i) => txBuffer.put(i + 1, b) }
       for {
         bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
-        _ <- assertCompleteData(requisiteBufferSize, bytesTransferred)
+        _ <- assertCompleteData(data.length, bytesTransferred - 1)
       } yield {
         ()
       }
@@ -61,13 +61,13 @@ class SpiController(api: SpiApi) extends Controller { self =>
 
   private def assertCompleteData(expected: Int, actual: Int): Either[IncompleteDataException, Unit] = if (expected == actual) Right(()) else Left(IncompleteDataException(expected, actual))
 
-  private def open(device: Address): Either[DeviceUnavailableException, Int] =
+  private def open(device: SpiAddress): Either[DeviceUnavailableException, Int] =
     Either.catchNonFatal{ api.open(device.toFilename, O_RDWR) }.leftMap(DeviceUnavailableException(device, _))
 
   private def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeed: Frequency): Either[TransferFailedException, Int] =
     Either.catchNonFatal{ api.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeed.toHertz.toInt) }.leftMap(TransferFailedException(_))
 
-  private def withFileDescriptor[A](device: Address, f: Int => DeviceResult[A]): DeviceResult[A] = for {
+  private def withFileDescriptor[A](device: SpiAddress, f: Int => DeviceResult[A]): DeviceResult[A] = for {
     fd <- open(device)
     result <- f(fd).bimap({ l => api.close(fd); l }, { r => api.close(fd); r })
   } yield result
@@ -81,7 +81,7 @@ trait SpiApi {
 }
 
 object SpiController {
-  def apply() = new SpiController(new SpiApi {
+  def apply() = new SpiControllerImpl(new SpiApi {
     def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int) = Spidev.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz)
     def open(filename: String, flags: Int) = IOCtl.open(filename, flags)
     def close(fileDescriptor: Int) = IOCtl.close(fileDescriptor)

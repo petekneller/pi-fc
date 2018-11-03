@@ -8,7 +8,7 @@ import squants.time.{Time, Seconds, Microseconds}
 import fc.device.api.DeviceResult
 import fc.device.rc.{RcInput, RcReceiver, RcChannel}
 import fc.device.sensor.Mpu9250
-import fc.device.pwm.ESC
+import fc.device.esc.ESC
 import ESC.{Command, Run, Arm, Disarm}
 
 package object fs2 {

@@ -2,6 +2,7 @@ package fc.device.sensor
 
 import cats.syntax.either._
 import fc.device.api._
+import fc.device.controller.spi._
 
 trait FullScale {
   val factor: Double
@@ -12,9 +13,9 @@ case class Measurement(
     scale: FullScale) extends Rx {
 
   type T = Double
-  type Register = Byte
+  type Ctrl = SpiController
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[Double] = word.read(device).map(short => (short.toDouble / maxShort) * scale.factor)
+  def read(device: SpiAddress)(implicit controller: SpiController): DeviceResult[Double] = word.read(device).map(short => (short.toDouble / maxShort) * scale.factor)
 
   private val maxShort = math.pow(2, 15) // well, close enough
 
@@ -28,9 +29,9 @@ case class Measurement3Axis(
     scale: FullScale) extends Rx {
 
   type T = (Double, Double, Double)
-  type Register = Byte
+  type Ctrl = SpiController
 
-  def read(device: Address)(implicit controller: Controller { type Bus = device.Bus; type Register = Byte }): DeviceResult[(Double, Double, Double)] = for {
+  def read(device: SpiAddress)(implicit controller: SpiController): DeviceResult[(Double, Double, Double)] = for {
     x <- xMeasurement.read(device)
     y <- yMeasurement.read(device)
     z <- zMeasurement.read(device)

@@ -6,16 +6,16 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import cats.syntax.either._
-import fc.device.api._
+import fc.device.controller.spi.{SpiController, SpiAddress}
 
-class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory with DeviceTestUtils {
+class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
-  val address = new MockDeviceAddress
-  implicit val mockController = stub[MockByteController]
+  val address = SpiAddress(0, 0)
+  implicit val mockController = stub[SpiController]
   val register1 = 1.toByte
   val register2 = 2.toByte
 
-  "Meaurement.read" should "normalize the 16-bit register values before applying the scaling factor" in {
+  "Measurement.read" should "normalize the 16-bit register values before applying the scaling factor" in {
     (mockController.receive _).when(*, register1, refineMV[Positive](1)).returns(Right(Seq(0xFF.toByte)))
     (mockController.receive _).when(*, register2, refineMV[Positive](1)).returns(Right(Seq(0x7F.toByte)))
 

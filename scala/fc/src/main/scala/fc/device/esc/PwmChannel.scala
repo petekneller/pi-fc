@@ -1,16 +1,15 @@
-package fc.device.pwm
+package fc.device.esc
 
 import squants.time.{Time, Nanoseconds, Frequency, Gigahertz}
 import fc.device.api._
-import fc.device.api.configuration._
-import fc.device.controller.File
+import fc.device.controller.filesystem._
 
 trait PwmChannel extends Device {
-  type Register = String
+  type Ctrl = FileSystemController
 }
 
 object PwmChannel {
-  def apply(chipNumber: Int, channelNumber: Int)(implicit c: Controller { type Bus = File; type Register = String }): PwmChannel = new PwmChannel {
+  def apply(chipNumber: Int, channelNumber: Int)(implicit c: FileSystemController): PwmChannel = new PwmChannel {
     val address = PwmAddress(chipNumber, channelNumber)
     implicit val controller = c
   }
