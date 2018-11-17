@@ -6,8 +6,8 @@ import eu.timepit.refined.auto.autoRefineV
 import fc.device.api._
 
 case class BytesRx(sourceRegister: Byte, numBytes: Int Refined Positive) extends Rx {
-    type T = Seq[Byte]
-    type Ctrl = SpiController
+  type T = Seq[Byte]
+  type Ctrl = SpiController
 
-    def read(device: SpiAddress)(implicit controller: SpiController): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
+  def read(device: SpiAddress)(implicit controller: SpiController): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
 }
