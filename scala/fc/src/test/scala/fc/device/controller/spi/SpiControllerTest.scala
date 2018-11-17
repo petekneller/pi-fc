@@ -47,7 +47,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.open _).verify("/dev/spidev0.0", *)
   }
 
-  it should "open the underlying file write-only" in {
+  it should "open the underlying file read-write" in {
     controller.transmit(device, register, Seq(b"1"))
     (mockApi.open _).verify(*, O_RDWR)
   }
@@ -57,6 +57,23 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.open _) when(*, *) throws errorCause
 
     controller.transmit(device, register, Seq(b"1")) should === (Left(DeviceUnavailableException(device, errorCause)))
+  }
+
+  "transfer" should "open the correct file" in {
+    controller.transfer(device, None)
+    (mockApi.open _).verify("/dev/spidev0.0", *)
+  }
+
+  it should "open the underlying file read-write" in {
+    controller.transfer(device, None)
+    (mockApi.open _).verify(*, O_RDWR)
+  }
+
+  it should "return a 'device unavailable' error if the underlying 'open' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.open _) when(*, *) throws errorCause
+
+    controller.transfer(device, None) should === (Left(DeviceUnavailableException(device, errorCause)))
   }
 
   "receive" should "close the underlying file even if an error occurs during transfer" in {
@@ -89,6 +106,21 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transmit(device, register, Seq(b"1")) should === (Left(TransferFailedException(errorCause)))
   }
 
+  "transfer" should "close the underlying file even if an error occurs during transfer" in {
+    (mockApi.open _).when(*, *).returns(fd)
+    (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
+
+    controller.transfer(device, None)
+    (mockApi.close _).verify(fd).once()
+  }
+
+  it should "return a 'transfer failed' error if the underlying 'transfer' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
+
+    controller.transfer(device, None) should === (Left(TransferFailedException(errorCause)))
+  }
+
   /*
    Tests for the detail of byte transfers
    */
@@ -116,6 +148,19 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
       txBuffer.limit === 4 && rxBuffer.limit === 4
+    })
+  }
+
+  "transfer" should "attempt to transfer 1 byte" in {
+    controller.transfer(device, None)
+    (mockApi.transfer _).verify(*, *, *, 1, *)
+  }
+
+  it should "allocate 1 byte in both the transmit and receive buffers" in {
+    controller.transfer(device, None)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 1 && rxBuffer.limit === 1
     })
   }
 
@@ -162,6 +207,22 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => txBuffer.toSeq.tail == data })
   }
 
+  "transfer" should "set the outgoing byte in the first byte of the transmit buffer" in {
+    controller.transfer(device, Some(0x12))
+
+    (mockApi.transfer _).verify(where {(_, txBuffer, _, _, _) =>
+      txBuffer.get(0) === 0x12.toByte
+    })
+  }
+
+  it should "set the transmit buffer to zero if there is no outgoing byte" in {
+    controller.transfer(device, None)
+
+    (mockApi.transfer _).verify(where {(_, txBuffer, _, _, _) =>
+      txBuffer.get(0) === 0x00.toByte
+    })
+  }
+
   "receive" should "return the requested number of bytes" in {
     (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
       rxBuffer.put(b"1").put(b"2").put(b"3").put(b"4")
@@ -188,6 +249,15 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.transfer _).when(*, *, *, *, *).returns(numBytesWritten)
 
     controller.transmit(device, register, Seq(b"1", b"2", b"3")) should === (Left(IncompleteDataException(desiredNumBytes, numBytesWritten - 1)))
+  }
+
+  "transfer" should "return the first byte of the receive buffer" in {
+    (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
+      rxBuffer.put(b"1")
+      1
+    }
+
+    controller.transfer(device, None) === Right(b"1")
   }
 
 

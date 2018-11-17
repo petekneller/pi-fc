@@ -21,10 +21,13 @@ trait SpiRegisterController extends RegisterBasedDeviceController {
   type Register = Byte
 }
 
-// TODO Ugh! I hate XyzImpl's. Must think of a better name
-class SpiControllerImpl(api: SpiApi) extends SpiRegisterController {
+trait SpiBidirectionalController extends BidirectionalDeviceController {
+  type Addr = SpiAddress
+}
 
-  private val clockSpeed = Kilohertz(100)
+// TODO Ugh! I hate XyzImpl's. Must think of a better name
+class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidirectionalController {
+  override type Addr = SpiAddress
 
   def receive(device: SpiAddress, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
@@ -57,7 +60,24 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController {
       }
     })
 
+  def transfer(device: Addr, dataToWrite: Option[Byte]): DeviceResult[Byte] =
+    withFileDescriptor(device, { fd =>
+      val requisiteBufferSize = 1
+      val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
+      val rxBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
+
+      txBuffer.put(0, dataToWrite.getOrElse(0x0))
+      for {
+        bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
+        _ <- assertCompleteData(1, bytesTransferred)
+      } yield {
+        rxBuffer.toSeq.head
+      }
+    })
+
   // Internal API from here on down
+
+  private val clockSpeed = Kilohertz(100)
 
   private def assertCompleteData(expected: Int, actual: Int): Either[IncompleteDataException, Unit] = if (expected == actual) Right(()) else Left(IncompleteDataException(expected, actual))
 
