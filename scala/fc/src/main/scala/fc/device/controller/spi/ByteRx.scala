@@ -5,8 +5,10 @@ import eu.timepit.refined.auto.autoRefineV
 import fc.device.api._
 
 case class ByteRx(sourceRegister: Byte) extends Rx {
-    type T = Byte
-    type Ctrl = SpiController
+  type T = Byte
+  type Ctrl = SpiController
 
-    def read(device: SpiAddress)(implicit controller: SpiController) = controller.receive(device, sourceRegister, 1) map (_.head)
+  def read(device: SpiAddress)(implicit controller: SpiController) = bytesRx.read(device) map (_.head)
+
+  private val bytesRx = BytesRx(sourceRegister, 1)
 }
