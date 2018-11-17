@@ -47,10 +47,10 @@ object Mpu9250 {
   }
 
   object configs {
-    val GYRO_FS_SEL =    MultiBitFlag(registers.GYRO_CONFIG, 4, 2, enums.GyroFullScale)
-    val ACCEL_FS_SEL =   MultiBitFlag(registers.ACCEL_CONFIG_1, 4, 2, enums.AccelFullScale)
-    val SLEEP =          SingleBitFlag(registers.PWR_MGMT_1, 6)
-    val H_RESET =        SingleBitFlag(registers.PWR_MGMT_1, 7) // hardware reset - all config registers go to their default values
+    val GYRO_FS_SEL =    MultiBitConfiguration(registers.GYRO_CONFIG, 4, 2, enums.GyroFullScale)
+    val ACCEL_FS_SEL =   MultiBitConfiguration(registers.ACCEL_CONFIG_1, 4, 2, enums.AccelFullScale)
+    val SLEEP =          SingleBitConfiguration(registers.PWR_MGMT_1, 6)
+    val H_RESET =        SingleBitConfiguration(registers.PWR_MGMT_1, 7) // hardware reset - all config registers go to their default values
   }
 
   object constants {
