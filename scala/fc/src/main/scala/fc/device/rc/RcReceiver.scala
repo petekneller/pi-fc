@@ -8,7 +8,7 @@ trait RcReceiver extends Device {
   type Ctrl = FileSystemController
 
   def readChannel(channel: RcChannel): DeviceResult[RcInput] =
-    RxString.numeric[RcInput](channel.register, { l => RcInput.fromPpm(l.toInt, channel.min, channel.max, channel.mid) }).read(address)
+    NumericRx[RcInput](channel.register, { l => RcInput.fromPpm(l.toInt, channel.min, channel.max, channel.mid) }).read(address)
 }
 
 object RcReceiver {

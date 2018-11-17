@@ -20,13 +20,13 @@ case class BooleanConfiguration(register: String) extends Rx with Tx {
 
   def write(device: FileSystemAddress, value: Boolean)(implicit controller: FileSystemController): DeviceResult[Unit] = tx.write(device, if (value) "1" else "0")
 
-  private val rx = RxString.string(register, refineMV[Positive](1))
-  private val tx = TxString.string(register)
+  private val rx = StringRx(register, refineMV[Positive](1))
+  private val tx = StringTx(register)
 }
 
 case class NotABooleanException(actualValue: String) extends DeviceException
 
 
 object NumericConfiguration {
-  def apply[A](register: String, map: Long => A = identity[Long] _, contramap: A => Long = identity[Long] _) = JointConfiguration(RxString.numeric(register, map))(TxString.numeric(register, contramap))
+  def apply[A](register: String, map: Long => A = identity[Long] _, contramap: A => Long = identity[Long] _) = JointConfiguration(NumericRx(register, map))(NumericTx(register, contramap))
 }
