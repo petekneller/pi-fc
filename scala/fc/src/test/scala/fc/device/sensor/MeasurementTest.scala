@@ -6,12 +6,12 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import cats.syntax.either._
-import fc.device.controller.spi.{SpiController, SpiAddress}
+import fc.device.controller.spi.{SpiRegisterController, SpiAddress}
 
 class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val address = SpiAddress(0, 0)
-  implicit val mockController = stub[SpiController]
+  implicit val mockController = stub[SpiRegisterController]
   val register1 = 1.toByte
   val register2 = 2.toByte
 

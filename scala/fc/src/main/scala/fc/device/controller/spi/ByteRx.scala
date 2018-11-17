@@ -6,9 +6,9 @@ import fc.device.api._
 
 case class ByteRx(sourceRegister: Byte) extends Rx {
   type T = Byte
-  type Ctrl = SpiController
+  type Ctrl = SpiRegisterController
 
-  def read(device: SpiAddress)(implicit controller: SpiController) = bytesRx.read(device) map (_.head)
+  def read(device: SpiAddress)(implicit controller: SpiRegisterController) = bytesRx.read(device) map (_.head)
 
   private val bytesRx = BytesRx(sourceRegister, 1)
 }

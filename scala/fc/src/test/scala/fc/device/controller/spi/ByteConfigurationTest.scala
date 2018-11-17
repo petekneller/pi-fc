@@ -12,7 +12,7 @@ import fc.device.api._
 class ByteConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = SpiAddress(0, 0)
-  implicit val mockController = stub[SpiController]
+  implicit val mockController = stub[SpiRegisterController]
   val register = 0x35.toByte
 
   "read" should "make a read request for that register" in {

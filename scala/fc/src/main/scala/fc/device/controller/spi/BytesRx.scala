@@ -7,7 +7,7 @@ import fc.device.api._
 
 case class BytesRx(sourceRegister: Byte, numBytes: Int Refined Positive) extends Rx {
   type T = Seq[Byte]
-  type Ctrl = SpiController
+  type Ctrl = SpiRegisterController
 
-  def read(device: SpiAddress)(implicit controller: SpiController): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
+  def read(device: SpiAddress)(implicit controller: SpiRegisterController): DeviceResult[Seq[Byte]] = controller.receive(device, sourceRegister, numBytes)
 }

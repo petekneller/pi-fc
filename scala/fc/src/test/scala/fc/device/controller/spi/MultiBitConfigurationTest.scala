@@ -12,7 +12,7 @@ import fc.device.api._
 class MultiBitConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = SpiAddress(0, 0)
-  implicit val mockController = stub[SpiController]
+  implicit val mockController = stub[SpiRegisterController]
   val register = 0x35.toByte
 
   "receive" should "return only the specified bits" in {

@@ -16,13 +16,13 @@ case class SpiAddress(busNumber: Int, chipSelect: Int) extends Address {
   def toFilename: String = s"/dev/spidev${busNumber}.${chipSelect}"
 }
 
-trait SpiController extends RegisterBasedDeviceController {
+trait SpiRegisterController extends RegisterBasedDeviceController {
   type Addr = SpiAddress
   type Register = Byte
 }
 
 // TODO Ugh! I hate XyzImpl's. Must think of a better name
-class SpiControllerImpl(api: SpiApi) extends SpiController {
+class SpiControllerImpl(api: SpiApi) extends SpiRegisterController {
 
   private val clockSpeed = Kilohertz(100)
 

@@ -10,7 +10,7 @@ import fc.device.api._
 import fc.device.controller.spi._
 
 trait Mpu9250 extends Device {
-  type Ctrl = SpiController
+  type Ctrl = SpiRegisterController
   import Mpu9250.{registers, constants, configs, enums}
 
   def checkCommunication(): DeviceResult[Boolean] = ByteRx(registers.WHOAMI).read(address).map(_ === constants.DEVICE_ID)
@@ -41,9 +41,9 @@ trait Mpu9250 extends Device {
 
 object Mpu9250 {
 
-  def apply(a: SpiAddress)(implicit c: SpiController) = new Mpu9250 {
+  def apply(a: SpiAddress)(implicit c: SpiRegisterController) = new Mpu9250 {
     val address: SpiAddress = a
-    implicit val controller: SpiController = c
+    implicit val controller: SpiRegisterController = c
   }
 
   object configs {

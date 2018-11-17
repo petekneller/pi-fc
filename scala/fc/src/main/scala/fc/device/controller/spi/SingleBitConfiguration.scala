@@ -12,12 +12,12 @@ import fc.device.api._
 
 case class SingleBitConfiguration(register: Byte, bit: SingleBitConfiguration.BetweenZeroAndSeven) extends Configuration { self =>
   type T = Boolean
-  type Ctrl = SpiController
+  type Ctrl = SpiRegisterController
 
-  def read(device: SpiAddress)(implicit controller: SpiController): DeviceResult[Boolean] =
+  def read(device: SpiAddress)(implicit controller: SpiRegisterController): DeviceResult[Boolean] =
     rx.read(device).map(registerValue => ((registerValue.unsigned >> bit) & 0x1) == 0x1)
 
-  def write(device: SpiAddress, value: Boolean)(implicit controller: SpiController): DeviceResult[Unit] = for {
+  def write(device: SpiAddress, value: Boolean)(implicit controller: SpiRegisterController): DeviceResult[Unit] = for {
     originalValue <- rx.read(device)
     bitMask = 0x1 << bit
     newValue = if (value)
