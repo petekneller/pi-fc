@@ -5,7 +5,7 @@ import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
 import fc.device.api._
 
-case class BooleanConfiguration(register: String) extends Rx with Tx {
+case class BooleanConfiguration(register: String) extends Configuration {
   type T = Boolean
   type Ctrl = FileSystemController
 
@@ -25,8 +25,3 @@ case class BooleanConfiguration(register: String) extends Rx with Tx {
 }
 
 case class NotABooleanException(actualValue: String) extends DeviceException
-
-
-object NumericConfiguration {
-  def apply[A](register: String, map: Long => A = identity[Long] _, contramap: A => Long = identity[Long] _) = JointConfiguration(NumericRx(register, map))(NumericTx(register, contramap))
-}

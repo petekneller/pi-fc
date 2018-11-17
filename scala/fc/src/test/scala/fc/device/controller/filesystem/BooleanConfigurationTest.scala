@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 
-class StringConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class BooleanConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = new FileSystemAddress { def toFilename = "unused" }
   implicit val mockController = stub[FileSystemController]
