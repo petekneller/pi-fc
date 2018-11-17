@@ -5,9 +5,7 @@ import fc.device.api._
 
 case class NotNumericException(actualValue: String) extends DeviceException
 
-object NumericRx {
-
-  def apply[A](register: String, f: Long => A = identity[Long] _) = new Rx {
+case class NumericRx[A](register: String, f: Long => A = identity[Long] _) extends Rx {
     type T = A
     type Ctrl = FileSystemController
 
@@ -17,6 +15,4 @@ object NumericRx {
     } yield f(long)
 
     private val rx = StringRx(register)
-  }
-
 }
