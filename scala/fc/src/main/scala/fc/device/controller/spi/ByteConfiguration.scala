@@ -20,8 +20,8 @@ case class ByteConfiguration(register: Byte) extends Configuration {
   def write(device: SpiAddress, value: Byte)(implicit controller: SpiController): DeviceResult[Unit] =
     tx.write(device, value)
 
-  private val rx = ByteRx.byte(register)
-  private val tx = ByteTx.byte(register)
+  private val rx = ByteRx(register)
+  private val tx = ByteTx(register)
 }
 
 case class SingleBitFlag(register: Byte, bit: SingleBitFlag.BetweenZeroAndSeven) extends Configuration { self =>
@@ -41,8 +41,8 @@ case class SingleBitFlag(register: Byte, bit: SingleBitFlag.BetweenZeroAndSeven)
     _ <- tx.write(device, newValue.toByte)
   } yield ()
 
-  private val rx = ByteRx.byte(register)
-  private val tx = ByteTx.byte(register)
+  private val rx = ByteRx(register)
+  private val tx = ByteTx(register)
 }
 
 object SingleBitFlag {
@@ -82,6 +82,6 @@ case class MultiBitFlag[E <: FlagEnumeration](register: Byte, hiBit: SingleBitFl
     _ <- tx.write(device, newRegisterValue.toByte)
   } yield ()
 
-  private val rx = ByteRx.byte(register)
-  private val tx = ByteTx.byte(register)
+  private val rx = ByteRx(register)
+  private val tx = ByteTx(register)
 }
