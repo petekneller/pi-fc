@@ -27,5 +27,8 @@ lazy val spidev = project.in(file("spidev")).
 lazy val fc = project.in(file("fc")).
   dependsOn(ioctl, spidev)
 
+lazy val util = project.in(file("util")).
+  dependsOn(ioctl, spidev, fc)
+
 lazy val root = project.in(file(".")).
-  aggregate(ioctl, spidev, fc)
+  aggregate(ioctl, spidev, fc, util)

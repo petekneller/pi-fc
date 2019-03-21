@@ -1,10 +1,10 @@
-package fc.util
+package util.spitotcp.v0
 
 import java.net.ServerSocket
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 
 /*
- As close a port of https://github.com/emlid/Navio2/blob/master/Utilities/ublox-spi-to-tcp/ublox-spi-to-tcp.c to scala as I can get. For now.
+ See README.md in util.spitotcp
  */
 object SpiToTcp {
 
@@ -35,11 +35,8 @@ object SpiToTcp {
         else
           None
 
-        println(s"Read from TCP: ${if (dataToSpi.isDefined) 1 else 0 } byte(s)")
-
         val dataFromSpi = spiController.transfer(gps, dataToSpi).fold(l => throw new RuntimeException(l.toString), identity)
 
-        println(s"Read from SPI byte: ${dataFromSpi.toString}")
         clientOutput.write(Array(dataFromSpi))
 
       } // while(true)
