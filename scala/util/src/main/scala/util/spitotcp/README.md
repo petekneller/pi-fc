@@ -13,3 +13,13 @@ And this is a screenshot of the original C programming doing the same:
 ![spi-to-tcp-c](spi-to-tcp-c.png SPI to TCP in C)
 
 Note that as well as the extra CPU usage by the scala version (and of course memory) the C CPU usage is mostly system, whereas with scala there's much more user time.
+
+## v1
+
+A very basic attempt to improve efficiency:
+* transfers chunks rather than just 1 byte at a time
+* adds a `Thread.sleep` so that the thread is not constantly spinning
+
+Superficially this does improve CPU usage:
+* transferring 100 bytes instead of 1 lead to CPU usage ~5%
+* with 100 byte transfers and a `Thread.sleep(100)` - CPU ~1%

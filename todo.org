@@ -1,5 +1,5 @@
 * TODO spi-to-tcp
-** v1: instead of looping constantly just add a thread sleep or other? And read > 1 byte?
+** +v1: instead of looping constantly just add a thread sleep or other? And read > 1 byte?+
 *** +extend =BidirectionalController= to transmit > 1 byte; further unit tests+
 ** create a device around the spi that includes a input queue, output queue and some means to transfer data between them, but attempts to not bind to a threading impl??
 *** the 'means to transfer data between them' could just be fn the takes input queue bytes, sends them to spi and adds bytes from spi to the output queue - leave it up to the caller how that gets scheduled
