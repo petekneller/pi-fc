@@ -1,6 +1,7 @@
 package util.spitotcp.v0
 
 import java.net.ServerSocket
+import eu.timepit.refined.auto.{autoRefineV}
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 
 /*
@@ -31,13 +32,13 @@ object SpiToTcp {
       while (true) {
 
         val dataToSpi = if (clientInput.available() >= 1)
-          Some(clientInput.read.toByte)
+          Seq(clientInput.read.toByte)
         else
-          None
+          Seq.empty[Byte]
 
-        val dataFromSpi = spiController.transfer(gps, dataToSpi).fold(l => throw new RuntimeException(l.toString), identity)
+        val dataFromSpi = spiController.transfer(gps, dataToSpi, 1).fold(l => throw new RuntimeException(l.toString), identity)
 
-        clientOutput.write(Array(dataFromSpi))
+        clientOutput.write(dataFromSpi.toArray)
 
       } // while(true)
     } // while(true)

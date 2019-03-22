@@ -1,6 +1,12 @@
-* TODO add a 'bidirection controller' concept
-** split SpiControllerTest into public API and private impl?
-** same for FileSystemController?
+* TODO spi-to-tcp
+** v1: instead of looping constantly just add a thread sleep or other? And read > 1 byte?
+*** +extend =BidirectionalController= to transmit > 1 byte; further unit tests+
+** create a device around the spi that includes a input queue, output queue and some means to transfer data between them, but attempts to not bind to a threading impl??
+*** the 'means to transfer data between them' could just be fn the takes input queue bytes, sends them to spi and adds bytes from spi to the output queue - leave it up to the caller how that gets scheduled
+*** scheduling v1 could be just a periodic task
+*** scheduling v2 could be a blocking wait on input queue that has a timeout; when the timeout expires it polls the spi even though it hasn't yet any input data
+** v2: a 3 (blocking) thread process; 1 operates the spi/input-queue/output-queue device; 1 transfers tcp -> spi nput queue; the 3rd transfers spi output queue -> tcp
+** see what it looks like with fs2 (or cats-effect async stuff?)
 * TODO convert from SBT to MIll and refactor spidev tests -> integration tests
 * DONE refactor device/api: move impls of rx and tx into device/controller, squash device/configuration, separate file and spi controllers
 * DONE figure out how to remove the concept of 'register' from controllers, since uBlox GPS isn't register-based (is message-based)

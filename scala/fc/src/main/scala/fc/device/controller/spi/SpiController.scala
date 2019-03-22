@@ -3,7 +3,7 @@ package fc.device.controller.spi
 import java.nio.ByteBuffer
 import cats.syntax.either._
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.numeric.{ Positive, NonNegative }
 import eu.timepit.refined.auto.autoUnwrap
 import squants.time.{Frequency, Kilohertz}
 import ioctl.IOCtl
@@ -60,18 +60,18 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidir
       }
     })
 
-  def transfer(device: Addr, dataToWrite: Option[Byte]): DeviceResult[Byte] =
+  def transfer(device: Addr, dataToWrite: Seq[Byte], numBytesToRead: Int Refined NonNegative): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
-      val requisiteBufferSize = 1
+      val requisiteBufferSize = scala.math.max(dataToWrite.length, numBytesToRead)
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
       val rxBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)
 
-      txBuffer.put(0, dataToWrite.getOrElse(0x0))
+      dataToWrite.zipWithIndex foreach { case (b, i) => txBuffer.put(i, b) }
       for {
         bytesTransferred <- transfer(fd, txBuffer, rxBuffer, requisiteBufferSize, clockSpeed)
-        _ <- assertCompleteData(1, bytesTransferred)
+        _ <- assertCompleteData(requisiteBufferSize, bytesTransferred)
       } yield {
-        rxBuffer.toSeq.head
+        rxBuffer.toSeq
       }
     })
 

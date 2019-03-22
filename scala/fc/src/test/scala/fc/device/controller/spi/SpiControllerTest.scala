@@ -60,12 +60,12 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   "transfer" should "open the correct file" in {
-    controller.transfer(device, None)
+    controller.transfer(device, Seq.empty[Byte], 0)
     (mockApi.open _).verify("/dev/spidev0.0", *)
   }
 
   it should "open the underlying file read-write" in {
-    controller.transfer(device, None)
+    controller.transfer(device, Seq.empty[Byte], 0)
     (mockApi.open _).verify(*, O_RDWR)
   }
 
@@ -73,7 +73,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val errorCause = new RuntimeException("")
     (mockApi.open _) when(*, *) throws errorCause
 
-    controller.transfer(device, None) should === (Left(DeviceUnavailableException(device, errorCause)))
+    controller.transfer(device, Seq.empty[Byte], 0) should === (Left(DeviceUnavailableException(device, errorCause)))
   }
 
   "receive" should "close the underlying file even if an error occurs during transfer" in {
@@ -110,7 +110,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.open _).when(*, *).returns(fd)
     (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
 
-    controller.transfer(device, None)
+    controller.transfer(device, Seq.empty[Byte], 0)
     (mockApi.close _).verify(fd).once()
   }
 
@@ -118,7 +118,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val errorCause = new RuntimeException("")
     (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
 
-    controller.transfer(device, None) should === (Left(TransferFailedException(errorCause)))
+    controller.transfer(device, Seq.empty[Byte], 0) should === (Left(TransferFailedException(errorCause)))
   }
 
   /*
@@ -151,16 +151,55 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     })
   }
 
-  "transfer" should "attempt to transfer 1 byte" in {
-    controller.transfer(device, None)
-    (mockApi.transfer _).verify(*, *, *, 1, *)
+  "transfer" should "attempt to transfer the maximum of the outgoing or the requested number of bytes (1)" in {
+    controller.transfer(device, Seq.empty[Byte], 0)
+    (mockApi.transfer _).verify(*, *, *, 0, *)
   }
 
-  it should "allocate 1 byte in both the transmit and receive buffers" in {
-    controller.transfer(device, None)
+  it should "attempt to transfer the maximum of the outgoing or the requested number of bytes (2)" in {
+    controller.transfer(device, Seq(b"1", b"2", b"3"), 3)
+    (mockApi.transfer _).verify(*, *, *, 3, *)
+  }
+
+  it should "attempt to transfer the maximum of the outgoing or the requested number of bytes (3)" in {
+    controller.transfer(device, Seq.empty[Byte], 10)
+    (mockApi.transfer _).verify(*, *, *, 10, *)
+  }
+
+  it should "attempt to transfer the maximum of the outgoing or the requested number of bytes (4)" in {
+    controller.transfer(device, Seq(b"1", b"2", b"3"), 0)
+    (mockApi.transfer _).verify(*, *, *, 3, *)
+  }
+
+  it should "allocate the same number of bytes in both the transmit and receive buffers (1)" in {
+    controller.transfer(device, Seq.empty[Byte], 0)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 1 && rxBuffer.limit === 1
+      txBuffer.limit === 0 && rxBuffer.limit === 0
+    })
+  }
+
+  it should "allocate the same number of bytes in both the transmit and receive buffers (2)" in {
+    controller.transfer(device, Seq(b"1", b"2", b"3"), 3)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 3 && rxBuffer.limit === 3
+    })
+  }
+
+  it should "allocate the same number of bytes in both the transmit and receive buffers (3)" in {
+    controller.transfer(device, Seq.empty[Byte], 10)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 10 && rxBuffer.limit === 10
+    })
+  }
+
+  it should "allocate the same number of bytes in both the transmit and receive buffers (4)" in {
+    controller.transfer(device, Seq(b"1", b"2", b"3"), 0)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 3 && rxBuffer.limit === 3
     })
   }
 
@@ -207,19 +246,13 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.transfer _).verify(where { (_, txBuffer, _, _, _) => txBuffer.toSeq.tail == data })
   }
 
-  "transfer" should "set the outgoing byte in the first byte of the transmit buffer" in {
-    controller.transfer(device, Some(0x12))
+  "transfer" should "set the outgoing bytes in the transmit buffer, padding the rest with zeroes if the incoming number exceeds the outgoing" in {
+    controller.transfer(device, Seq(0x12, 0x34), 3)
 
     (mockApi.transfer _).verify(where {(_, txBuffer, _, _, _) =>
       txBuffer.get(0) === 0x12.toByte
-    })
-  }
-
-  it should "set the transmit buffer to zero if there is no outgoing byte" in {
-    controller.transfer(device, None)
-
-    (mockApi.transfer _).verify(where {(_, txBuffer, _, _, _) =>
-      txBuffer.get(0) === 0x00.toByte
+      txBuffer.get(1) === 0x34.toByte
+      txBuffer.get(2) === 0x00.toByte
     })
   }
 
@@ -251,13 +284,13 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transmit(device, register, Seq(b"1", b"2", b"3")) should === (Left(IncompleteDataException(desiredNumBytes, numBytesWritten - 1)))
   }
 
-  "transfer" should "return the first byte of the receive buffer" in {
+  "transfer" should "return the maximum of the outgoing or the requested number of bytes" in {
     (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
-      rxBuffer.put(b"1")
-      1
+      rxBuffer.put(b"1").put(b"2")
+      2
     }
 
-    controller.transfer(device, None) === Right(b"1")
+    controller.transfer(device, Seq(0x12, 0x34), 1) === Right(Seq(b"1", b"2"))
   }
 
 
