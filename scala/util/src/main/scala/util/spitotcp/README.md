@@ -23,3 +23,9 @@ A very basic attempt to improve efficiency:
 Superficially this does improve CPU usage:
 * transferring 100 bytes instead of 1 lead to CPU usage ~5%
 * with 100 byte transfers and a `Thread.sleep(100)` - CPU ~1%
+
+## v2
+
+Not an update to improve efficiency/performance; instead an experiment in separating the two ends of the data pipe and putting an async/thread boundary between them.
+
+The drop in size of chunks read/written to the TCP stream (back down to 1) likely has a small impact on efficiency as CPU usage is back up to 2-4%. Probably this is due to transmitting bytes 1 at a time from the queue to TCP output stream when we know that there will be chunks of at least `maxBytesToTransfer`.
