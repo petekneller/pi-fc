@@ -76,6 +76,40 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transferN(device, Seq.empty[Byte], 0) should === (Left(DeviceUnavailableException(device, errorCause)))
   }
 
+  "transfer" should "open the correct file" in {
+    controller.transfer(device, Seq.empty[Byte])
+    (mockApi.open _).verify("/dev/spidev0.0", *)
+  }
+
+  it should "open the underlying file read-write" in {
+    controller.transfer(device, Seq.empty[Byte])
+    (mockApi.open _).verify(*, O_RDWR)
+  }
+
+  it should "return a 'device unavailable' error if the underlying 'open' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.open _) when(*, *) throws errorCause
+
+    controller.transfer(device, Seq.empty[Byte]) should === (Left(DeviceUnavailableException(device, errorCause)))
+  }
+
+  "receive (bi-directional)" should "open the correct file" in {
+    controller.receive(device, 0)
+    (mockApi.open _).verify("/dev/spidev0.0", *)
+  }
+
+  it should "open the underlying file read-write" in {
+    controller.receive(device, 0)
+    (mockApi.open _).verify(*, O_RDWR)
+  }
+
+  it should "return a 'device unavailable' error if the underlying 'open' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.open _) when(*, *) throws errorCause
+
+    controller.receive(device, 0) should === (Left(DeviceUnavailableException(device, errorCause)))
+  }
+
   "receive" should "close the underlying file even if an error occurs during transfer" in {
     (mockApi.open _).when(*, *).returns(fd)
     (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
@@ -118,7 +152,37 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val errorCause = new RuntimeException("")
     (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
 
-    controller.transfer(device, Seq.empty[Byte], 0) should === (Left(TransferFailedException(errorCause)))
+    controller.transferN(device, Seq.empty[Byte], 0) should === (Left(TransferFailedException(errorCause)))
+  }
+
+  "transfer" should "close the underlying file even if an error occurs during transfer" in {
+    (mockApi.open _).when(*, *).returns(fd)
+    (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
+
+    controller.transfer(device, Seq.empty[Byte])
+    (mockApi.close _).verify(fd).once()
+  }
+
+  it should "return a 'transfer failed' error if the underlying 'transfer' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
+
+    controller.transfer(device, Seq.empty[Byte]) should === (Left(TransferFailedException(errorCause)))
+  }
+
+  "receive (bi-directional)" should "close the underlying file even if an error occurs during transfer" in {
+    (mockApi.open _).when(*, *).returns(fd)
+    (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
+
+    controller.receive(device, 0)
+    (mockApi.close _).verify(fd).once()
+  }
+
+  it should "return a 'transfer failed' error if the underlying 'transfer' call fails" in {
+    val errorCause = new RuntimeException("")
+    (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
+
+    controller.receive(device, 0) should === (Left(TransferFailedException(errorCause)))
   }
 
   /*
@@ -203,6 +267,32 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     })
   }
 
+  "transfer" should "attempt to transfer the number of bytes present in the input data" in {
+    controller.transfer(device, Seq(b"1", b"2", b"3"))
+    (mockApi.transfer _).verify(*, *, *, 3, *)
+  }
+
+  it should "allocate the same number of bytes in both the transmit and receive buffers" in {
+    controller.transfer(device, Seq(b"1", b"2", b"3"))
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 3 && rxBuffer.limit === 3
+    })
+  }
+
+  "receive (bi-directional)" should "attempt to transfer the requested number of bytes" in {
+    controller.transfer(device, 3)
+    (mockApi.transfer _).verify(*, *, *, 3, *)
+  }
+
+  it should "allocate the same number of bytes in both the transmit and receive buffers" in {
+    controller.transfer(device, 3)
+
+    (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
+      txBuffer.limit === 3 && rxBuffer.limit === 3
+    })
+  }
+
   "receive" should "set a read flag in the first byte of the transmit buffer" in {
     controller.receive(device, register, 1)
 
@@ -256,6 +346,15 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     })
   }
 
+  "transfer" should "set the outgoing bytes in the transmit buffer" in {
+    controller.transfer(device, Seq(0x12, 0x34))
+
+    (mockApi.transfer _).verify(where {(_, txBuffer, _, _, _) =>
+      txBuffer.get(0) === 0x12.toByte
+      txBuffer.get(1) === 0x34.toByte
+    })
+  }
+
   "receive" should "return the requested number of bytes" in {
     (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
       rxBuffer.put(b"1").put(b"2").put(b"3").put(b"4")
@@ -291,6 +390,26 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     }
 
     controller.transferN(device, Seq(0x12, 0x34), 1) === Right(Seq(b"1", b"2"))
+  }
+
+  "receive (bi-directional)" should "return the requested number of bytes" in {
+    (mockApi.transfer _).when(*, *, *, *, *).onCall{ (_, _, rxBuffer, _, _) =>
+      rxBuffer.put(b"1").put(b"2").put(b"3")
+      3
+    }
+
+    controller.receive(device, 3) should === (Right(Seq(b"1", b"2", b"3")))
+  }
+
+  it should "return an 'incomplete data' error if less than N bytes could be fetched" in {
+    val expectedNumBytes = refineMV[Positive](2)
+    val actualNumBytes = 1
+    (mockApi.transfer _).when(*, *, *, expectedNumBytes, *).onCall{ (_, _, rxBuffer, _, _) =>
+      rxBuffer.put(b"1")
+      actualNumBytes
+    }
+
+    controller.receive(device, expectedNumBytes) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
   }
 
 

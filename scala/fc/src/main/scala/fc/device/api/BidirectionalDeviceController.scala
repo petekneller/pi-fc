@@ -1,7 +1,7 @@
 package fc.device.api
 
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.numeric.{ NonNegative, Positive }
 
 trait BidirectionalDeviceController extends Controller {
 
@@ -13,4 +13,7 @@ trait BidirectionalDeviceController extends Controller {
   @deprecated("Beware, using this method incorrectly can lead to data corruption")
   def transferN(device: Addr, dataToWrite: Seq[Byte], numBytesToRead: Int Refined NonNegative): DeviceResult[Seq[Byte]]
 
+  def transfer(device: Addr, dataToWrite: Seq[Byte]): DeviceResult[Seq[Byte]]
+
+  def receive(device: Addr, numBytesToRead: Int Refined Positive): DeviceResult[Seq[Byte]]
 }

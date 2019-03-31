@@ -2,9 +2,10 @@ package fc.device.controller.spi
 
 import java.nio.ByteBuffer
 import cats.syntax.either._
-import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.{ Refined, RefType }
 import eu.timepit.refined.numeric.{ Positive, NonNegative }
-import eu.timepit.refined.auto.autoUnwrap
+import eu.timepit.refined.auto.{ autoRefineV, autoUnwrap }
+import eu.timepit.refined.refineV
 import squants.time.{Frequency, Kilohertz}
 import ioctl.IOCtl
 import IOCtl.O_RDWR
@@ -28,6 +29,8 @@ trait SpiBidirectionalController extends BidirectionalDeviceController {
 // TODO Ugh! I hate XyzImpl's. Must think of a better name
 class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidirectionalController {
   override type Addr = SpiAddress
+
+  // API for RegisterBasedDeviceController
 
   def receive(device: SpiAddress, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
@@ -60,6 +63,8 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidir
       }
     })
 
+  // API for BidirectionalDeviceController
+
   def transferN(device: Addr, dataToWrite: Seq[Byte], numBytesToRead: Int Refined NonNegative): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = scala.math.max(dataToWrite.length, numBytesToRead)
@@ -74,6 +79,16 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidir
         rxBuffer.toSeq
       }
     })
+
+  def transfer(device: Addr, dataToWrite: Seq[Byte]): DeviceResult[Seq[Byte]] =
+    transferN(device, dataToWrite, 0)
+
+  def receive(device: Addr, numBytesToRead: Int Refined Positive): DeviceResult[Seq[Byte]] = {
+    // This is a faff - a Positive is clearly NonNegative but refined doesn't seem to be able to infer that.
+    // The correct solution is to learn how to add that inference, but I'd rather not spend the time right now.
+    val numBytes: Int Refined NonNegative = refineV[NonNegative](RefType[Refined].unwrap(numBytesToRead)).toOption.get
+    transferN(device, Seq.empty[Byte], numBytes)
+  }
 
   // Internal API from here on down
 
