@@ -60,7 +60,7 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidir
       }
     })
 
-  def transfer(device: Addr, dataToWrite: Seq[Byte], numBytesToRead: Int Refined NonNegative): DeviceResult[Seq[Byte]] =
+  def transferN(device: Addr, dataToWrite: Seq[Byte], numBytesToRead: Int Refined NonNegative): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, { fd =>
       val requisiteBufferSize = scala.math.max(dataToWrite.length, numBytesToRead)
       val txBuffer = ByteBuffer.allocateDirect(requisiteBufferSize)

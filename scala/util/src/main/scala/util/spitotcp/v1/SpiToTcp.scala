@@ -34,7 +34,7 @@ object SpiToTcp {
 
         val dataToSpi = (0 until min(maxBytesToTransfer, clientInput.available())) map {_ => clientInput.read.toByte }
 
-        val dataFromSpi = spiController.transfer(gps, dataToSpi, maxBytesToTransfer).fold(l => throw new RuntimeException(l.toString), identity)
+        val dataFromSpi = spiController.transferN(gps, dataToSpi, maxBytesToTransfer).fold(l => throw new RuntimeException(l.toString), identity)
 
         clientOutput.write(dataFromSpi.toArray)
 

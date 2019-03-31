@@ -53,9 +53,9 @@ object SpiToTcp {
             val dataFromQueue = Option(spiInputQueue.poll(delayMs, MILLISECONDS))
 
             val dataFromSpi = dataFromQueue.fold(
-              spiController.transfer(gps, Seq.empty[Byte], maxBytesToTransfer)
+              spiController.transferN(gps, Seq.empty[Byte], maxBytesToTransfer)
             )(
-              data => spiController.transfer(gps, Seq(data), 1)
+              data => spiController.transferN(gps, Seq(data), 1)
             ).fold(l => throw new RuntimeException(l.toString), identity)
 
             dataFromSpi foreach spiOutputQueue.add
