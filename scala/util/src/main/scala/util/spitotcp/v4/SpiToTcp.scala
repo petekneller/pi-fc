@@ -1,10 +1,11 @@
-package util.spitotcp.v3
+package util.spitotcp.v4
 
 import java.net.ServerSocket
 import java.util.concurrent.{ LinkedBlockingQueue, Executors }
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.HOURS
 import scala.math.min
+import scala.concurrent.{ ExecutionContext, Future }
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
@@ -39,41 +40,33 @@ object SpiToTcp {
     val spiOutputQueue = new LinkedBlockingQueue[Byte]()
 
     val executor = Executors.newCachedThreadPool()
+    implicit val ec = ExecutionContext.fromExecutor(executor)
 
-    def task1(): Runnable = new Runnable{
-      def run(): Unit = {
-        val dataFromTcp = clientInput.read.toByte
-        spiInputQueue.add(dataFromTcp)
-        executor.submit(task1())
-      }
-    }
+    def task1()(implicit ec: ExecutionContext): Unit = Future {
+      val dataFromTcp = clientInput.read.toByte
+      spiInputQueue.add(dataFromTcp)
+    } foreach { _ => task1() }
 
-    def task2(): Runnable = new Runnable{
-      def run(): Unit = {
-        val dataFromQueue = Option(spiInputQueue.poll(delayMs, MILLISECONDS))
+    def task2()(implicit ec: ExecutionContext): Unit = Future {
+      val dataFromQueue = Option(spiInputQueue.poll(delayMs, MILLISECONDS))
 
-        val dataFromSpi = dataFromQueue.fold(
-          spiController.receive(gps, maxBytesToTransfer)
-        )(
-          data => spiController.transfer(gps, Seq(data))
-        ).fold(l => throw new RuntimeException(l.toString), identity)
+      val dataFromSpi = dataFromQueue.fold(
+        spiController.receive(gps, maxBytesToTransfer)
+      )(
+        data => spiController.transfer(gps, Seq(data))
+      ).fold(l => throw new RuntimeException(l.toString), identity)
 
-        dataFromSpi foreach spiOutputQueue.add
-        executor.submit(task2())
-      }
-    }
+      dataFromSpi foreach spiOutputQueue.add
+    } foreach { _ => task2() }
 
-    def task3(): Runnable = new Runnable{
-      def run(): Unit = {
-        val dataFromQueue = spiOutputQueue.take()
-        clientOutput.write(Array(dataFromQueue))
-        executor.submit(task3())
-      }
-    }
+    def task3()(implicit ec: ExecutionContext): Unit = Future {
+      val dataFromQueue = spiOutputQueue.take()
+      clientOutput.write(Array(dataFromQueue))
+    } foreach { _ => task3() }
 
-    executor.submit(task1())
-    executor.submit(task2())
-    executor.submit(task3())
+    task1()
+    task2()
+    task3()
 
     // Clearly this isn't a long-term solution
     executor.awaitTermination(1, HOURS)

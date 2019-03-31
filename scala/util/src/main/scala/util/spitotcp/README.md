@@ -33,3 +33,7 @@ The drop in size of chunks read/written to the TCP stream (back down to 1) likel
 ## v3
 
 An update to v2 that replaces the explicit threads with use of a scheduler. The scheduler uses an unlimited-size thread pool as, even though in this version the number of threads shouldn't exceed 3, that is the appropriate pattern when doing blocking IO.
+
+## v4
+
+An update to v3 that replaces java `Runnable`s with `Future`. Which is a bit of a bastardisation of Future, since Future's are best when composed to ultimately a value while this implementation has side-effects and returns Unit.
