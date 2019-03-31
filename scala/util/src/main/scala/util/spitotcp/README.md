@@ -29,3 +29,7 @@ Superficially this does improve CPU usage:
 Not an update to improve efficiency/performance; instead an experiment in separating the two ends of the data pipe and putting an async/thread boundary between them.
 
 The drop in size of chunks read/written to the TCP stream (back down to 1) likely has a small impact on efficiency as CPU usage is back up to 2-4%. Probably this is due to transmitting bytes 1 at a time from the queue to TCP output stream when we know that there will be chunks of at least `maxBytesToTransfer`.
+
+## v3
+
+An update to v2 that replaces the explicit threads with use of a scheduler. The scheduler uses an unlimited-size thread pool as, even though in this version the number of threads shouldn't exceed 3, that is the appropriate pattern when doing blocking IO.
