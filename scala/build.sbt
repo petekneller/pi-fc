@@ -2,12 +2,12 @@ organization in ThisBuild := "com.github.petekneller"
 
 version in ThisBuild := "dev"
 
-scalaVersion in ThisBuild := "2.11.8"
+scalaVersion in ThisBuild := "2.12.8"
 
 
 /* Ammonite */
 
-libraryDependencies in ThisBuild += "com.lihaoyi" %% "ammonite" % "0.8.2" cross CrossVersion.full
+libraryDependencies in ThisBuild += "com.lihaoyi" %% "ammonite" % "1.6.5" cross CrossVersion.full
 
 initialCommands in (ThisBuild, console) := """ammonite.Main().run()"""
 
