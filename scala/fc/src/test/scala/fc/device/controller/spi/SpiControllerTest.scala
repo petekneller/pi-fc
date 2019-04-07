@@ -2,7 +2,7 @@ package fc.device.controller.spi
 
 import java.nio.ByteBuffer
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
-import eu.timepit.refined.refineMV
+import eu.timepit.refined.refineV
 import eu.timepit.refined.numeric.Positive
 import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
@@ -94,12 +94,12 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   "receive (bi-directional)" should "open the correct file" in {
-    controller.receive(device, 0)
+    controller.receive(device, 1)
     (mockApi.open _).verify("/dev/spidev0.0", *)
   }
 
   it should "open the underlying file read-write" in {
-    controller.receive(device, 0)
+    controller.receive(device, 1)
     (mockApi.open _).verify(*, O_RDWR)
   }
 
@@ -107,7 +107,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val errorCause = new RuntimeException("")
     (mockApi.open _) when(*, *) throws errorCause
 
-    controller.receive(device, 0) should === (Left(DeviceUnavailableException(device, errorCause)))
+    controller.receive(device, 1) should === (Left(DeviceUnavailableException(device, errorCause)))
   }
 
   "receive" should "close the underlying file even if an error occurs during transfer" in {
@@ -174,7 +174,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     (mockApi.open _).when(*, *).returns(fd)
     (mockApi.transfer _).when(*, *, *, *, *) throws new RuntimeException("")
 
-    controller.receive(device, 0)
+    controller.receive(device, 1)
     (mockApi.close _).verify(fd).once()
   }
 
@@ -182,7 +182,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     val errorCause = new RuntimeException("")
     (mockApi.transfer _).when(*, *, *, *, *).throws(errorCause)
 
-    controller.receive(device, 0) should === (Left(TransferFailedException(errorCause)))
+    controller.receive(device, 1) should === (Left(TransferFailedException(errorCause)))
   }
 
   /*
@@ -281,12 +281,12 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   "receive (bi-directional)" should "attempt to transfer the requested number of bytes" in {
-    controller.transfer(device, 3)
+    controller.receive(device, 3)
     (mockApi.transfer _).verify(*, *, *, 3, *)
   }
 
   it should "allocate the same number of bytes in both the transmit and receive buffers" in {
-    controller.transfer(device, 3)
+    controller.receive(device, 3)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
       txBuffer.limit === 3 && rxBuffer.limit === 3
@@ -365,14 +365,14 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   it should "return an 'incomplete data' error if less than N bytes could be fetched" in {
-    val expectedNumBytes = refineMV[Positive](2)
+    val expectedNumBytes = 2
     val actualNumBytes = 1
     (mockApi.transfer _).when(*, *, *, expectedNumBytes+1, *).onCall{ (_, _, rxBuffer, _, _) =>
       rxBuffer.put(b"1").put(b"2")
       actualNumBytes + 1
     }
 
-    controller.receive(device, register, expectedNumBytes) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
+    controller.receive(device, register, refineV[Positive](expectedNumBytes).right.get) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
   }
 
   "transmit" should "return an error if less bytes were written than specified" in {
@@ -402,14 +402,14 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   it should "return an 'incomplete data' error if less than N bytes could be fetched" in {
-    val expectedNumBytes = refineMV[Positive](2)
+    val expectedNumBytes = 2
     val actualNumBytes = 1
     (mockApi.transfer _).when(*, *, *, expectedNumBytes, *).onCall{ (_, _, rxBuffer, _, _) =>
       rxBuffer.put(b"1")
       actualNumBytes
     }
 
-    controller.receive(device, expectedNumBytes) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
+    controller.receive(device, refineV[Positive](expectedNumBytes).right.get) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
   }
 
 
