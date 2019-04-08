@@ -37,3 +37,7 @@ An update to v2 that replaces the explicit threads with use of a scheduler. The 
 ## v4
 
 An update to v3 that replaces java `Runnable`s with `Future`. Which is a bit of a bastardisation of Future, since Future's are best when composed to ultimately a value while this implementation has side-effects and returns Unit.
+
+# v5
+
+A version using `cats.effect.IO` to construct tasks that are then `parSequence`d to run concurrently (and never end)

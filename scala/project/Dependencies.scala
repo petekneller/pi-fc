@@ -9,7 +9,7 @@ object Dependencies {
   val jna = "net.java.dev.jna" % "jna" % "4.3.0"
 
   val cats = "org.typelevel" %% "cats-core" % "1.6.0"
-  val catsEffects = "org.typelevel" %% "cats-effect" % "1.2.0"
+  val catsEffect = "org.typelevel" %% "cats-effect" % "1.2.0"
 
   val fs2 = "co.fs2" %% "fs2-core" % "0.9.4"
 
