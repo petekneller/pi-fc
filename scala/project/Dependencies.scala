@@ -11,7 +11,7 @@ object Dependencies {
   val cats = "org.typelevel" %% "cats-core" % "1.6.0"
   val catsEffect = "org.typelevel" %% "cats-effect" % "1.2.0"
 
-  val fs2 = "co.fs2" %% "fs2-core" % "0.9.4"
+  val fs2 = "co.fs2" %% "fs2-core" % "1.0.2"
 
   def compilerDep(scalaVersion: String) = "org.scala-lang" % "scala-compiler" % scalaVersion % Provided
 
