@@ -4,5 +4,7 @@ import Dependencies._
 
 libraryDependencies ++= Seq(
   cats,
-  catsEffect
+  catsEffect,
+  fs2,
+  fs2io
 )
