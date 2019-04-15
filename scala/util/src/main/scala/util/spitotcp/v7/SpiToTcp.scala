@@ -28,31 +28,29 @@ object SpiToTcp {
     val maxBytesToTransfer: Int Refined Positive = 100
     val delay = 100.milliseconds
 
+    implicit val t: Timer[IO] = IO.timer(ExecutionContext.global)
+    implicit val cs = IO.contextShift(ExecutionContext.global)
+
     def transferToPeer(client: Socket[IO]): Stream[IO, Unit] = {
       val fromClient = client.reads(maxBytesToTransfer).onFinalize(client.endOfOutput)
 
-      implicit val t: Timer[IO] = IO.timer(ExecutionContext.global)
       val ping = Stream.awakeEvery[IO](delay)
 
-      val transferViaSpi: Pipe[IO, Either[Seq[Byte], FiniteDuration], Byte] = fromClient => {
+      val transferViaSpi: Pipe[IO, Either[Byte, FiniteDuration], Byte] = fromClient => {
         fromClient flatMap { _ match {
-            case Left(clientBytes) => Stream.eval(IO.delay{ spiController.transfer(gps, clientBytes.toSeq).right.get })
+            case Left(clientByte) => Stream.eval(IO.delay{ spiController.transfer(gps, Seq(clientByte)).right.get })
             case Right(_) => Stream.eval(IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get })
           }
         } flatMap { bytes => Stream.chunk(Chunk.seq(bytes))}
       }
 
-      val sendToClient: Pipe[IO, Byte, Unit] = s => {
-        s.flatMap{ byte => Stream.eval_(client.write(Chunk.singleton(byte))) }
+      val sendToClient: Pipe[IO, Byte, Unit] = fromSpi => {
+        fromSpi.flatMap{ byte => Stream.eval_(client.write(Chunk.singleton(byte))) }
       }
 
-      implicit val ec = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
-      implicit val cs = IO.contextShift(ec)
-      (fromClient.chunks.map(_.toArray: Seq[Byte]) either ping) through transferViaSpi through sendToClient
+      (fromClient either ping) through transferViaSpi through sendToClient
     }
 
-    val ec = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
-    implicit val cs = IO.contextShift(ec)
     implicit val acg = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool())
 
     val app = for {
