@@ -36,19 +36,19 @@ object SpiToTcp {
 
       val ping = Stream.awakeEvery[IO](delay)
 
-      val transferViaSpi: Pipe[IO, Either[Byte, FiniteDuration], Byte] = fromClient => {
+      val transferViaSpi: Pipe[IO, Either[Seq[Byte], FiniteDuration], Byte] = fromClient => {
         fromClient flatMap { _ match {
-            case Left(clientByte) => Stream.eval(IO.delay{ spiController.transfer(gps, Seq(clientByte)).right.get })
+            case Left(clientBytes) => Stream.eval(IO.delay{ spiController.transfer(gps, clientBytes).right.get })
             case Right(_) => Stream.eval(IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get })
           }
         } flatMap { bytes => Stream.chunk(Chunk.seq(bytes))}
       }
 
       val sendToClient: Pipe[IO, Byte, Unit] = fromSpi => {
-        fromSpi.flatMap{ byte => Stream.eval_(client.write(Chunk.singleton(byte))) }
+        fromSpi.chunks.flatMap{ bytes => Stream.eval_(client.write(bytes)) }
       }
 
-      (fromClient either ping) through transferViaSpi through sendToClient
+      (fromClient.chunks.map(_.toArray: Seq[Byte]) either ping) through transferViaSpi through sendToClient
     }
 
     implicit val acg = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool())
