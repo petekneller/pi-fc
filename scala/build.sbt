@@ -9,13 +9,17 @@ scalaVersion in ThisBuild := "2.12.8"
 
 libraryDependencies in ThisBuild += "com.lihaoyi" %% "ammonite" % "1.6.5" cross CrossVersion.full
 
-initialCommands in (ThisBuild, console) := """ammonite.Main().run()"""
-
+def ammonite() = {
+  sourceGenerators in Test += Def.task {
+    val file = (sourceManaged in Test).value / "amm.scala"
+    IO.write(file, """object amm extends App { ammonite.Main.main(args) }""")
+    Seq(file)
+  }.taskValue
+}
 
 /* Ensime */
 
 ensimeIgnoreMissingDirectories in ThisBuild := true
-
 
 /* modules */
 
@@ -28,6 +32,7 @@ lazy val fc = project.in(file("fc")).
   dependsOn(ioctl, spidev)
 
 lazy val util = project.in(file("util")).
+  settings(ammonite()).
   dependsOn(ioctl, spidev, fc)
 
 lazy val root = project.in(file(".")).
