@@ -30,6 +30,7 @@ object SpiToTcp {
 
     implicit val t: Timer[IO] = IO.timer(ExecutionContext.global)
     implicit val cs = IO.contextShift(ExecutionContext.global)
+    val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
     def transferToPeer(client: Socket[IO]): Stream[IO, Unit] = {
       val fromClient = client.reads(maxBytesToTransfer).onFinalize(client.endOfOutput)
@@ -38,8 +39,8 @@ object SpiToTcp {
 
       val transferViaSpi: Pipe[IO, Either[Seq[Byte], FiniteDuration], Byte] = fromClient => {
         fromClient flatMap { _ match {
-            case Left(clientBytes) => Stream.eval(IO.delay{ spiController.transfer(gps, clientBytes).right.get })
-            case Right(_) => Stream.eval(IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get })
+            case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spiController.transfer(gps, clientBytes).right.get }))
+            case Right(_) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get }))
           }
         } flatMap { bytes => Stream.chunk(Chunk.seq(bytes))}
       }
