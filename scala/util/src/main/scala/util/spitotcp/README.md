@@ -44,4 +44,8 @@ A version using `cats.effect.IO` to construct tasks that are then `parSequence`d
 
 # v6
 
-A version using basic fs2 features
+A version using basic `fs2` features
+
+# v7
+
+A more realistic `fs2` example using NIO for the incoming TCP socket
