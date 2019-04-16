@@ -40,8 +40,8 @@ object OfBytes {
   }
 
   def handlePeer(client: Socket[IO],
-    receiveMetric: SignallingRef[IO, Int],
-    transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] = {
+                   receiveMetric: SignallingRef[IO, Int],
+                   transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] = {
 
     val ping = Stream.awakeEvery[IO](delay)
 
@@ -55,17 +55,21 @@ object OfBytes {
       upstream flatMap {
         case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiTransfer(clientBytes))))
         case Right(_) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiReceive())))
-      } flatMap { case (duration, bytes) => Stream.eval(transferDurationMetric.set(duration)) >>  Stream.chunk(Chunk.seq(bytes))}
+      } flatMap {
+        case (duration, bytes) => Stream.eval(transferDurationMetric.set(duration)) >>
+                                   Stream.chunk(Chunk.seq(bytes))
+      }
     }
 
     (withReceiveMetric either ping) through transferViaSpi through transmitToClient(client)
   }
 
   def printMetrics(receiveMetric: SignallingRef[IO, Int],
-    transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] =
+                     transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] =
+
         ((receiveMetric.discrete) either (transferDurationMetric.discrete)) map {
           case Left(receiveBytes) => s"Last receive was $receiveBytes bytes"
-          case Right(transferDuration) => s"Last transfer took ${transferDuration.toNanos} nanoseconds"
+          case Right(transferDuration) => s"Last transfer took ${transferDuration.toMicros} microseconds"
         } flatMap { message => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ println(message) })) }
 
   def withDuration[A](ioa: IO[A]): IO[(FiniteDuration, A)] =
