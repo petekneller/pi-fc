@@ -55,7 +55,7 @@ object OfBytes {
       upstream flatMap {
         case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiTransfer(clientBytes))))
         case Right(_) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiReceive())))
-      } flatMap { case (duration, bytes) => Stream.chunk(Chunk.seq(bytes))}
+      } flatMap { case (duration, bytes) => Stream.eval(transferDurationMetric.set(duration)) >>  Stream.chunk(Chunk.seq(bytes))}
     }
 
     (withReceiveMetric either ping) through transferViaSpi through transmitToClient(client)
