@@ -3,6 +3,7 @@ package util.spitotcp
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
 import java.nio.channels.AsynchronousChannelGroup
+import java.util.concurrent.TimeUnit.NANOSECONDS
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import eu.timepit.refined.W
@@ -18,7 +19,7 @@ import v7.SpiToTcp.{ spiTransfer, spiReceive, delay, receiveFromClient, transmit
 object OfBytes {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
 
-  implicit val t: Timer[IO] = IO.timer(ExecutionContext.global)
+  implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
   implicit val cs = IO.contextShift(ExecutionContext.global)
   val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
@@ -29,15 +30,19 @@ object OfBytes {
       clientResource <- Socket.server[IO](new InetSocketAddress("0.0.0.0", port))
       clientSocket <- Stream.resource(clientResource)
       receiveMetric <- Stream.eval(SignallingRef[IO, Int](0))
-      tcpStream = handlePeer(clientSocket, receiveMetric)
-      metricStream = printMetrics(receiveMetric)
+      transferDurationMetric <- Stream.eval(SignallingRef[IO, FiniteDuration](0.nanos))
+      tcpStream = handlePeer(clientSocket, receiveMetric, transferDurationMetric)
+      metricStream = printMetrics(receiveMetric, transferDurationMetric)
       _ <- Stream(tcpStream, metricStream).parJoinUnbounded
     } yield ()
 
     app.compile.drain.unsafeRunSync()
   }
 
-  def handlePeer(client: Socket[IO], receiveMetric: SignallingRef[IO, Int]): Stream[IO, Unit] = {
+  def handlePeer(client: Socket[IO],
+    receiveMetric: SignallingRef[IO, Int],
+    transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] = {
+
     val ping = Stream.awakeEvery[IO](delay)
 
     val chunksFromClient = receiveFromClient(client).chunks.map(_.toArray: Seq[Byte])
@@ -48,15 +53,27 @@ object OfBytes {
 
     val transferViaSpi: Pipe[IO, Either[Seq[Byte], FiniteDuration], Byte] = upstream => {
       upstream flatMap {
-        case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(spiTransfer(clientBytes)))
-        case Right(_) => Stream.eval(cs.evalOn(blockingIO)(spiReceive()))
-      } flatMap { bytes => Stream.chunk(Chunk.seq(bytes))}
+        case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiTransfer(clientBytes))))
+        case Right(_) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiReceive())))
+      } flatMap { case (duration, bytes) => Stream.chunk(Chunk.seq(bytes))}
     }
 
     (withReceiveMetric either ping) through transferViaSpi through transmitToClient(client)
   }
 
-  def printMetrics(receiveMetric: SignallingRef[IO, Int]): Stream[IO, Unit] = {
-    receiveMetric.discrete.flatMap(receiveBytes => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ println(s"Received $receiveBytes bytes") })))
-  }
+  def printMetrics(receiveMetric: SignallingRef[IO, Int],
+    transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] =
+      for {
+        metrics <- (receiveMetric.discrete) zip (transferDurationMetric.discrete)
+        (receiveBytes, transferDuration) = metrics
+        message = s"Last receive was $receiveBytes bytes; Last transfer took ${transferDuration.toNanos} nanoseconds"
+        _ <- Stream.eval(cs.evalOn(blockingIO)(IO.delay{ println(message) }))
+      } yield ()
+
+  def withDuration[A](ioa: IO[A]): IO[(FiniteDuration, A)] =
+    for {
+      begin <- timer.clock.monotonic(NANOSECONDS)
+      a <- ioa
+      end <- timer.clock.monotonic(NANOSECONDS)
+    } yield (FiniteDuration(end - begin, NANOSECONDS), a)
 }
