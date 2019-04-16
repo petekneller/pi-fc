@@ -63,12 +63,10 @@ object OfBytes {
 
   def printMetrics(receiveMetric: SignallingRef[IO, Int],
     transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] =
-      for {
-        metrics <- (receiveMetric.discrete) zip (transferDurationMetric.discrete)
-        (receiveBytes, transferDuration) = metrics
-        message = s"Last receive was $receiveBytes bytes; Last transfer took ${transferDuration.toNanos} nanoseconds"
-        _ <- Stream.eval(cs.evalOn(blockingIO)(IO.delay{ println(message) }))
-      } yield ()
+        ((receiveMetric.discrete) either (transferDurationMetric.discrete)) map {
+          case Left(receiveBytes) => s"Last receive was $receiveBytes bytes"
+          case Right(transferDuration) => s"Last transfer took ${transferDuration.toNanos} nanoseconds"
+        } flatMap { message => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ println(message) })) }
 
   def withDuration[A](ioa: IO[A]): IO[(FiniteDuration, A)] =
     for {
