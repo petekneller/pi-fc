@@ -22,34 +22,23 @@ import fc.device.controller.spi.{ SpiAddress, SpiController }
 object SpiToTcp {
 
   def main(args: Array[String]): Unit = {
-    val gps = SpiAddress(busNumber = 0, chipSelect = 0)
-    val spiController = SpiController()
-
-    val maxBytesToTransfer: Int Refined Positive = 100
-    val delay = 100.milliseconds
 
     implicit val t: Timer[IO] = IO.timer(ExecutionContext.global)
     implicit val cs = IO.contextShift(ExecutionContext.global)
     val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
     def transferToPeer(client: Socket[IO]): Stream[IO, Unit] = {
-      val fromClient = client.reads(maxBytesToTransfer).onFinalize(client.endOfOutput)
-
       val ping = Stream.awakeEvery[IO](delay)
 
       val transferViaSpi: Pipe[IO, Either[Seq[Byte], FiniteDuration], Byte] = fromClient => {
         fromClient flatMap { _ match {
-            case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spiController.transfer(gps, clientBytes).right.get }))
-            case Right(_) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get }))
+            case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(spiTransfer(clientBytes)))
+            case Right(_) => Stream.eval(cs.evalOn(blockingIO)(spiReceive()))
           }
         } flatMap { bytes => Stream.chunk(Chunk.seq(bytes))}
       }
 
-      val sendToClient: Pipe[IO, Byte, Unit] = fromSpi => {
-        fromSpi.chunks.flatMap{ bytes => Stream.eval_(client.write(bytes)) }
-      }
-
-      (fromClient.chunks.map(_.toArray: Seq[Byte]) either ping) through transferViaSpi through sendToClient
+      (receiveFromClient(client).chunks.map(_.toArray: Seq[Byte]) either ping) through transferViaSpi through transmitToClient(client)
     }
 
     implicit val acg = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool())
@@ -62,4 +51,19 @@ object SpiToTcp {
     app.compile.drain.unsafeRunSync()
   }
 
+  val gps = SpiAddress(busNumber = 0, chipSelect = 0)
+  val spiController = SpiController()
+
+  val maxBytesToTransfer: Int Refined Positive = 100
+  val delay = 100.milliseconds
+
+  def spiTransfer(bytes: Seq[Byte]): IO[Seq[Byte]] = IO.delay{ spiController.transfer(gps, bytes).right.get }
+
+  def spiReceive(): IO[Seq[Byte]] = IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get }
+
+  def receiveFromClient(client: Socket[IO]): Stream[IO, Byte] =
+    client.reads(maxBytesToTransfer).onFinalize(client.endOfOutput)
+
+  def transmitToClient(client: Socket[IO]): Pipe[IO, Byte, Unit] = (input: Stream[IO, Byte]) =>
+    input.chunks.flatMap{ bytes => Stream.eval_(client.write(bytes)) }
 }
