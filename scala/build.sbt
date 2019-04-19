@@ -29,6 +29,7 @@ lazy val spidev = project.in(file("spidev")).
   dependsOn(ioctl)
 
 lazy val fc = project.in(file("fc")).
+  settings(ammonite()).
   dependsOn(ioctl, spidev)
 
 lazy val util = project.in(file("util")).
