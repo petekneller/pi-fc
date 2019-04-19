@@ -22,4 +22,7 @@ object Dependencies {
 
   val squants = "org.typelevel"  %% "squants"  % "1.4.0"
 
+  val slf4j = "org.slf4j" % "slf4j-api" % "1.7.26"
+  val logback = "ch.qos.logback" % "logback-classic" % "1.2.3"
+
 }

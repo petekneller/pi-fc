@@ -6,6 +6,7 @@ import java.nio.channels.AsynchronousChannelGroup
 import java.util.concurrent.TimeUnit.NANOSECONDS
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+import org.slf4j.LoggerFactory
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Interval
@@ -18,6 +19,8 @@ import v7.SpiToTcp.{ spiTransfer, spiReceive, delay, receiveFromClient, transmit
 
 object OfBytes {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
+
+  val logger = LoggerFactory.getLogger(this.getClass)
 
   implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
   implicit val cs = IO.contextShift(ExecutionContext.global)
@@ -47,7 +50,7 @@ object OfBytes {
 
     val chunksFromClient = receiveFromClient(client).chunks.map(_.toArray: Seq[Byte])
     val withReceiveMetric = for {
-      bytes <-chunksFromClient
+      bytes <- chunksFromClient
       _ <- Stream.eval(receiveMetric.set(bytes.length))
     } yield bytes
 
@@ -56,8 +59,8 @@ object OfBytes {
         case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiTransfer(clientBytes))))
         case Right(_) => Stream.eval(cs.evalOn(blockingIO)(withDuration(spiReceive())))
       } flatMap {
-        case (duration, bytes) => Stream.eval(transferDurationMetric.set(duration)) >>
-                                   Stream.chunk(Chunk.seq(bytes))
+        case (duration, gpsBytes) => Stream.eval(transferDurationMetric.set(duration)) >>
+                                   Stream.chunk(Chunk.seq(gpsBytes))
       }
     }
 
@@ -66,11 +69,12 @@ object OfBytes {
 
   def printMetrics(receiveMetric: SignallingRef[IO, Int],
                      transferDurationMetric: SignallingRef[IO, FiniteDuration]): Stream[IO, Unit] =
-
-        ((receiveMetric.discrete) either (transferDurationMetric.discrete)) map {
-          case Left(receiveBytes) => s"Last receive was $receiveBytes bytes"
-          case Right(transferDuration) => s"Last transfer took ${transferDuration.toMicros} microseconds"
-        } flatMap { message => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ println(message) })) }
+    ((receiveMetric.discrete) either (transferDurationMetric.discrete)) map {
+      case Left(receiveBytes) => s"Last receive was $receiveBytes bytes"
+      case Right(transferDuration) => s"Last transfer took ${transferDuration.toMicros} microseconds"
+    } flatMap { message => Stream.eval(cs.evalOn(blockingIO)(IO.delay{
+      logger.info(message)
+    })) }
 
   def withDuration[A](ioa: IO[A]): IO[(FiniteDuration, A)] =
     for {
