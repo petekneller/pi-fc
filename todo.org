@@ -4,6 +4,8 @@
 ** +see what it looks like with fs2 (or cats-effect async stuff?)+
 ** move from byte-based to message-based transfers
 *** nmea message parsing
+**** add some way of turning it back to bytes
+**** family polymorphism between Message and MessageParser? (return type of MessageParser)
 **** add checksum-ing
 *** ublox message parsing
 **** add checksum-ing
