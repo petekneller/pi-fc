@@ -1,12 +1,14 @@
 package fc.device.gps.nmea
 
 import org.scalatest.{ FlatSpec, Matchers }
-import org.scalatest.matchers.{ BeMatcher, MatchResult }
 import org.scalactic.TypeCheckedTripleEquals
-import fc.device.gps.MessageParser
+import fc.device.gps.{ MessageParser, ParserTestSupport }
 import MessageParser._
 
-class NmeaParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class NmeaParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
+
+  // TODO checksum doesn't match
+
   "An empty parser" should "not consume a byte that does not represent '$'" in {
     val f = 'f'.toByte
     NmeaParser().consume(f) should be (unconsumed(f))
@@ -101,50 +103,6 @@ class NmeaParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals
       }
     }
     state1 should be (done)
-  }
-
-  private def unconsumed(byte: Byte): BeMatcher[ParseState] = new BeMatcher[ParseState] {
-    def apply(left: ParseState): MatchResult = {
-      val success = left match {
-        case Unconsumed(_) => true
-        case _ => false
-      }
-      MatchResult(success, s"$left is not Unconsumed", s"$left is Unconsumed"
-      )
-    }
-  }
-
-  private val proceeding = new BeMatcher[ParseState] {
-    def apply(left: ParseState) = {
-      val success = left match {
-        case Proceeding(_) => true
-        case _ => false
-      }
-      MatchResult(success, s"$left is not Proceeding", s"$left is Proceeding"
-      )
-    }
-  }
-
-  private val done = new BeMatcher[ParseState] {
-    def apply(left: ParseState) = {
-      val success = left match {
-        case Done(_) => true
-        case _ => false
-      }
-      MatchResult(success, s"$left is not Done", s"$left is Done"
-      )
-    }
-  }
-
-  private val failed = new BeMatcher[ParseState] {
-    def apply(left: ParseState) = {
-      val success = left match {
-        case Failed(_) => true
-        case _ => false
-      }
-      MatchResult(success, s"$left is not Failed", s"$left is Failed"
-      )
-    }
   }
 
 }

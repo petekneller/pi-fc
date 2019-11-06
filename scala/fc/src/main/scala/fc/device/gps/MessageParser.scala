@@ -16,7 +16,7 @@ trait MessageParser {
 
 object MessageParser {
   sealed trait ParseState
-  case class Unconsumed(byte: Byte) extends ParseState
+  case class Unconsumed(bytes: Seq[Byte]) extends ParseState
   case class Proceeding(next: MessageParser) extends ParseState
   case class Done(message: Message) extends ParseState
   case class Failed(cause: String) extends ParseState

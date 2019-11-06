@@ -5,10 +5,18 @@ import MessageParser._
 
 sealed trait NmeaParser extends MessageParser
 
+object NmeaParser {
+  def apply(): MessageParser = Empty
+
+  private[nmea] val initialChar = '$'.toByte
+  private[nmea] val trailerChar1 = '\r'.toByte
+  private[nmea] val trailerChar2 = '\n'.toByte
+}
+
 case object Empty extends NmeaParser {
   def consume(byte: Byte): ParseState = byte match {
     case b if (b == NmeaParser.initialChar) => Proceeding(AwaitingTrailer1(Seq.empty))
-    case _ => Unconsumed(byte)
+    case _ => Unconsumed(Seq(byte))
   }
 }
 
@@ -25,12 +33,4 @@ case class AwaitingTrailer2(messageContent: Seq[Byte]) extends NmeaParser {
     case b if (b == NmeaParser.trailerChar2) => Done(Unknown(messageContent))
     case b => Proceeding(AwaitingTrailer1(messageContent :+ b))
   }
-}
-
-object NmeaParser {
-  def apply(): MessageParser = Empty
-
-  private[nmea] val initialChar = '$'.toByte
-  private[nmea] val trailerChar1 = '\r'.toByte
-  private[nmea] val trailerChar2 = '\n'.toByte
 }
