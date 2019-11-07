@@ -12,27 +12,27 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
   // TODO checksum doesn't match
 
   "An empty parser" should "not consume a byte that is not 0xB5" in {
-    UbxParser().consume(b) should be (unconsumed(b))
+    UbxParser().consume(b) should be (unconsumed[UbxMessage](b))
   }
 
   it should "consume a byte that is 0xB5 and proceed" in {
-    UbxParser().consume(b5) should be (proceeding)
+    UbxParser().consume(b5) should be (proceeding[UbxMessage])
   }
 
   "a proceeding parser" should "halt when the second byte is not 0x62 and return both bytes" in {
-    AwaitingPreamble2.consume(c) should be (unconsumed(b5, c))
+    AwaitingPreamble2.consume(c) should be (unconsumed[UbxMessage](b5, c))
   }
 
   it should "continue proceeding when the second byte is 0x62" in {
-    AwaitingPreamble2.consume(sixty2) should be (proceeding)
+    AwaitingPreamble2.consume(sixty2) should be (proceeding[UbxMessage])
   }
 
   it should "parse out the message class" in {
-    AwaitingClass.consume(b) should === (Proceeding(AwaitingId(b)))
+    AwaitingClass.consume(b) should === (Proceeding[UbxMessage](AwaitingId(b)))
   }
 
   it should "parse out the message id" in {
-    AwaitingId(b).consume(c) should === (Proceeding(AwaitingLength1(b, c)))
+    AwaitingId(b).consume(c) should === (Proceeding[UbxMessage](AwaitingLength1(b, c)))
   }
 
   it should "parse out the payload length" in {
@@ -49,46 +49,46 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
 
   it should "parse out the message payload" in {
     val state1 = ConsumingPayload(b, c, 3, Seq.empty[Byte]).consume(d)
-    state1 should be (proceeding)
+    state1 should be (proceeding[UbxMessage])
 
-    val state2 = (state1.asInstanceOf[Proceeding]).next.consume(c)
-    state2 should be (proceeding)
+    val state2 = (state1.asInstanceOf[Proceeding[UbxMessage]]).next.consume(c)
+    state2 should be (proceeding[UbxMessage])
 
-    val state3 = (state2.asInstanceOf[Proceeding]).next.consume(b)
+    val state3 = (state2.asInstanceOf[Proceeding[UbxMessage]]).next.consume(b)
     state3 should === (Proceeding(AwaitingChecksum1(b, c, Seq(d, c, b))))
   }
 
   it should "parse out the checksum" in {
     val state1 = AwaitingChecksum1(b, c, Seq.empty[Byte]).consume(b)
-    state1 should be(proceeding)
+    state1 should be(proceeding[UbxMessage])
 
-    val state2 = state1.asInstanceOf[Proceeding].next.consume(d)
-    state2 should === (Done(Unknown(b, c, Seq.empty[Byte], b, d)))
+    val state2 = state1.asInstanceOf[Proceeding[UbxMessage]].next.consume(d)
+    state2 should === (Done[UbxMessage](Unknown(b, c, Seq.empty[Byte], b, d)))
   }
 
   "UbxParser" should "successfully parse a Config Power poll message (as Unknown)" in {
     val expected = examples.UbxConfigPowerPoll
     consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done[UbxMessage](Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
     )
   }
 
   it should "successfully parse a Config Power message (as Unknown)" in {
     val expected = examples.UbxConfigPower
     consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done[UbxMessage](Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
     )
   }
 
   it should "successfully parse an Ack message (as Unknown)" in {
     val expected = examples.UbxAckAck
     consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done[UbxMessage](Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
     )
   }
 
-  private def consume(parser: UbxParser, bytes: Seq[Byte]): ParseState =
-    bytes.foldLeft(Proceeding(parser): ParseState){(state, byte) => state match {
+  private def consume(parser: UbxParser, bytes: Seq[Byte]): ParseState[UbxMessage] =
+    bytes.foldLeft(Proceeding(parser): ParseState[UbxMessage]){(state, byte) => state match {
       case Proceeding(next) => next.consume(byte)
       case _ => fail(s"Failed parsing at byte prior to [$byte] with state [$state]")
     }}

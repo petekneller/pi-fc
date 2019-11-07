@@ -8,8 +8,8 @@ import MessageParser._
 
 trait ParserTestSupport {
 
-  def unconsumed(expectedBytes: Byte*): BeMatcher[ParseState] = new BeMatcher[ParseState] {
-    def apply(left: ParseState): MatchResult = {
+  def unconsumed[A](expectedBytes: Byte*): BeMatcher[ParseState[A]] = new BeMatcher[ParseState[A]] {
+    def apply(left: ParseState[A]): MatchResult = {
       val success = left match {
         case Unconsumed(bytes) => expectedBytes.toList === bytes.toList
         case _ => false
@@ -19,8 +19,8 @@ trait ParserTestSupport {
     }
   }
 
-  val proceeding = new BeMatcher[ParseState] {
-    def apply(left: ParseState) = {
+  def proceeding[A] = new BeMatcher[ParseState[A]] {
+    def apply(left: ParseState[A]) = {
       val success = left match {
         case Proceeding(_) => true
         case _ => false
@@ -30,8 +30,8 @@ trait ParserTestSupport {
     }
   }
 
-  val done = new BeMatcher[ParseState] {
-    def apply(left: ParseState) = {
+  def done[A] = new BeMatcher[ParseState[A]] {
+    def apply(left: ParseState[A]) = {
       val success = left match {
         case Done(_) => true
         case _ => false
@@ -41,8 +41,8 @@ trait ParserTestSupport {
     }
   }
 
-  val failed = new BeMatcher[ParseState] {
-    def apply(left: ParseState) = {
+  def failed[A] = new BeMatcher[ParseState[A]] {
+    def apply(left: ParseState[A]) = {
       val success = left match {
         case Failed(_) => true
         case _ => false
