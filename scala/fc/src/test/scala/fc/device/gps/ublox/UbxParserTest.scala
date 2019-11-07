@@ -12,19 +12,19 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
   // TODO checksum doesn't match
 
   "An empty parser" should "not consume a byte that is not 0xB5" in {
-    UbxParser().consume(b) should be (unconsumed[UbxMessage](b))
+    UbxParser().consume(b) should be (unconsumed(b))
   }
 
   it should "consume a byte that is 0xB5 and proceed" in {
-    UbxParser().consume(b5) should be (proceeding[UbxMessage])
+    UbxParser().consume(b5) should be (proceeding)
   }
 
   "a proceeding parser" should "halt when the second byte is not 0x62 and return both bytes" in {
-    AwaitingPreamble2.consume(c) should be (unconsumed[UbxMessage](b5, c))
+    AwaitingPreamble2.consume(c) should be (unconsumed(b5, c))
   }
 
   it should "continue proceeding when the second byte is 0x62" in {
-    AwaitingPreamble2.consume(sixty2) should be (proceeding[UbxMessage])
+    AwaitingPreamble2.consume(sixty2) should be (proceeding)
   }
 
   it should "parse out the message class" in {
@@ -49,10 +49,10 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
 
   it should "parse out the message payload" in {
     val state1 = ConsumingPayload(b, c, 3, Seq.empty[Byte]).consume(d)
-    state1 should be (proceeding[UbxMessage])
+    state1 should be (proceeding)
 
     val state2 = (state1.asInstanceOf[Proceeding[UbxMessage]]).next.consume(c)
-    state2 should be (proceeding[UbxMessage])
+    state2 should be (proceeding)
 
     val state3 = (state2.asInstanceOf[Proceeding[UbxMessage]]).next.consume(b)
     state3 should === (Proceeding(AwaitingChecksum1(b, c, Seq(d, c, b))))
@@ -60,7 +60,7 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
 
   it should "parse out the checksum" in {
     val state1 = AwaitingChecksum1(b, c, Seq.empty[Byte]).consume(b)
-    state1 should be(proceeding[UbxMessage])
+    state1 should be(proceeding)
 
     val state2 = state1.asInstanceOf[Proceeding[UbxMessage]].next.consume(d)
     state2 should === (Done[UbxMessage](Unknown(b, c, Seq.empty[Byte], b, d)))
@@ -87,8 +87,10 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
     )
   }
 
-  private def consume(parser: UbxParser, bytes: Seq[Byte]): ParseState[UbxMessage] =
-    bytes.foldLeft(Proceeding(parser): ParseState[UbxMessage]){(state, byte) => state match {
+  type Msg = UbxMessage
+
+  private def consume(parser: UbxParser, bytes: Seq[Byte]): ParseState =
+    bytes.foldLeft(Proceeding(parser): ParseState){(state, byte) => state match {
       case Proceeding(next) => next.consume(byte)
       case _ => fail(s"Failed parsing at byte prior to [$byte] with state [$state]")
     }}

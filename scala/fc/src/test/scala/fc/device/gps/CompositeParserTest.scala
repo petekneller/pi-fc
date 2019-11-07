@@ -9,7 +9,7 @@ class CompositeParserTest extends FlatSpec with Matchers with TypeCheckedTripleE
   "a composite parser" should "return Unconsumed if neither of its member parsers consumes the input" in {
     val p1 = parserReturning(Unconsumed(Seq(b)))
     val p2 = parserReturning(Unconsumed(Seq(b)))
-    new CompositeParser(p1, p2).consume(b) should be (unconsumed[CompositeMessage[Foo, Foo]](b))
+    new CompositeParser(p1, p2).consume(b) should be (unconsumed(b))
   }
 
   it should "use the first member parser if that consumes the input" in {
@@ -17,7 +17,7 @@ class CompositeParserTest extends FlatSpec with Matchers with TypeCheckedTripleE
     val p1 = parserReturning(Proceeding(p0))
     val p2 = parserReturning(Unconsumed(Seq(b)))
     val firstResult = new CompositeParser(p1, p2).consume(b)
-    firstResult should be (proceeding[CompositeMessage[Foo, Foo]])
+    firstResult should be (proceeding)
     firstResult.asInstanceOf[Proceeding[CompositeMessage[Foo, Foo]]].next.consume(b) should === (Failed[CompositeMessage[Foo, Foo]]("boo!"))
   }
 
@@ -26,14 +26,16 @@ class CompositeParserTest extends FlatSpec with Matchers with TypeCheckedTripleE
     val p1 = parserReturning(Unconsumed(Seq(b)))
     val p2 = parserReturning(Proceeding(p0))
     val firstResult = new CompositeParser(p1, p2).consume(b)
-    firstResult should be (proceeding[CompositeMessage[Foo, Foo]])
+    firstResult should be (proceeding)
     firstResult.asInstanceOf[Proceeding[CompositeMessage[Foo, Foo]]].next.consume(b) should === (Failed[CompositeMessage[Foo, Foo]]("boo!"))
   }
+
+  type Msg = CompositeMessage[Foo, Foo]
 
   val b = 'b'.toByte
 
   trait Foo extends Message
-  private def parserReturning(state: ParseState[Foo]): MessageParser[Foo] = new MessageParser[Foo] {
-    def consume(byte: Byte): ParseState[Foo] = state
+  private def parserReturning(state: MessageParser.ParseState[Foo]): MessageParser[Foo] = new MessageParser[Foo] {
+    def consume(byte: Byte): MessageParser.ParseState[Foo] = state
   }
 }
