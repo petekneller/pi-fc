@@ -43,34 +43,36 @@ object OfMessages {
     val ping = Stream.awakeEvery[IO](delay)
 
     val bytesFromClient = receiveFromClient(client)
+    val messagesFromClient = bytesFromClient through messagePrinting
 
-    val chunksFromClient = (bytesFromClient through messagePrinting).chunks.map(_.toArray: Seq[Byte])
-
-    val transferViaSpi: Pipe[IO, Either[Seq[Byte], FiniteDuration], Byte] = upstream => {
+    val transferViaSpi: Pipe[IO, Either[Message, FiniteDuration], Byte] = upstream => {
       upstream flatMap {
-        case Left(clientBytes) => Stream.eval(cs.evalOn(blockingIO)(spiTransfer(clientBytes)))
+        case Left(clientMsg) => Stream.eval(cs.evalOn(blockingIO)(spiTransfer(clientMsg.toBytes)))
         case Right(_) => Stream.eval(cs.evalOn(blockingIO)(spiReceive()))
       } flatMap {
         case gpsBytes => Stream.chunk(Chunk.seq(gpsBytes))
       }
     }
 
-    (chunksFromClient either ping) through transferViaSpi through messagePrinting through transmitToClient(client)
+    (messagesFromClient either ping) through
+      transferViaSpi through
+      messagePrinting flatMap { msg => Stream.chunk(Chunk.seq(msg.toBytes)) } through
+      transmitToClient(client)
   }
 
-  val messagePrinting: Pipe[IO, Byte, Byte] = s => printMessages(s, newParser()).stream
+  val messagePrinting: Pipe[IO, Byte, Message] = s => printMessages(s, newParser()).stream
 
   def newParser() = CompositeParser(NmeaParser(), UbxParser())
 
-  def printMessages[A <: Message](s: Stream[IO, Byte], parser: MessageParser[A]): Pull[IO, Byte, Unit] = {
+  def printMessages[A <: Message](s: Stream[IO, Byte], parser: MessageParser[A]): Pull[IO, Message, Unit] = {
     s.pull.uncons1.flatMap {
       case None => Pull.pure(None)
       case Some((byte, rest)) => parser.consume(byte) match {
-        case Unconsumed(_) => Pull.output1(byte) >> printMessages(rest, parser)
-        case Proceeding(nextParser) => Pull.output1(byte) >> printMessages(rest, nextParser)
-        case Done(msg) => Pull.output1(byte) >> Pull.eval(IO.delay{ logger.info(msg.toString) }) >>
+        case Unconsumed(_) => printMessages(rest, parser)
+        case Proceeding(nextParser) => printMessages(rest, nextParser)
+        case Done(msg) => Pull.output1(msg) >> Pull.eval(IO.delay{ logger.info(msg.toString) }) >>
           printMessages(rest, newParser())
-        case Failed(cause) => Pull.output1(byte) >> Pull.eval(IO.delay{ logger.error(cause) }) >>
+        case Failed(cause) => Pull.eval(IO.delay{ logger.error(cause) }) >>
           printMessages(rest, newParser())
       }
     }
