@@ -3,6 +3,7 @@ package fc.device.gps
 import cats.syntax.eq._
 import cats.instances.byte._
 import cats.instances.list._
+import org.scalatest.Assertions.fail
 import org.scalatest.matchers.{ BeMatcher, MatchResult }
 import MessageParser.{ ParseState => OrigParseState, Unconsumed => OrigUnconsumed, Proceeding => OrigProceeding, Done => OrigDone, Failed => OrigFailed }
 
@@ -20,6 +21,14 @@ trait ParserTestSupport {
 
   type Msg <: Message
   type ParseState = OrigParseState[Msg]
+  type Unconsumed = OrigUnconsumed[Msg]
+  type Proceeding = OrigProceeding[Msg]
+  type Done = OrigDone[Msg]
+  type Failed = OrigFailed[Msg]
+
+  def Done(msg: Msg): ParseState = OrigDone(msg)
+  def Failed(cause: String): ParseState = OrigFailed(cause)
+  def Proceeding(next: MessageParser[Msg]): ParseState = OrigProceeding(next)
 
   def unconsumed(expectedBytes: Byte*): BeMatcher[ParseState] = new BeMatcher[ParseState] {
     def apply(left: ParseState): MatchResult = {
@@ -64,5 +73,11 @@ trait ParserTestSupport {
       )
     }
   }
+
+  def consume(parser: MessageParser[Msg], bytes: Seq[Byte]): ParseState =
+    bytes.foldLeft(Proceeding(parser)){(state, byte) => state match {
+      case OrigProceeding(next) => next.consume(byte)
+      case _ => fail(s"Failed parsing at byte prior to [$byte] with state [$state]")
+    }}
 
 }

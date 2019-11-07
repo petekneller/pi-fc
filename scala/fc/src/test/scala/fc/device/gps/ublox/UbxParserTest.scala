@@ -4,8 +4,6 @@ import spire.syntax.literals._
 import org.scalatest.{ FlatSpec, Matchers }
 import org.scalactic.TypeCheckedTripleEquals
 import fc.device.gps.ParserTestSupport
-import fc.device.gps.MessageParser
-import MessageParser._
 
 class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
@@ -28,11 +26,11 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
   }
 
   it should "parse out the message class" in {
-    AwaitingClass.consume(b) should === (Proceeding[UbxMessage](AwaitingId(b)))
+    AwaitingClass.consume(b) should === (Proceeding(AwaitingId(b)))
   }
 
   it should "parse out the message id" in {
-    AwaitingId(b).consume(c) should === (Proceeding[UbxMessage](AwaitingLength1(b, c)))
+    AwaitingId(b).consume(c) should === (Proceeding(AwaitingLength1(b, c)))
   }
 
   it should "parse out the payload length" in {
@@ -51,10 +49,10 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
     val state1 = ConsumingPayload(b, c, 3, Seq.empty[Byte]).consume(d)
     state1 should be (proceeding)
 
-    val state2 = (state1.asInstanceOf[Proceeding[UbxMessage]]).next.consume(c)
+    val state2 = (state1.asInstanceOf[Proceeding]).next.consume(c)
     state2 should be (proceeding)
 
-    val state3 = (state2.asInstanceOf[Proceeding[UbxMessage]]).next.consume(b)
+    val state3 = (state2.asInstanceOf[Proceeding]).next.consume(b)
     state3 should === (Proceeding(AwaitingChecksum1(b, c, Seq(d, c, b))))
   }
 
@@ -62,38 +60,32 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
     val state1 = AwaitingChecksum1(b, c, Seq.empty[Byte]).consume(b)
     state1 should be(proceeding)
 
-    val state2 = state1.asInstanceOf[Proceeding[UbxMessage]].next.consume(d)
-    state2 should === (Done[UbxMessage](Unknown(b, c, Seq.empty[Byte], b, d)))
+    val state2 = state1.asInstanceOf[Proceeding].next.consume(d)
+    state2 should === (Done(Unknown(b, c, Seq.empty[Byte], b, d)))
   }
 
   "UbxParser" should "successfully parse a Config Power poll message (as Unknown)" in {
     val expected = examples.UbxConfigPowerPoll
     consume(UbxParser(), expected.bytes) should === (
-      Done[UbxMessage](Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
     )
   }
 
   it should "successfully parse a Config Power message (as Unknown)" in {
     val expected = examples.UbxConfigPower
     consume(UbxParser(), expected.bytes) should === (
-      Done[UbxMessage](Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
     )
   }
 
   it should "successfully parse an Ack message (as Unknown)" in {
     val expected = examples.UbxAckAck
     consume(UbxParser(), expected.bytes) should === (
-      Done[UbxMessage](Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
     )
   }
 
   type Msg = UbxMessage
-
-  private def consume(parser: UbxParser, bytes: Seq[Byte]): ParseState =
-    bytes.foldLeft(Proceeding(parser): ParseState){(state, byte) => state match {
-      case Proceeding(next) => next.consume(byte)
-      case _ => fail(s"Failed parsing at byte prior to [$byte] with state [$state]")
-    }}
 
   private val b5 = 0xB5.toByte
   private val sixty2 = 0x62.toByte
