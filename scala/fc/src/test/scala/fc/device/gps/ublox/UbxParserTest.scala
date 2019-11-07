@@ -17,7 +17,7 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
     UbxParser().consume(b5) should be (proceeding)
   }
 
-  "a proceeding parser" should "halt when the second byte is not 0x62 and return both bytes" in {
+  "A proceeding parser" should "halt when the second byte is not 0x62 and return both bytes" in {
     AwaitingPreamble2.consume(c) should be (unconsumed(b5, c))
   }
 
@@ -64,7 +64,7 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
     state2 should === (Done(Unknown(b, c, Seq.empty[Byte], b, d)))
   }
 
-  "UbxParser" should "successfully parse a Config Power poll message (as Unknown)" in {
+  "A parser" should "successfully parse a Config Power poll message (as Unknown)" in {
     val expected = examples.UbxConfigPowerPoll
     consume(UbxParser(), expected.bytes) should === (
       Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))

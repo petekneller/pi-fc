@@ -9,6 +9,7 @@ object examples {
     val payload = Seq.empty[Byte]
     val checksum1 = 0x5D.toByte
     val checksum2 = 0x1D.toByte
+    val msg = Unknown(clazz, id, payload, checksum1, checksum2)
   }
 
   object UbxConfigPower {
@@ -19,6 +20,7 @@ object examples {
     val payload: Seq[Byte] = Seq(0xF2, 0x17, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00).map(_.toByte)
     val checksum1 = 0xAE.toByte
     val checksum2 = 0x46.toByte
+    val msg = Unknown(clazz, id, payload, checksum1, checksum2)
   }
 
   object UbxAckAck {
@@ -29,6 +31,7 @@ object examples {
     val payload: Seq[Byte] = Seq(0x06, 0x57).map(_.toByte)
     val checksum1 = 0x65.toByte
     val checksum2 = 0x8E.toByte
+    val msg = Unknown(clazz, id, payload, checksum1, checksum2)
   }
 
 }

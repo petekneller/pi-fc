@@ -60,7 +60,7 @@ class NmeaParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals
     state2 should be (failed)
   }
 
-  "NmeaParser" should "successfully consumer a PUBX Time Of Day Poll message (as Unknown)" in {
+  "A parser" should "successfully consumer a PUBX Time Of Day Poll message (as Unknown)" in {
     consume(NmeaParser(), examples.PubxTimeOfDayPoll.bytes) should be (done)
   }
 

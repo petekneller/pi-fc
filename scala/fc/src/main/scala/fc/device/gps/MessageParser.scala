@@ -1,6 +1,8 @@
 package fc.device.gps
 
-trait Message
+trait Message {
+  def toBytes: Seq[Byte]
+}
 
 trait MessageParser[Msg <: Message] {
   def consume(byte: Byte): MessageParser.ParseState[Msg]

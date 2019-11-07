@@ -3,8 +3,12 @@ package fc.device.gps
 import MessageParser._
 
 sealed trait CompositeMessage[A <: Message, B <: Message] extends Message
-case class Left[A <: Message, B <: Message](msg: A) extends CompositeMessage[A, B]
-case class Right[A <: Message, B <: Message](msg: B) extends CompositeMessage[A, B]
+case class Left[A <: Message, B <: Message](msg: A) extends CompositeMessage[A, B] {
+  def toBytes: Seq[Byte] = msg.toBytes
+}
+case class Right[A <: Message, B <: Message](msg: B) extends CompositeMessage[A, B] {
+  def toBytes: Seq[Byte] = msg.toBytes
+}
 
 object CompositeParser {
   def apply[A <: Message, B <: Message](a: MessageParser[A], b: MessageParser[B]): CompositeParser[A, B] =
