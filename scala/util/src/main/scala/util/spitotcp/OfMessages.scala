@@ -12,8 +12,9 @@ import cats.effect.{ IO, Timer }
 import fs2.{ Stream, Pipe, Chunk, Pull }
 import fs2.concurrent.SignallingRef
 import fs2.io.tcp.Socket
-import fc.device.gps.MessageParser
+import fc.device.gps.{ Message, MessageParser, CompositeParser }
 import MessageParser._
+import fc.device.gps.ublox.UbxParser
 import fc.device.gps.nmea.NmeaParser
 import v7.SpiToTcp.{ spiTransfer, spiReceive, delay, receiveFromClient, transmitToClient }
 import OfBytes.{ Port }
@@ -43,8 +44,6 @@ object OfMessages {
 
     val bytesFromClient = receiveFromClient(client)
 
-    val afterMessagePrinting = printMessages(bytesFromClient).stream
-
     val chunksFromClient = (bytesFromClient through messagePrinting).chunks.map(_.toArray: Seq[Byte])
 
     val transferViaSpi: Pipe[IO, Either[Seq[Byte], FiniteDuration], Byte] = upstream => {
@@ -59,18 +58,20 @@ object OfMessages {
     (chunksFromClient either ping) through transferViaSpi through messagePrinting through transmitToClient(client)
   }
 
-  val messagePrinting: Pipe[IO, Byte, Byte] = s => printMessages(s).stream
+  val messagePrinting: Pipe[IO, Byte, Byte] = s => printMessages(s, newParser()).stream
 
-  def printMessages(s: Stream[IO, Byte], parser: MessageParser = NmeaParser()): Pull[IO, Byte, Unit] = {
+  def newParser() = CompositeParser(NmeaParser(), UbxParser())
+
+  def printMessages[A <: Message](s: Stream[IO, Byte], parser: MessageParser[A]): Pull[IO, Byte, Unit] = {
     s.pull.uncons1.flatMap {
       case None => Pull.pure(None)
       case Some((byte, rest)) => parser.consume(byte) match {
         case Unconsumed(_) => Pull.output1(byte) >> printMessages(rest, parser)
         case Proceeding(nextParser) => Pull.output1(byte) >> printMessages(rest, nextParser)
         case Done(msg) => Pull.output1(byte) >> Pull.eval(IO.delay{ logger.info(msg.toString) }) >>
-          printMessages(rest, NmeaParser())
+          printMessages(rest, newParser())
         case Failed(cause) => Pull.output1(byte) >> Pull.eval(IO.delay{ logger.error(cause) }) >>
-          printMessages(rest, NmeaParser())
+          printMessages(rest, newParser())
       }
     }
   }
