@@ -43,7 +43,7 @@ object OfMessages {
     val ping = Stream.awakeEvery[IO](delay)
 
     val bytesFromClient = receiveFromClient(client)
-    val messagesFromClient = bytesFromClient through messagePrinting
+    val messagesFromClient = bytesFromClient through messagePrinting("<-")
 
     val transferViaSpi: Pipe[IO, Either[Message, FiniteDuration], Byte] = upstream => {
       upstream flatMap {
@@ -56,24 +56,24 @@ object OfMessages {
 
     (messagesFromClient either ping) through
       transferViaSpi through
-      messagePrinting flatMap { msg => Stream.chunk(Chunk.seq(msg.toBytes)) } through
+      messagePrinting("->") flatMap { msg => Stream.chunk(Chunk.seq(msg.toBytes)) } through
       transmitToClient(client)
   }
 
-  val messagePrinting: Pipe[IO, Byte, Message] = s => printMessages(s, newParser()).stream
+  def messagePrinting(dir: String): Pipe[IO, Byte, Message] = s => printMessages(s, dir, newParser()).stream
 
   def newParser() = CompositeParser(NmeaParser(), UbxParser())
 
-  def printMessages[A <: Message](s: Stream[IO, Byte], parser: MessageParser[A]): Pull[IO, Message, Unit] = {
+  def printMessages[A <: Message](s: Stream[IO, Byte], dir: String, parser: MessageParser[A]): Pull[IO, Message, Unit] = {
     s.pull.uncons1.flatMap {
       case None => Pull.pure(None)
       case Some((byte, rest)) => parser.consume(byte) match {
-        case Unconsumed(_) => printMessages(rest, parser)
-        case Proceeding(nextParser) => printMessages(rest, nextParser)
-        case Done(msg) => Pull.output1(msg) >> Pull.eval(IO.delay{ logger.info(msg.toString) }) >>
-          printMessages(rest, newParser())
+        case Unconsumed(_) => printMessages(rest, dir, parser)
+        case Proceeding(nextParser) => printMessages(rest, dir, nextParser)
+        case Done(msg) => Pull.output1(msg) >> Pull.eval(IO.delay{ logger.info(s"$dir ${msg.toString}") }) >>
+          printMessages(rest, dir, newParser())
         case Failed(cause) => Pull.eval(IO.delay{ logger.error(cause) }) >>
-          printMessages(rest, newParser())
+          printMessages(rest, dir, newParser())
       }
     }
   }
