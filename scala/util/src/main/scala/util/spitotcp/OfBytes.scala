@@ -9,13 +9,13 @@ import scala.concurrent.ExecutionContext
 import org.slf4j.LoggerFactory
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.Interval
-import eu.timepit.refined.auto.{ autoRefineV, autoUnwrap }
+import eu.timepit.refined.numeric.{ Interval, Positive }
+import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import cats.effect.{ IO, Timer }
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.concurrent.SignallingRef
 import fs2.io.tcp.Socket
-import v7.SpiToTcp.{ spiTransfer, spiReceive, delay, receiveFromClient, transmitToClient }
+import fc.device.controller.spi.{ SpiAddress, SpiController }
 
 object OfBytes {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
@@ -82,4 +82,20 @@ object OfBytes {
       a <- ioa
       end <- timer.clock.monotonic(NANOSECONDS)
     } yield (FiniteDuration(end - begin, NANOSECONDS), a)
+
+  val gps = SpiAddress(busNumber = 0, chipSelect = 0)
+  val spiController = SpiController()
+
+  val maxBytesToTransfer: Int Refined Positive = 100
+  val delay = 100.milliseconds
+
+  def spiTransfer(bytes: Seq[Byte]): IO[Seq[Byte]] = IO.delay{ spiController.transfer(gps, bytes).right.get }
+
+  def spiReceive(): IO[Seq[Byte]] = IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get }
+
+  def receiveFromClient(client: Socket[IO]): Stream[IO, Byte] =
+    client.reads(maxBytesToTransfer).onFinalize(client.endOfOutput)
+
+  def transmitToClient(client: Socket[IO]): Pipe[IO, Byte, Unit] = (input: Stream[IO, Byte]) =>
+    input.chunks.flatMap{ bytes => Stream.eval_(client.write(bytes)) }
 }
