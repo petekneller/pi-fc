@@ -6,15 +6,15 @@ case class StatisticalMeasures[A](median: A, p90: A, max: A)
 
 object StatisticalMeasures {
   def apply[A: Ordering](data: Seq[A], empty: A): StatisticalMeasures[A] = {
-    val size = data.size
-    if (size == 0)
+    val length = data.length
+    if (length == 0)
       StatisticalMeasures(empty, empty, empty)
     else {
       val ordered = data.sorted
       StatisticalMeasures(
-        ordered.apply(toIndex(0.5 * size)),
-        ordered.apply(toIndex(0.9 * size)),
-        ordered.apply(toIndex(1.0 * size))
+        ordered.apply(toIndex(0.5 * length)),
+        ordered.apply(toIndex(0.9 * length)),
+        ordered.apply(toIndex(1.0 * length))
       )
     }
   }
