@@ -23,6 +23,7 @@ import fc.device.gps.{ Message, MessageParser, CompositeParser }
 import MessageParser._
 import fc.device.gps.ublox.UbxParser
 import fc.device.gps.nmea.NmeaParser
+import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
 
 object OfMessages {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
@@ -40,7 +41,7 @@ object OfMessages {
       clientResource <- Socket.server[IO](new InetSocketAddress("0.0.0.0", port))
       clientSocket <- Stream.resource(clientResource)
       tcpStream = handlePeer(clientSocket)
-      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(metrics.observe()) }
+      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(observeMetrics()) }
       _ <- Stream(tcpStream, metricStream).parJoinUnbounded
     } yield ()
 
@@ -92,7 +93,7 @@ object OfMessages {
   val maxBytesToTransfer: Int Refined Positive = 100
   val delay = 100.milliseconds
 
-  val metrics = new Metrics()
+  val metricsBuffer = AggregationBuffer[SpiEvent](10)
 
   def spiTransfer(bytes: Seq[Byte]): IO[Seq[Byte]] = IO.delay{
     withSpiMetrics(bytes.size){ () =>
@@ -111,7 +112,7 @@ object OfMessages {
     val readBytes = spiFunction()
     val end = Instant.now()
     val duration = FiniteDuration(Duration.between(begin, end).toMillis, MILLISECONDS)
-    metrics.record(SpiEvent(begin, duration, writeBytes, readBytes.size))
+    metricsBuffer.record(SpiEvent(begin, duration, writeBytes, readBytes.size))
     readBytes
   }
 
@@ -125,48 +126,22 @@ object OfMessages {
 
   case class SpiMetrics(rate: Double, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], readBytes: StatisticalMeasures[Int])
 
-  class Metrics() {
-    private val size: Int = 10
-    private val buffer: AtomicReference[Vector[SpiEvent]] = new AtomicReference(Vector.empty)
-    def record(event: SpiEvent): Unit = {
-      buffer.updateAndGet{ buffer => (buffer :+ event).takeRight(size) }
-    }
+  def observeMetrics(): SpiMetrics = {
+    val events = metricsBuffer.retrieve
 
-    def observe(): SpiMetrics = {
-      val events = buffer.get()
+    val rate = (for {
+      oldest <- events.headOption
+      newest <- events.lastOption
+    } yield {
+      val spanOfEvents = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
+      events.size / (spanOfEvents.toDouble / 1000.0)
+    }).getOrElse(0.0)
 
-      val rate = (for {
-        oldest <- events.headOption
-        newest <- events.lastOption
-      } yield {
-        val spanOfEvents = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
-        events.size / (spanOfEvents.toDouble / 1000.0)
-      }).getOrElse(0.0)
+    val duration = StatisticalMeasures(events.map(_.duration), FiniteDuration(0, MILLISECONDS))
+    val writeBytes = StatisticalMeasures(events.map(_.writeBytes), 0)
+    val readBytes = StatisticalMeasures(events.map(_.readBytes), 0)
 
-      val duration = StatisticalMeasures(events.map(_.duration), FiniteDuration(0, MILLISECONDS))
-      val writeBytes = StatisticalMeasures(events.map(_.writeBytes), 0)
-      val readBytes = StatisticalMeasures(events.map(_.readBytes), 0)
-
-      SpiMetrics(rate, duration, writeBytes, readBytes)
-    }
+    SpiMetrics(rate, duration, writeBytes, readBytes)
   }
 
-  case class StatisticalMeasures[A](median: A, p95: A, max: A)
-
-  object StatisticalMeasures {
-    def apply[A: Ordering](data: Seq[A], empty: A): StatisticalMeasures[A] = {
-      val size = data.size
-      if (size == 0)
-        StatisticalMeasures(empty, empty, empty)
-
-      val ordered = data.sorted
-      StatisticalMeasures(
-        ordered.apply(toIndex(0.5 * size)),
-        ordered.apply(toIndex(0.9 * size)),
-        ordered.apply(toIndex(1.0 * size))
-      )
-    }
-
-    private def toIndex(idx: Double): Int = max(idx.floor.toInt - 1, 0)
-  }
 }
