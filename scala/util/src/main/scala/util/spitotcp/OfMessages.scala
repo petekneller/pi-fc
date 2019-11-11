@@ -34,6 +34,8 @@ object OfMessages {
   implicit val cs = IO.contextShift(ExecutionContext.global)
   val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
+  val spiController = SpiController()
+
   def apply(port: Port): Unit = {
 
     implicit val acg = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool())
@@ -41,7 +43,7 @@ object OfMessages {
       clientResource <- Socket.server[IO](new InetSocketAddress("0.0.0.0", port))
       clientSocket <- Stream.resource(clientResource)
       tcpStream = handlePeer(clientSocket)
-      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(observeMetrics()) }
+      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(spiController.observeMetrics()) }
       _ <- Stream(tcpStream, metricStream).parJoinUnbounded
     } yield ()
 
@@ -88,32 +90,16 @@ object OfMessages {
   }
 
   val gps = SpiAddress(busNumber = 0, chipSelect = 0)
-  val spiController = SpiController()
 
   val maxBytesToTransfer: Int Refined Positive = 100
   val delay = 100.milliseconds
 
-  val metricsBuffer = AggregationBuffer[SpiEvent](10)
-
   def spiTransfer(bytes: Seq[Byte]): IO[Seq[Byte]] = IO.delay{
-    withSpiMetrics(bytes.size){ () =>
-      spiController.transfer(gps, bytes).right.get
-    }
+    spiController.transfer(gps, bytes).right.get
   }
 
   def spiReceive(): IO[Seq[Byte]] = IO.delay{
-    withSpiMetrics(0){ () =>
-      spiController.receive(gps, maxBytesToTransfer).right.get
-    }
-  }
-
-  def withSpiMetrics(writeBytes: Int)(spiFunction: () => Seq[Byte]): Seq[Byte] = {
-    val begin = Instant.now()
-    val readBytes = spiFunction()
-    val end = Instant.now()
-    val duration = FiniteDuration(Duration.between(begin, end).toMillis, MILLISECONDS)
-    metricsBuffer.record(SpiEvent(begin, duration, writeBytes, readBytes.size))
-    readBytes
+    spiController.receive(gps, maxBytesToTransfer).right.get
   }
 
   def receiveFromClient(client: Socket[IO]): Stream[IO, Byte] =
@@ -121,27 +107,5 @@ object OfMessages {
 
   def transmitToClient(client: Socket[IO]): Pipe[IO, Byte, Unit] = (input: Stream[IO, Byte]) =>
     input.chunks.flatMap{ bytes => Stream.eval_(client.write(bytes)) }
-
-  case class SpiEvent(timestamp: Instant, duration: FiniteDuration, writeBytes: Int, readBytes: Int)
-
-  case class SpiMetrics(rate: Double, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], readBytes: StatisticalMeasures[Int])
-
-  def observeMetrics(): SpiMetrics = {
-    val events = metricsBuffer.retrieve
-
-    val rate = (for {
-      oldest <- events.headOption
-      newest <- events.lastOption
-    } yield {
-      val spanOfEvents = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
-      events.size / (spanOfEvents.toDouble / 1000.0)
-    }).getOrElse(0.0)
-
-    val duration = StatisticalMeasures(events.map(_.duration), FiniteDuration(0, MILLISECONDS))
-    val writeBytes = StatisticalMeasures(events.map(_.writeBytes), 0)
-    val readBytes = StatisticalMeasures(events.map(_.readBytes), 0)
-
-    SpiMetrics(rate, duration, writeBytes, readBytes)
-  }
 
 }
