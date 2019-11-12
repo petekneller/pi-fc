@@ -3,7 +3,12 @@ package fc.device.api
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.{ NonNegative, Positive }
 
-trait BidirectionalDeviceController extends Controller {
+/*
+ * Some device buses (eg. SPI) have full-duplex communication between the master
+ * and slave devices. This can mean that even a transmit-only action can cause data
+ * to be returned that needs to be handled.
+ */
+trait DuplexController extends Controller {
 
   /*
    *  Be very careful using this method. If the size of `dataToWrite` is less than

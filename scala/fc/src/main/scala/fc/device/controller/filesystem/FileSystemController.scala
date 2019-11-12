@@ -13,7 +13,7 @@ trait FileSystemAddress extends Address {
   def toFilename: String
 }
 
-trait FileSystemController extends RegisterBasedDeviceController {
+trait FileSystemController extends RegisterController {
   type Addr = FileSystemAddress
   type Register = String
 }

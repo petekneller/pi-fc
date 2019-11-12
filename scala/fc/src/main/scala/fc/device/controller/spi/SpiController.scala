@@ -21,20 +21,20 @@ case class SpiAddress(busNumber: Int, chipSelect: Int) extends Address {
   def toFilename: String = s"/dev/spidev${busNumber}.${chipSelect}"
 }
 
-trait SpiRegisterController extends RegisterBasedDeviceController {
+trait SpiRegisterController extends RegisterController {
   type Addr = SpiAddress
   type Register = Byte
 }
 
-trait SpiBidirectionalController extends BidirectionalDeviceController {
+trait SpiDuplexController extends DuplexController {
   type Addr = SpiAddress
 }
 
 // TODO Ugh! I hate XyzImpl's. Must think of a better name
-class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidirectionalController {
+class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiDuplexController {
   override type Addr = SpiAddress
 
-  // API for RegisterBasedDeviceController
+  // API for RegisterController
 
   def receive(device: SpiAddress, register: Byte, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withMetricRecording(0, { () =>
@@ -72,7 +72,7 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiBidir
       })
     })
 
-  // API for BidirectionalDeviceController
+  // API for DuplexController
 
   def transferN(device: Addr, dataToWrite: Seq[Byte], numBytesToRead: Int Refined NonNegative): DeviceResult[Seq[Byte]] =
     withMetricRecording(dataToWrite.length, { () =>

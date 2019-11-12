@@ -4,10 +4,11 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 
 /*
- Transmission is fundamentally byte-based. Transactions of other sizes (bit, word, multi-byte) are
- enabled via the Rx and Tx types, which transform more meaningful 'packets' into Controller transfers
+ Transmission is fundamentally byte-based and occurs to/from registers on the device.
+ Transactions of other sizes (bit, word, multi-byte) are enabled via the Rx and Tx types,
+ which transform more meaningful 'packets' into Controller transfers.
 */
-trait RegisterBasedDeviceController extends Controller {
+trait RegisterController extends Controller {
   type Register
   /*
    @throws DeviceUnavailableException should something occur while trying to initially connect to the device
