@@ -4,7 +4,7 @@ import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import fc.device.api._
 import fc.device.controller.filesystem._
 
-trait RcReceiver extends Device {
+trait RcReceiver extends HalfDuplexDevice {
   type Ctrl = FileSystemController
 
   def readChannel(channel: RcChannel): DeviceResult[RcInput] =

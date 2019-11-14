@@ -7,8 +7,9 @@ package object api {
 package api {
 
   /*
-   Controller provides an abstraction over the different bus types, eg. SPI v I2C, at which a device can be reached at an Address
-  */
+   * 'Controller' provides an abstraction over the different bus types, eg. SPI v I2C, at which a
+   * device can be reached at an 'Address'
+   */
 
   trait Address
 

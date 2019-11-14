@@ -8,7 +8,7 @@ import eu.timepit.refined.numeric.{ NonNegative, Positive }
  * and slave devices. This can mean that even a transmit-only action can cause data
  * to be returned that needs to be handled.
  */
-trait DuplexController extends Controller {
+trait FullDuplexController extends Controller {
 
   /*
    *  Be very careful using this method. If the size of `dataToWrite` is less than

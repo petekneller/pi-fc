@@ -9,7 +9,7 @@ import ioctl.syntax._
 import fc.device.api._
 import fc.device.controller.spi._
 
-trait Mpu9250 extends Device {
+trait Mpu9250 extends HalfDuplexDevice {
   type Ctrl = SpiRegisterController
   import Mpu9250.{registers, constants, configs, enums}
 

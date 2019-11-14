@@ -26,12 +26,12 @@ trait SpiRegisterController extends RegisterController {
   type Register = Byte
 }
 
-trait SpiDuplexController extends DuplexController {
+trait SpiFullDuplexController extends FullDuplexController {
   type Addr = SpiAddress
 }
 
 // TODO Ugh! I hate XyzImpl's. Must think of a better name
-class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiDuplexController {
+class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiFullDuplexController {
   override type Addr = SpiAddress
 
   // API for RegisterController

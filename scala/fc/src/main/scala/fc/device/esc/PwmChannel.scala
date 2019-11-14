@@ -7,7 +7,7 @@ import squants.time.{Time, Nanoseconds, Frequency, Gigahertz}
 import fc.device.api._
 import fc.device.controller.filesystem._
 
-trait PwmChannel extends Device {
+trait PwmChannel extends HalfDuplexDevice {
   type Ctrl = FileSystemController
 }
 
