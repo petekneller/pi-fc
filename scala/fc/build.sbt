@@ -8,6 +8,7 @@ libraryDependencies ++= Seq(
   fs2,
   compilerDep(scalaVersion.value),
   refined,
+  slf4j,
   spire,
   squants,
   scalaTest % Test,
