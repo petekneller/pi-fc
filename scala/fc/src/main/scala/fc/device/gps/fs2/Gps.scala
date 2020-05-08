@@ -35,30 +35,33 @@ object Gps {
 
     val polling = Stream.awakeEvery[IO](pollInterval)
 
-    def parseMessages0(s: Stream[IO, Byte], parser: MessageParser[M]): Pull[IO, M, Unit] = {
-      s.pull.uncons1 flatMap {
-        case None => Pull.pure(None)
-        case Some((byte, rest)) => parser.consume(byte) match {
-          case Unconsumed(_) => parseMessages0(rest, newParser())
-          case Proceeding(next) => parseMessages0(rest, next)
-          case Done(msg) => Pull.output1(msg) >>
-            parseMessages0(rest, newParser())
-          case Failed(cause) => Pull.eval(IO.delay{ logger.error(s"Message parsing failed: ${cause}") }) >>
-            parseMessages0(rest, newParser())
-        }
-      }
-    }
-    val parseMessages: Pipe[IO, Byte, M] = s => parseMessages0(s, newParser()).stream
-
     val outputStream = (input either polling) flatMap {
       case Left(msg) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spi.transfer(address, msg.toBytes) }))
       case Right(_) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spi.receive(address, numPollingBytes) }))
     } flatMap {
       case Left(cause) => Stream.eval_(IO.delay{ logger.error(s"Device exception reading GPS: ${cause.toString}") })
       case Right(bytes) => Stream.chunk(Chunk.seq(bytes))
-    } through parseMessages
+    } through parseStream(newParser)
 
     (inputQueue, outputStream)
+  }
+
+  def parseStream[M <: Message](newParser: () => MessageParser[M]): Pipe[IO, Byte, M] = {
+    def parse0(s: Stream[IO, Byte], parser: MessageParser[M]): Pull[IO, M, Unit] = {
+      s.pull.uncons1 flatMap {
+        case None => Pull.pure(None)
+        case Some((byte, rest)) => parser.consume(byte) match {
+          case Unconsumed(_) => parse0(rest, newParser())
+          case Proceeding(next) => parse0(rest, next)
+          case Done(msg) => Pull.output1(msg) >>
+            parse0(rest, newParser())
+          case Failed(cause) => Pull.eval(IO.delay{ logger.error(s"Message parsing failed: ${cause}") }) >>
+            parse0(rest, newParser())
+        }
+      }
+    }
+
+    s => parse0(s, newParser()).stream
   }
 
   private val logger = LoggerFactory.getLogger(this.getClass)

@@ -72,22 +72,8 @@ object SpiToTcp {
     }
   }
 
-  private def parseMessages(): Pipe[IO, Byte, Msg] = s => parseMessages0(s, newParser()).stream
-
   private def newParser() = CompositeParser(NmeaParser(), UbxParser())
-
-  private def parseMessages0(s: Stream[IO, Byte], parser: MessageParser[Msg]): Pull[IO, Msg, Unit] = {
-    s.pull.uncons1.flatMap {
-      case None => Pull.pure(None)
-      case Some((byte, rest)) => parser.consume(byte) match {
-        case Unconsumed(_) => parseMessages0(rest, parser)
-        case Proceeding(nextParser) => parseMessages0(rest, nextParser)
-        case Done(msg) => Pull.output1(msg) >> parseMessages0(rest, newParser())
-        case Failed(cause) => Pull.eval(IO.delay{ logger.error(cause) }) >>
-          parseMessages0(rest, newParser())
-      }
-    }
-  }
+  private def parseMessages(): Pipe[IO, Byte, Msg] = Gps.parseStream(newParser _)
 
   private def transmitToClient(client: Socket[IO]): Pipe[IO, Msg, Unit] = (input: Stream[IO, Msg]) =>
     input flatMap {
