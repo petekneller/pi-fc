@@ -19,6 +19,7 @@ import fs2.{ Stream, Pipe, Chunk, Pull }
 import fs2.concurrent.SignallingRef
 import fs2.io.tcp.Socket
 import fc.device.controller.spi.{ SpiAddress, SpiController }
+import SpiController.TransferEvent
 import fc.device.gps.{ Message, MessageParser, CompositeParser, CompositeMessage }
 import MessageParser._
 import fc.device.gps.ublox.{ UbxParser, UbxMessage }
@@ -44,11 +45,13 @@ object SpiToTcp {
       cs
     )
 
+    spiController.addTransferCallback(metricsBuffer.record _)
+
     val app = for {
       clientSocket <- createSocket(port)
       inputStream = receiveFromClient(clientSocket, gpsInput)
       outputStream = gpsOutput through transmitToClient(clientSocket)
-      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(spiController.observeMetrics()) }
+      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(observeMetrics()) }
       _ <- Stream(inputStream, outputStream, metricStream).parJoinUnbounded
     } yield ()
 
@@ -80,10 +83,31 @@ object SpiToTcp {
       msg => Stream.chunk(Chunk.seq(msg.toBytes))
     } through client.writes()
 
+  private case class MetricObservation(rate: Double, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], readBytes: StatisticalMeasures[Int])
+
+  private def observeMetrics(): MetricObservation = {
+    val events = metricsBuffer.retrieve
+
+    val rate = (for {
+      oldest <- events.headOption
+      newest <- events.lastOption
+    } yield {
+      val spanOfEvents = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
+      events.size / (spanOfEvents.toDouble / 1000.0)
+    }).getOrElse(0.0)
+
+    val duration = StatisticalMeasures(events.map(_.duration), FiniteDuration(0, MILLISECONDS))
+    val writeBytes = StatisticalMeasures(events.map(_.writeBytes), 0)
+    val readBytes = StatisticalMeasures(events.map(_.readBytes), 0)
+
+    MetricObservation(rate, duration, writeBytes, readBytes)
+  }
+
   private implicit val timer = IO.timer(ExecutionContext.global)
   private implicit val cs = IO.contextShift(ExecutionContext.global)
   private val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   private val spiController = SpiController()
   private val maxBytesToTransfer: Int Refined Positive = 100
   private val logger = LoggerFactory.getLogger(this.getClass)
+  private val metricsBuffer = AggregationBuffer[TransferEvent](10)
 }

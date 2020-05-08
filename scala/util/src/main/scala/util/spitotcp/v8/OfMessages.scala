@@ -23,7 +23,6 @@ import fc.device.gps.{ Message, MessageParser, CompositeParser }
 import MessageParser._
 import fc.device.gps.ublox.UbxParser
 import fc.device.gps.nmea.NmeaParser
-import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
 
 object OfMessages {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
@@ -42,9 +41,7 @@ object OfMessages {
     val app = for {
       clientResource <- Socket.server[IO](new InetSocketAddress("0.0.0.0", port))
       clientSocket <- Stream.resource(clientResource)
-      tcpStream = handlePeer(clientSocket)
-      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(spiController.observeMetrics()) }
-      _ <- Stream(tcpStream, metricStream).parJoinUnbounded
+      _ <- handlePeer(clientSocket)
     } yield ()
 
     app.compile.drain.unsafeRunSync()

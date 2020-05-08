@@ -15,7 +15,7 @@ import IOCtl.O_RDWR
 import ioctl.syntax._
 import spidev.Spidev
 import fc.device.api._
-import fc.metrics.{ AggregationBuffer, StatisticalMeasures }
+import fc.metrics.Hook
 
 case class SpiAddress(busNumber: Int, chipSelect: Int) extends Address {
   def toFilename: String = s"/dev/spidev${busNumber}.${chipSelect}"
@@ -103,24 +103,8 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiFullD
   }
 
   // Metrics API
-
-  def observeMetrics(): MetricObservation = {
-    val events = metricsBuffer.retrieve
-
-    val rate = (for {
-      oldest <- events.headOption
-      newest <- events.lastOption
-    } yield {
-      val spanOfEvents = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
-      events.size / (spanOfEvents.toDouble / 1000.0)
-    }).getOrElse(0.0)
-
-    val duration = StatisticalMeasures(events.map(_.duration), FiniteDuration(0, MILLISECONDS))
-    val writeBytes = StatisticalMeasures(events.map(_.writeBytes), 0)
-    val readBytes = StatisticalMeasures(events.map(_.readBytes), 0)
-
-    MetricObservation(rate, duration, writeBytes, readBytes)
-  }
+  import SpiController.TransferEvent
+  def addTransferCallback(callback: TransferEvent => Unit): Unit = transferHook.callbacks.add(callback)
 
   // Internal API from here on down
 
@@ -139,17 +123,15 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiFullD
     result <- f(fd).bimap({ l => api.close(fd); l }, { r => api.close(fd); r })
   } yield result
 
-  private case class TransferEvent(timestamp: Instant, duration: FiniteDuration, writeBytes: Int, readBytes: Int)
+  private val transferHook = Hook[TransferEvent]()
 
-  private val metricsBuffer = AggregationBuffer[TransferEvent](10)
-
-  private def withMetricRecording[A](numBytesToWrite: Int, thunk: () => DeviceResult[(A, Int)]): DeviceResult[A] = {
+  private def withMetricRecording[A](numBytesToWrite: Int, actionUnderObservation: () => DeviceResult[(A, Int)]): DeviceResult[A] = {
     val begin = Instant.now()
-    val result = thunk()
-    val numBytesRead = result.right.toOption.map{ case (_, nb) => nb }.getOrElse(0)
+    val result = actionUnderObservation()
     val end = Instant.now()
+    val numBytesRead = result.right.toOption.map{ case (_, nb) => nb }.getOrElse(0)
     val duration = FiniteDuration(Duration.between(begin, end).toMillis, MILLISECONDS)
-    metricsBuffer.record(TransferEvent(begin, duration, numBytesToWrite, numBytesRead))
+    transferHook.notify(TransferEvent(begin, duration, numBytesToWrite, numBytesRead))
     result.map{ case (bytes, _) => bytes }
   }
 
@@ -161,12 +143,12 @@ trait SpiApi {
   def close(fileDescriptor: Int): Int
 }
 
-case class MetricObservation(rate: Double, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], readBytes: StatisticalMeasures[Int])
-
 object SpiController {
   def apply() = new SpiControllerImpl(new SpiApi {
     def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int) = Spidev.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz)
     def open(filename: String, flags: Int) = IOCtl.open(filename, flags)
     def close(fileDescriptor: Int) = IOCtl.close(fileDescriptor)
   })
+
+  case class TransferEvent(timestamp: Instant, duration: FiniteDuration, writeBytes: Int, readBytes: Int)
 }
