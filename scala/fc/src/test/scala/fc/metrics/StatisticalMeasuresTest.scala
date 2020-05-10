@@ -17,6 +17,10 @@ class StatisticalMeasuresTest extends FlatSpec with Matchers with TypeCheckedTri
     StatisticalMeasures(Seq("f", "foo", "fo"), "").max should === ("foo")
   }
 
+  it should "calculate the minimum value" in {
+    StatisticalMeasures(Seq("f", "foo", "fo"), "").min should === ("f")
+  }
+
   it should "tolerate and empty data set by returning the empty value" in {
     val empty = StatisticalMeasures(Seq.empty[Double], 0.0)
     empty.median should === (0.0)
