@@ -26,6 +26,8 @@ import fc.device.gps.ublox.{ UbxParser, UbxMessage }
 import fc.device.gps.nmea.{ NmeaParser, NmeaMessage }
 import fc.device.gps.fs2.Gps
 import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
+import squants.information.{ DataRate, BytesPerSecond }
+import squants.time.{ Frequency, Hertz }
 
 object SpiToTcp {
 
@@ -83,9 +85,9 @@ object SpiToTcp {
       msg => Stream.chunk(Chunk.seq(msg.toBytes))
     } through client.writes()
 
-  private case class MetricObservation(rate: Double, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], readBytes: StatisticalMeasures[Int]) {
+  private case class MetricObservation(transferRate: Frequency, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], writeRate: DataRate, readBytes: StatisticalMeasures[Int], readRate: DataRate) {
     override def toString(): String =
-      s"MetricObservation - rate: $rate; duration: ${formatStats(duration)}; writeBytes: ${formatStats(writeBytes)}; readBytes: ${formatStats(readBytes)}"
+      s"MetricObservation - transferRate: $transferRate; duration: ${formatStats(duration)}; writeBytes: ${formatStats(writeBytes)}; writeRate: $writeRate; readBytes: ${formatStats(readBytes)}; readRate: $readRate"
   }
 
   private def formatStats[A](stats: StatisticalMeasures[A]): String =
@@ -94,19 +96,22 @@ object SpiToTcp {
   private def observeMetrics(): MetricObservation = {
     val events = metricsBuffer.retrieve
 
-    val rate = (for {
+    val timeSpanOfEventsDoubleSeconds = (for {
       oldest <- events.headOption
       newest <- events.lastOption
     } yield {
-      val spanOfEvents = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
-      events.size / (spanOfEvents.toDouble / 1000.0)
-    }).getOrElse(0.0)
+      val span = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
+      span.toDouble / 1000.0
+    })
+    val transferRate = Hertz(timeSpanOfEventsDoubleSeconds.map(span => events.size.toDouble / span).getOrElse(0.0))
 
     val duration = StatisticalMeasures(events.map(_.duration), FiniteDuration(0, MILLISECONDS))
     val writeBytes = StatisticalMeasures(events.map(_.writeBytes), 0)
+    val writeRate = BytesPerSecond(timeSpanOfEventsDoubleSeconds.map(span => events.map(_.writeBytes).sum.toDouble / span).getOrElse(0.0))
     val readBytes = StatisticalMeasures(events.map(_.readBytes), 0)
+    val readRate = BytesPerSecond(timeSpanOfEventsDoubleSeconds.map(span => events.map(_.readBytes).sum.toDouble / span).getOrElse(0.0))
 
-    MetricObservation(rate, duration, writeBytes, readBytes)
+    MetricObservation(transferRate, duration, writeBytes, writeRate, readBytes, readRate)
   }
 
   private implicit val timer = IO.timer(ExecutionContext.global)

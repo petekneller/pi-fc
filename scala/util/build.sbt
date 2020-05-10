@@ -8,5 +8,6 @@ libraryDependencies ++= Seq(
   cats,
   catsEffect,
   fs2,
-  fs2io
+  fs2io,
+  squants
 )
