@@ -19,7 +19,7 @@ import fs2.{ Stream, Pipe, Chunk, Pull }
 import fs2.concurrent.SignallingRef
 import fs2.io.tcp.Socket
 import fc.device.controller.spi.{ SpiAddress, SpiController }
-import SpiController.TransferEvent
+import SpiController.{ TransferEvent => SpiTransferEvent }
 import fc.device.gps.{ Message, MessageParser, CompositeParser, CompositeMessage }
 import MessageParser._
 import fc.device.gps.ublox.{ UbxParser, UbxMessage }
@@ -47,13 +47,15 @@ object SpiToTcp {
       cs
     )
 
-    spiController.addTransferCallback(metricsBuffer.record _)
+    spiController.addTransferCallback(spiObservationsBuffer.record _)
 
     val app = for {
       clientSocket <- createSocket(port)
       inputStream = receiveFromClient(clientSocket, gpsInput)
       outputStream = gpsOutput through transmitToClient(clientSocket)
-      metricStream = Stream.awakeEvery[IO](1.second) map { _ => println(observeMetrics()) }
+      metricStream = Stream.awakeEvery[IO](1.second) >> { Stream.eval_(IO.delay{
+        println(observeSpiTransfers())
+      })}
       _ <- Stream(inputStream, outputStream, metricStream).parJoinUnbounded
     } yield ()
 
@@ -85,16 +87,16 @@ object SpiToTcp {
       msg => Stream.chunk(Chunk.seq(msg.toBytes))
     } through client.writes()
 
-  private case class MetricObservation(transferRate: Frequency, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], writeRate: DataRate, readBytes: StatisticalMeasures[Int], readRate: DataRate) {
+  private case class SpiTransfersObservation(transferRate: Frequency, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], writeRate: DataRate, readBytes: StatisticalMeasures[Int], readRate: DataRate) {
     override def toString(): String =
-      s"MetricObservation - transferRate: $transferRate; duration: ${formatStats(duration)}; writeBytes: ${formatStats(writeBytes)}; writeRate: $writeRate; readBytes: ${formatStats(readBytes)}; readRate: $readRate"
+      s"SpiTransfersObservation - transferRate: $transferRate; duration: ${formatStats(duration)}; writeBytes: ${formatStats(writeBytes)}; writeRate: $writeRate; readBytes: ${formatStats(readBytes)}; readRate: $readRate"
   }
 
   private def formatStats[A](stats: StatisticalMeasures[A]): String =
     s"[${stats.min};${stats.median};${stats.p90};${stats.max}]"
 
-  private def observeMetrics(): MetricObservation = {
-    val events = metricsBuffer.retrieve
+  private def observeSpiTransfers(): SpiTransfersObservation = {
+    val events = spiObservationsBuffer.retrieve
 
     val timeSpanOfEventsDoubleSeconds = (for {
       oldest <- events.headOption
@@ -111,7 +113,7 @@ object SpiToTcp {
     val readBytes = StatisticalMeasures(events.map(_.readBytes), 0)
     val readRate = BytesPerSecond(timeSpanOfEventsDoubleSeconds.map(span => events.map(_.readBytes).sum.toDouble / span).getOrElse(0.0))
 
-    MetricObservation(transferRate, duration, writeBytes, writeRate, readBytes, readRate)
+    SpiTransfersObservation(transferRate, duration, writeBytes, writeRate, readBytes, readRate)
   }
 
   private implicit val timer = IO.timer(ExecutionContext.global)
@@ -120,5 +122,5 @@ object SpiToTcp {
   private val spiController = SpiController()
   private val maxBytesToTransfer: Int Refined Positive = 100
   private val logger = LoggerFactory.getLogger(this.getClass)
-  private val metricsBuffer = AggregationBuffer[TransferEvent](10)
+  private val spiObservationsBuffer = AggregationBuffer[SpiTransferEvent](10)
 }
