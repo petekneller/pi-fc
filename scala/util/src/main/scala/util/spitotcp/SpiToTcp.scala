@@ -55,6 +55,7 @@ object SpiToTcp {
       outputStream = gpsOutput through transmitToClient(clientSocket)
       metricStream = Stream.awakeEvery[IO](1.second) >> { Stream.eval_(IO.delay{
         println(observeSpiTransfers())
+        println(observeOutgoingMessages())
       })}
       _ <- Stream(inputStream, outputStream, metricStream).parJoinUnbounded
     } yield ()
@@ -83,8 +84,10 @@ object SpiToTcp {
   private def parseMessages(): Pipe[IO, Byte, Msg] = Gps.parseStream(newParser _)
 
   private def transmitToClient(client: Socket[IO]): Pipe[IO, Msg, Unit] = (input: Stream[IO, Msg]) =>
-    input flatMap {
-      msg => Stream.chunk(Chunk.seq(msg.toBytes))
+    input flatMap { msg =>
+      val bytes = msg.toBytes
+      Stream.eval_(IO.delay{ messageObservationsBuffer.record(MessageOutgoing(Instant.now(), bytes.length)) }) ++
+        Stream.chunk(Chunk.seq(bytes))
     } through client.writes()
 
   private case class SpiTransfersObservation(transferRate: Frequency, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], writeRate: DataRate, readBytes: StatisticalMeasures[Int], readRate: DataRate) {
@@ -116,6 +119,26 @@ object SpiToTcp {
     SpiTransfersObservation(transferRate, duration, writeBytes, writeRate, readBytes, readRate)
   }
 
+  private case class MessageOutgoing(timestamp: Instant, size: Int)
+  private case class OutgoingMessagesObservation(messageRate: Frequency, dataRate: DataRate, size: StatisticalMeasures[Int])
+
+  private def observeOutgoingMessages(): OutgoingMessagesObservation = {
+    val events = messageObservationsBuffer.retrieve
+
+    val timeSpanOfEventsDoubleSeconds = (for {
+      oldest <- events.headOption
+      newest <- events.lastOption
+    } yield {
+      val span = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
+      span.toDouble / 1000.0
+    })
+
+    val messageRate = Hertz(timeSpanOfEventsDoubleSeconds.map(span => events.size.toDouble / span).getOrElse(0.0))
+    val dataRate = BytesPerSecond(timeSpanOfEventsDoubleSeconds.map(span => events.map(_.size).sum.toDouble / span).getOrElse(0.0))
+    val size = StatisticalMeasures(events.map(_.size), 0)
+    OutgoingMessagesObservation(messageRate, dataRate, size)
+  }
+
   private implicit val timer = IO.timer(ExecutionContext.global)
   private implicit val cs = IO.contextShift(ExecutionContext.global)
   private val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
@@ -123,4 +146,5 @@ object SpiToTcp {
   private val maxBytesToTransfer: Int Refined Positive = 100
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val spiObservationsBuffer = AggregationBuffer[SpiTransferEvent](10)
+  private val messageObservationsBuffer = AggregationBuffer[MessageOutgoing](10)
 }
