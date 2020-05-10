@@ -83,7 +83,13 @@ object SpiToTcp {
       msg => Stream.chunk(Chunk.seq(msg.toBytes))
     } through client.writes()
 
-  private case class MetricObservation(rate: Double, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], readBytes: StatisticalMeasures[Int])
+  private case class MetricObservation(rate: Double, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], readBytes: StatisticalMeasures[Int]) {
+    override def toString(): String =
+      s"MetricObservation - rate: $rate; duration: ${formatStats(duration)}; writeBytes: ${formatStats(writeBytes)}; readBytes: ${formatStats(readBytes)}"
+  }
+
+  private def formatStats[A](stats: StatisticalMeasures[A]): String =
+    s"[${stats.min};${stats.median};${stats.p90};${stats.max}]"
 
   private def observeMetrics(): MetricObservation = {
     val events = metricsBuffer.retrieve
