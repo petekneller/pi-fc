@@ -31,7 +31,7 @@ object Gps {
   ): (BlockingQueue[M], Stream[IO, M]) = {
 
     val inputQueue = new LinkedBlockingQueue[M]()
-    val input = Stream.eval(cs.evalOn(blockingIO)(IO.delay{ inputQueue.take() }))
+    val input = Stream.eval(cs.evalOn(blockingIO)(IO.delay{ inputQueue.take() })).repeat
 
     val polling = Stream.awakeEvery[IO](pollInterval)
 
