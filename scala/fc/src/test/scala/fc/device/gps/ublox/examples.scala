@@ -71,6 +71,10 @@ object examples {
     )
   }
 
+  val UbxMonitorRxBuffer = {
+    // B5 62 0A 07 18 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 29 45
+  }
+
   val UbxMonitorTxBufferPoll = {
     // B5 62 0A 08 00 00 12 40
     val clazz = 0x0A.toByte
@@ -87,6 +91,13 @@ object examples {
       msg = TxBufferPoll
     )
   }
+
+  val UbxMonitorTxBuffer = {
+    // B5 62 0A 08 1C 00 00 00 00 00 00 00 00 00 9F 02 00 00 00 00 00 00 0A 00 00 00 00 00 1B 00 0A 1B 00 00 19 A5
+    // spi: ~25% ~10% 671
+    // total: "
+  }
+
 
 }
 
