@@ -54,6 +54,40 @@ object examples {
     )
   }
 
+  val UbxMonitorRxBufferPoll = {
+    // B5 62 0A 07 00 00 11 3D
+    val clazz = 0x0A.toByte
+    val id = 0x07.toByte
+    val payloadLength = (0x00.toByte, 0x00.toByte)
+    val checksum = (0x11.toByte, 0x3D.toByte)
+    Example(
+      bytes = Seq(0xB5, 0x62, 0x0A, 0x07, 0x00, 0x00, 0x11, 0x3D).map(_.toByte),
+      clazz = clazz,
+      id = id,
+      payload = Seq.empty,
+      payloadLength = payloadLength,
+      checksum = checksum,
+      msg = RxBufferPoll
+    )
+  }
+
+  val UbxMonitorTxBufferPoll = {
+    // B5 62 0A 08 00 00 12 40
+    val clazz = 0x0A.toByte
+    val id = 0x08.toByte
+    val payloadLength = (0x00.toByte, 0x00.toByte)
+    val checksum = (0x12.toByte, 0x40.toByte)
+    Example(
+      bytes = Seq(0xB5, 0x62, 0x0A, 0x08, 0x00, 0x00, 0x12, 0x40).map(_.toByte),
+      clazz = clazz,
+      id = id,
+      payload = Seq.empty,
+      payloadLength = payloadLength,
+      checksum = checksum,
+      msg = TxBufferPoll
+    )
+  }
+
 }
 
 case class Example(

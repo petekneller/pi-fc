@@ -44,6 +44,12 @@ class UbxMessagesTest extends FlatSpec with Matchers with TypeCheckedTripleEqual
   // Ack/Ack
   testsForToBytes(examples.UbxAckAck, "UBX-ACK-ACK")
 
+  // Monitor/RxBuffer
+  testsForToBytes(examples.UbxMonitorRxBufferPoll, "UBX-MON-RXBUF")
+
+  // Monitor/TxBuffer
+  testsForToBytes(examples.UbxMonitorTxBufferPoll, "UBX-MON-TXBUF")
+
   // Internals
   private def testsForToBytes(example: Example, msgName: String): Unit = {
     val msgBytes = example.msg.toBytes

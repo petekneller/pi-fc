@@ -20,5 +20,20 @@ case class Unknown(clazz: Byte, id: Byte, payload: Seq[Byte], checksum1: Byte, c
     val length2 = ((payload.length >> 8) & 0xFF).toByte
     (preamble1 :: preamble2 :: clazz :: id :: length1 :: length2 :: payload.toList) :+ checksum1 :+ checksum2
   }
+}
 
+case object RxBufferPoll extends UbxMessage {
+  def clazz: Byte = 0x0A.toByte
+  def id: Byte = 0x07.toByte
+  def payloadLength: Int = 0
+  def checksum: (Byte, Byte) = (0x11.toByte, 0x3D.toByte)
+  def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte], checksum._1, checksum._2).toBytes
+}
+
+case object TxBufferPoll extends UbxMessage {
+  def clazz: Byte = 0x0A.toByte
+  def id: Byte = 0x08.toByte
+  def payloadLength: Int = 0
+  def checksum: (Byte, Byte) = (0x12.toByte, 0x40.toByte)
+  def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte], checksum._1, checksum._2).toBytes
 }
