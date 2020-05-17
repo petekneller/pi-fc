@@ -20,9 +20,9 @@ import fs2.concurrent.SignallingRef
 import fs2.io.tcp.Socket
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 import SpiController.{ TransferEvent => SpiTransferEvent }
-import fc.device.gps.{ Message, MessageParser, CompositeParser, CompositeMessage }
+import fc.device.gps.{ Message, MessageParser, CompositeParser, CompositeMessage, Right => UbxMsg }
 import MessageParser._
-import fc.device.gps.ublox.{ UbxParser, UbxMessage }
+import fc.device.gps.ublox.{ UbxParser, UbxMessage, RxBufferPoll, TxBufferPoll }
 import fc.device.gps.nmea.{ NmeaParser, NmeaMessage }
 import fc.device.gps.fs2.Gps
 import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
@@ -53,11 +53,7 @@ object SpiToTcp {
       clientSocket <- createSocket(port)
       inputStream = receiveFromClient(clientSocket, gpsInput)
       outputStream = gpsOutput through transmitToClient(clientSocket)
-      metricStream = Stream.awakeEvery[IO](1.second) >> { Stream.eval_(IO.delay{
-        println(observeSpiTransfers())
-        println(observeOutgoingMessages())
-      })}
-      _ <- Stream(inputStream, outputStream, metricStream).parJoinUnbounded
+      _ <- Stream((inputStream :: outputStream :: metricStreams(gpsInput)): _*).parJoinUnbounded
     } yield ()
 
     app.compile.drain.unsafeRunSync()
@@ -97,6 +93,18 @@ object SpiToTcp {
 
   private def formatStats[A](stats: StatisticalMeasures[A]): String =
     s"[${stats.min};${stats.median};${stats.p90};${stats.max}]"
+
+  private def metricStreams(gpsInput: BlockingQueue[Msg]): List[Stream[IO, Unit]] = {
+    val gpsStatusPolling = Stream.awakeEvery[IO](100.milliseconds) >> { Stream.eval_(IO.delay{
+      gpsInput.put(UbxMsg(RxBufferPoll))
+      gpsInput.put(UbxMsg(TxBufferPoll))
+    }) }
+    val observations = Stream.awakeEvery[IO](1.second) >> { Stream.eval_(IO.delay{
+      println(observeSpiTransfers())
+      println(observeOutgoingMessages())
+    })}
+    gpsStatusPolling :: observations :: Nil
+  }
 
   private def observeSpiTransfers(): SpiTransfersObservation = {
     val events = spiObservationsBuffer.retrieve
