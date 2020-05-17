@@ -67,21 +67,21 @@ class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals 
   "A parser" should "successfully parse a Config Power poll message (as Unknown)" in {
     val expected = examples.UbxConfigPowerPoll
     consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum._1, expected.checksum._2))
     )
   }
 
   it should "successfully parse a Config Power message (as Unknown)" in {
     val expected = examples.UbxConfigPower
     consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum._1, expected.checksum._2))
     )
   }
 
   it should "successfully parse an Ack message (as Unknown)" in {
     val expected = examples.UbxAckAck
     consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum1, expected.checksum2))
+      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum._1, expected.checksum._2))
     )
   }
 
