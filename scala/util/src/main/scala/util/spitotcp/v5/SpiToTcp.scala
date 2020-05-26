@@ -67,7 +67,7 @@ object SpiToTcp {
     def task3(): IO[Unit] = IO {
       val dataFromQueue = spiOutputQueue.take()
       clientOutput.write(Array(dataFromQueue))
-    } flatMap (+ => task3())
+    } flatMap (_ => task3())
 
     List(task1(), task2(), task3()).parSequence.unsafeRunSync()
   }
