@@ -17,10 +17,6 @@ def ammonite() = {
   }.taskValue
 }
 
-/* Ensime */
-
-ensimeIgnoreMissingDirectories in ThisBuild := true
-
 /* modules */
 
 lazy val ioctl = project.in(file("ioctl"))
