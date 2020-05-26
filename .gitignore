@@ -6,3 +6,7 @@ target/
 # ensime
 .ensime
 .ensime_cache
+
+# metals
+.bloop/
+.metals/
