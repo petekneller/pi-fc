@@ -1,11 +1,16 @@
 # sbt
-
 .history
 target/
 
 # ensime
 .ensime
 .ensime_cache
+
+# emacs
+*.~undo-tree~
+
+# vscode & friends
+.vscode
 
 # metals
 .bloop/
