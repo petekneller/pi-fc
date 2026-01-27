@@ -4,7 +4,6 @@ version in ThisBuild := "dev"
 
 scalaVersion in ThisBuild := "2.12.8"
 
-
 /* Ammonite */
 
 libraryDependencies in ThisBuild += "com.lihaoyi" %% "ammonite" % "1.6.5" cross CrossVersion.full
