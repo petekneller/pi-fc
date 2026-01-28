@@ -1,16 +1,18 @@
-organization in ThisBuild := "com.github.petekneller"
+ThisBuild / organization := "com.github.petekneller"
 
-version in ThisBuild := "dev"
+ThisBuild / version := "dev"
 
-scalaVersion in ThisBuild := "2.12.18"
+ThisBuild / scalaVersion := "2.12.18"
 
 /* Ammonite */
 
-libraryDependencies in ThisBuild += "com.lihaoyi" %% "ammonite" % "3.0.8" cross CrossVersion.full
+ThisBuild / libraryDependencies += "com.lihaoyi" %% "ammonite" % "3.0.8" cross CrossVersion.full
+
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 def ammonite() = {
-  sourceGenerators in Test += Def.task {
-    val file = (sourceManaged in Test).value / "amm.scala"
+  Test / sourceGenerators += Def.task {
+    val file = (Test / sourceManaged).value / "amm.scala"
     IO.write(file, """object amm extends App { ammonite.Main.main(args) }""")
     Seq(file)
   }.taskValue
