@@ -11,24 +11,25 @@ object Spidev {
    * matching <linux/spi/spi.h>
    */
 
-  val SPI_CPHA: Byte =      0x01
-  val SPI_CPOL: Byte =      0x02
+  val SPI_CPHA: Byte =      0x01            // clock phase: 0 = sample of leading edge (usual), 1 = trailing
+  val SPI_CPOL: Byte =      0x02            // clock polarity: 0 = begins low (usual)
 
+  // the traditional 'modes'
   val SPI_MODE_0: Byte =    (0|0)
   val SPI_MODE_1: Byte =    (0|SPI_CPHA).toByte
   val SPI_MODE_2: Byte =    (SPI_CPOL|0).toByte
   val SPI_MODE_3: Byte =    (SPI_CPOL|SPI_CPHA).toByte
 
-  val SPI_CS_HIGH: Byte =   0x04
-  val SPI_LSB_FIRST: Byte = 0x08
-  val SPI_3WIRE: Byte =     0x10
-  val SPI_LOOP: Byte =      0x20
-  val SPI_NO_CS: Byte =     0x40
-  val SPI_READY: Byte =     0x80.toByte
-  val SPI_TX_DUAL: Byte =   0x100.toByte
-  val SPI_TX_QUAD: Byte =   0x200.toByte
-  val SPI_RX_DUAL: Byte =   0x400.toByte
-  val SPI_RX_QUAD: Byte =   0x800.toByte
+  val SPI_CS_HIGH: Byte =   0x04            // chip select: 0 = active low (usual)
+  val SPI_LSB_FIRST: Byte = 0x08            // bitness: 0 = MSB first (usual), 1 = LSB first
+  val SPI_3WIRE: Byte =     0x10            // 3-wire mode: 0 = off (4-wire), 1 = on
+  val SPI_LOOP: Byte =      0x20            // loopback mode: 1 = on (?)
+  val SPI_NO_CS: Byte =     0x40            // 1 = no chip-select lines; requires 1 bus per device
+  val SPI_READY: Byte =     0x80.toByte     // slave pulls low to pause (?)
+  val SPI_TX_DUAL: Byte =   0x100.toByte    // 1 = transmit with 2 wires
+  val SPI_TX_QUAD: Byte =   0x200.toByte    // 1 = transmit with 4 wires
+  val SPI_RX_DUAL: Byte =   0x400.toByte    // 1 = receive with 2 wires
+  val SPI_RX_QUAD: Byte =   0x800.toByte    // 1 = receive with 4 wires
 
   val SPI_IOC_MAGIC: Byte = 'k'
 

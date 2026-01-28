@@ -29,6 +29,12 @@ import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
 import squants.information.{ DataRate, BytesPerSecond }
 import squants.time.{ Frequency, Hertz }
 
+/*
+ * Remimder of how to run this from the ammonite repl:
+ *   import eu.timepit.refined.auto.autoRefineV
+ *   _root_.util.spitotcp.SpiToTcp.apply(3000)
+ */
+
 object SpiToTcp {
 
   type Msg = CompositeMessage[NmeaMessage, UbxMessage]
