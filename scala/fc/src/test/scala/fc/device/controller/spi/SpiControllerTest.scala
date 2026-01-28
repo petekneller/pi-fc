@@ -198,7 +198,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.receive(device, register, 3)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 4 && rxBuffer.limit === 4
+      txBuffer.limit() === 4 && rxBuffer.limit() === 4
     })
   }
 
@@ -211,7 +211,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transmit(device, register, Seq(b"1", b"2", b"3"))
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 4 && rxBuffer.limit === 4
+      txBuffer.limit() === 4 && rxBuffer.limit() === 4
     })
   }
 
@@ -239,7 +239,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transferN(device, Seq.empty[Byte], 0)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 0 && rxBuffer.limit === 0
+      txBuffer.limit() === 0 && rxBuffer.limit() === 0
     })
   }
 
@@ -247,7 +247,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transferN(device, Seq(b"1", b"2", b"3"), 3)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 3 && rxBuffer.limit === 3
+      txBuffer.limit() === 3 && rxBuffer.limit() === 3
     })
   }
 
@@ -255,7 +255,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transferN(device, Seq.empty[Byte], 10)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 10 && rxBuffer.limit === 10
+      txBuffer.limit() === 10 && rxBuffer.limit() === 10
     })
   }
 
@@ -263,7 +263,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transferN(device, Seq(b"1", b"2", b"3"), 0)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 3 && rxBuffer.limit === 3
+      txBuffer.limit() === 3 && rxBuffer.limit() === 3
     })
   }
 
@@ -276,7 +276,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.transfer(device, Seq(b"1", b"2", b"3"))
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 3 && rxBuffer.limit === 3
+      txBuffer.limit() === 3 && rxBuffer.limit() === 3
     })
   }
 
@@ -289,7 +289,7 @@ class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEqu
     controller.receive(device, 3)
 
     (mockApi.transfer _).verify(where { (_, txBuffer, rxBuffer, _, _) =>
-      txBuffer.limit === 3 && rxBuffer.limit === 3
+      txBuffer.limit() === 3 && rxBuffer.limit() === 3
     })
   }
 

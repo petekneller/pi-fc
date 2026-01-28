@@ -62,9 +62,9 @@ object Spidev {
   }
 
   def transfer(fd: Int, tx: ByteBuffer, rx: ByteBuffer, transferSize: Int, clockSpeedHz: Int): Int = {
-    if (tx.limit < transferSize) throw new SpiTransferException(TxBufferTooSmall)
+    if (tx.limit() < transferSize) throw new SpiTransferException(TxBufferTooSmall)
     if (!tx.isDirect) throw new SpiTransferException(TxBufferNotDirect)
-    if (rx.limit < transferSize) throw new SpiTransferException(RxBufferTooSmall)
+    if (rx.limit() < transferSize) throw new SpiTransferException(RxBufferTooSmall)
     if (!rx.isDirect) throw new SpiTransferException(RxBufferNotDirect)
     if (clockSpeedHz <= 0) throw new SpiTransferException(ClockSpeedInvalid)
 
