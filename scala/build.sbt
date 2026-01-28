@@ -2,11 +2,11 @@ organization in ThisBuild := "com.github.petekneller"
 
 version in ThisBuild := "dev"
 
-scalaVersion in ThisBuild := "2.12.8"
+scalaVersion in ThisBuild := "2.12.18"
 
 /* Ammonite */
 
-libraryDependencies in ThisBuild += "com.lihaoyi" %% "ammonite" % "1.6.5" cross CrossVersion.full
+libraryDependencies in ThisBuild += "com.lihaoyi" %% "ammonite" % "3.0.8" cross CrossVersion.full
 
 def ammonite() = {
   sourceGenerators in Test += Def.task {
