@@ -15,3 +15,5 @@ target/
 # metals
 .bloop/
 .metals/
+# the bloop plugin seems to crash SBT on RPi
+metals.sbt
