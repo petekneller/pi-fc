@@ -5,6 +5,19 @@ import syntax._
 
 object macros {
 
+  /*
+   * Macros ported from kernel <ioctl.h>
+   * A quick reminder of how ioctl() works:
+   *  - its takes an open file descriptor, device-specific command/operation, and a pointer to an input/output argument
+   *  - the operation is 32 bits and (by convention) structured as:
+   *    - 2 bits indicating the request is an input/output/both/none (none = takes no argument, returns no value)
+   *    - 14 bits indicating the size of the argument buffer
+   *    - 8 bits indicating the 'type'; that is, the type of device
+   *    - 8 bits indicating the 'request number'/'nr'; that is, the ID of the operation within the 'type' namespace
+   *
+   * The IOx macros make forming the operation word easier
+   */
+
   def IOR[A](`type`: Byte, nr: Byte, dataType: Class[A]): Int = IOR(`type`, nr, Native.getNativeSize(dataType))
 
   def IOR(`type`: Byte, nr: Byte, dataSize: Int): Int = IOC(IOC_READ, `type`, nr, dataSize)
