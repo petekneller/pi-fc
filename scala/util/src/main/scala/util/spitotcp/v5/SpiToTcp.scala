@@ -66,7 +66,7 @@ object SpiToTcp {
       clientOutput.write(Array(dataFromQueue))
     } flatMap (_ => task3())
 
-    List(task1(), task2(), task3()).parSequence.unsafeRunSync()
+    val _ = List(task1(), task2(), task3()).parSequence.unsafeRunSync()
   }
 
 }

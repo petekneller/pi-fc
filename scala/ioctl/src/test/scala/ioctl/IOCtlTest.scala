@@ -25,7 +25,7 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     val bb = ByteBuffer.allocate(8)
     bb.order(LITTLE_ENDIAN)
     ioctl(fd, new NativeLong(op.unsigned), bb) should === (0)
-    close(fd)
+    val _ = close(fd)
 
     val version = bb.asLongBuffer.get
     version should be >(0L)

@@ -43,7 +43,7 @@ object SpiToTcp {
       def run(): Unit = {
         val dataFromTcp = clientInput.read.toByte
         spiInputQueue.add(dataFromTcp)
-        executor.submit(task1())
+        val _ = executor.submit(task1())
       }
     }
 
@@ -58,7 +58,7 @@ object SpiToTcp {
         ).fold(l => throw new RuntimeException(l.toString), identity)
 
         dataFromSpi foreach spiOutputQueue.add
-        executor.submit(task2())
+        val _ = executor.submit(task2())
       }
     }
 
@@ -66,16 +66,16 @@ object SpiToTcp {
       def run(): Unit = {
         val dataFromQueue = spiOutputQueue.take()
         clientOutput.write(Array(dataFromQueue))
-        executor.submit(task3())
+        val _ = executor.submit(task3())
       }
     }
 
-    executor.submit(task1())
-    executor.submit(task2())
-    executor.submit(task3())
+    { executor.submit(task1()); () }
+    { executor.submit(task2()); () }
+    { executor.submit(task3()); () }
 
     // Clearly this isn't a long-term solution
-    executor.awaitTermination(1, HOURS)
+    { executor.awaitTermination(1, HOURS); () }
   }
 
 }

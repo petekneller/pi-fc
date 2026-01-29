@@ -68,7 +68,7 @@ object SpiToTcp {
     task3()
 
     // Clearly this isn't a long-term solution
-    executor.awaitTermination(1, HOURS)
+    val _ = executor.awaitTermination(1, HOURS)
   }
 
 }

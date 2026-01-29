@@ -34,7 +34,7 @@ class TransferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     val whoamiAddress = 0x75.toByte
     tx.put(0, (readFlag | whoamiAddress).toByte)
     val bytesTransferred = transfer(fd, tx, rx, 2, 100000)
-    close(fd)
+    val _ = close(fd)
 
     bytesTransferred should === (2)
     rx.get(1) should === (113.toByte)

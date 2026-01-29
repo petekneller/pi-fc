@@ -27,7 +27,7 @@ class SingleBitConfigurationTest extends FlatSpec with Matchers with TypeChecked
     val bit1Flag = SingleBitConfiguration(register, 1)
 
     (mockController.receive _).when(*, *, refineMV[Positive](1)).returns(Right(Seq(0x71.toByte)))
-    (mockController.transmit _).when(*, *, *)returns(Right(Unit))
+    (mockController.transmit _).when(*, *, *).returns(Right(()))
     bit1Flag.write(device, true)
     (mockController.transmit _).verify(*, register, Seq(0x73.toByte))
   }
@@ -36,7 +36,7 @@ class SingleBitConfigurationTest extends FlatSpec with Matchers with TypeChecked
     val bit1Flag = SingleBitConfiguration(register, 1)
 
     (mockController.receive _).when(*, *, refineMV[Positive](1)).returns(Right(Seq(0x73.toByte)))
-    (mockController.transmit _).when(*, *, *)returns(Right(Unit))
+    (mockController.transmit _).when(*, *, *).returns(Right(()))
     bit1Flag.write(device, false)
     (mockController.transmit _).verify(*, register, Seq(0x71.toByte))
   }
