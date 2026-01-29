@@ -4,6 +4,31 @@ ThisBuild / version := "dev"
 
 ThisBuild / scalaVersion := "2.12.18"
 
+ThisBuild / scalacOptions ++= Seq(
+  // Standard warnings
+  "-deprecation",           // Warn about deprecated APIs
+  "-feature",               // Warn about features requiring explicit enabling
+  "-unchecked",             // Warn about unchecked type operations
+
+  // Extra warnings useful for migration
+  "-Xlint:adapted-args",          // Warn if argument list is adapted
+  "-Xlint:infer-any",             // Warn when Any is inferred
+  "-Xlint:missing-interpolator",  // Possible string interpolator missed
+  "-Xlint:nullary-unit",          // Warn about nullary methods returning Unit
+  "-Xlint:private-shadow",        // Private field shadowing local
+  "-Xlint:type-parameter-shadow", // Type parameter shadows existing type
+
+  // Unused code detection
+  "-Ywarn-dead-code",
+  "-Ywarn-unused:imports",
+  "-Ywarn-unused:locals",
+  "-Ywarn-unused:privates",
+
+  // Value handling
+  "-Ywarn-value-discard",   // Warn when non-Unit values are discarded
+  "-Ywarn-numeric-widen"    // Warn about implicit numeric widening
+)
+
 /* Ammonite */
 
 ThisBuild / libraryDependencies += "com.lihaoyi" %% "ammonite" % "3.0.8" cross CrossVersion.full
