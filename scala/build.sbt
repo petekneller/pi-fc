@@ -38,7 +38,7 @@ ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" 
 def ammonite() = {
   Test / sourceGenerators += Def.task {
     val file = (Test / sourceManaged).value / "amm.scala"
-    IO.write(file, """object amm extends App { ammonite.Main.main(args) }""")
+    IO.write(file, """object amm extends App { ammonite.AmmoniteMain.main(args) }""")
     Seq(file)
   }.taskValue
 }
