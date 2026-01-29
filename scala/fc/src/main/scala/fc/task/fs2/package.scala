@@ -4,7 +4,7 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit.MICROS
 import cats.syntax.either._
 import cats.effect.IO
-import _root_.fs2.{ Stream, Sink, Pipe, Pull }
+import _root_.fs2.{ Stream, Pipe, Pull }
 import squants.time.{ Time, Seconds, Microseconds }
 import fc.device.api.DeviceResult
 import fc.device.rc.{ RcInput, RcReceiver, RcChannel }
@@ -42,7 +42,7 @@ package object fs2 {
   def motorsTest(escs: ESC*): Stream[IO, String] =
     escs.foldLeft(Stream.empty.covaryAll[IO, String])((stream, esc) => stream ++ motorTest(esc))
 
-  def printToConsole[A]: Sink[IO, A] = s => s.flatMap(a => Stream.eval(IO.delay{ println(a.toString) }))
+  def printToConsole[A]: Pipe[IO, A, Unit] = s => s.flatMap(a => Stream.eval(IO.delay{ println(a.toString) }))
 
   def zip2[A, B](a: Stream[IO, DeviceResult[A]], b: Stream[IO, DeviceResult[B]]): Stream[IO, DeviceResult[(A, B)]] =
     (a zip b) map { case (aDR, bDR) =>
