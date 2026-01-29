@@ -1,6 +1,5 @@
 package fc.device.controller.spi
 
-import cats.syntax.either._
 import ioctl.syntax._
 import fc.device.api._
 

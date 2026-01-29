@@ -1,6 +1,5 @@
 package fc.device.esc
 
-import cats.syntax.either._
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import squants.time.{Hertz, Microseconds}
 import fc.device.api._

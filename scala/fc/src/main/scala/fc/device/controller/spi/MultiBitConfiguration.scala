@@ -1,6 +1,5 @@
 package fc.device.controller.spi
 
-import cats.syntax.either._
 import cats.syntax.eq._
 import cats.instances.byte._
 import eu.timepit.refined.W

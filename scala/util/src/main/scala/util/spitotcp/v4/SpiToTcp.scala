@@ -4,7 +4,6 @@ import java.net.ServerSocket
 import java.util.concurrent.{ LinkedBlockingQueue, Executors }
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.HOURS
-import scala.math.min
 import scala.concurrent.{ ExecutionContext, Future }
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive

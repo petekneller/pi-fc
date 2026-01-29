@@ -1,11 +1,9 @@
 package fc.device.sensor
 
-import cats.syntax.either._
 import cats.syntax.eq._
 import cats.instances.byte._
 import eu.timepit.refined.auto.autoRefineV
 import spire.syntax.literals._
-import ioctl.syntax._
 import fc.device.api._
 import fc.device.controller.spi._
 

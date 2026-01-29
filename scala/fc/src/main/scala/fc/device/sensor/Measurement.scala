@@ -1,6 +1,5 @@
 package fc.device.sensor
 
-import cats.syntax.either._
 import fc.device.api._
 import fc.device.controller.spi._
 

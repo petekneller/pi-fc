@@ -2,7 +2,6 @@ package fc.task
 
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit.MICROS
-import cats.syntax.either._
 import cats.effect.IO
 import _root_.fs2.{ Stream, Pipe, Pull }
 import squants.time.{ Time, Seconds, Microseconds }

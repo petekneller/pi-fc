@@ -1,6 +1,5 @@
 package fc
 
-import cats.syntax.either._
 import eu.timepit.refined.auto.autoRefineV
 import fs2.Stream
 import device.controller.filesystem.FileSystemController

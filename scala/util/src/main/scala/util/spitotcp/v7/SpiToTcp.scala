@@ -1,16 +1,10 @@
 package util.spitotcp.v7
 
 import java.net.InetSocketAddress
-import java.util.concurrent.{ LinkedBlockingQueue, Executors }
-import java.util.concurrent.TimeUnit.MILLISECONDS
-import java.util.concurrent.TimeUnit.HOURS
+import java.util.concurrent.Executors
 import java.nio.channels.AsynchronousChannelGroup
-import scala.math.min
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import cats.instances.list._
-import cats.syntax.apply._
-import cats.syntax.parallel._
 import cats.effect.{ IO, Timer }
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.io.tcp.Socket
