@@ -26,7 +26,7 @@ package object fs2 {
   def sleep(period: Time): Stream[IO, Nothing] = Stream.eval(IO.delay{ Thread.sleep(period.toMilliseconds.toLong) }).flatMap(_ => Stream.empty.covaryAll[IO, Nothing])
 
   def motorTest(esc: ESC): Stream[IO, String] = {
-    def sleep = fs2.sleep(Seconds(0.5)).map(_ => s"sleep for 0.5 seconds")
+    def sleep = Stream.emit("sleep for 0.5 seconds") ++ fs2.sleep(Seconds(0.5))
     def throttleMessage(ppm: DeviceResult[Int]) = s"ESC [${esc.name}] ppm: ${ppm.toString}"
     def armMessage(ppm: DeviceResult[Int]) = s"ESC [${esc.name}] armed: ${ppm.toString}"
     val throttleCommand = Run(0.05)
