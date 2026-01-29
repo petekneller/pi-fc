@@ -2,11 +2,10 @@ package ioctl
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
-import com.sun.jna.{NativeLong, Native, Platform}
+import com.sun.jna.{NativeLong, Platform}
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
-import syntax._
 import macros.IOR
 import IOCtl._
 

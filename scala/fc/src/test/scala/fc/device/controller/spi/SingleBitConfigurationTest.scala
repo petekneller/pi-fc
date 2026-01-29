@@ -3,11 +3,9 @@ package fc.device.controller.spi
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.auto.autoRefineV
 import eu.timepit.refined.numeric.Positive
-import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
-import fc.device.api._
 
 class SingleBitConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 

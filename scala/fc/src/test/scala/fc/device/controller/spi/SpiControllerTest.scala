@@ -10,7 +10,6 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import ioctl.syntax._
 import ioctl.IOCtl.O_RDWR
-import ioctl.IOCtlImpl.size_t
 import fc.device.api._
 
 class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {

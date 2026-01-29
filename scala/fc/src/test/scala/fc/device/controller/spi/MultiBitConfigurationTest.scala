@@ -7,7 +7,6 @@ import spire.syntax.literals._
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
-import fc.device.api._
 
 class MultiBitConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
