@@ -16,13 +16,13 @@ object Dependencies {
 
   def compilerDep(scalaVersion: String) = "org.scala-lang" % "scala-compiler" % scalaVersion % Provided
 
-  val refined = "eu.timepit" %% "refined" % "0.9.4"
+  val refined = "eu.timepit" %% "refined" % "0.11.2"
 
-  val spire = "org.spire-math" %% "spire" % "0.13.0"
+  val spire = "org.typelevel" %% "spire" % "0.17.0"
 
-  val squants = "org.typelevel"  %% "squants"  % "1.4.0"
+  val squants = "org.typelevel"  %% "squants"  % "1.8.3"
 
-  val slf4j = "org.slf4j" % "slf4j-api" % "1.7.26"
-  val logback = "ch.qos.logback" % "logback-classic" % "1.2.3"
+  val slf4j = "org.slf4j" % "slf4j-api" % "1.7.36"
+  val logback = "ch.qos.logback" % "logback-classic" % "1.2.13"
 
 }
