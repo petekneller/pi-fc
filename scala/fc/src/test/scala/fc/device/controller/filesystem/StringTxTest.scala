@@ -1,6 +1,6 @@
 package fc.device.controller.filesystem
 
-import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
+import eu.timepit.refined.auto.autoUnwrap
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory

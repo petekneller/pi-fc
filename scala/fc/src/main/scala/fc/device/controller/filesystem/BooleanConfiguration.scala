@@ -1,6 +1,5 @@
 package fc.device.controller.filesystem
 
-import cats.syntax.either._
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
 import fc.device.api._

@@ -3,7 +3,6 @@ package util.spitotcp.v2
 import java.net.ServerSocket
 import java.util.concurrent.{ LinkedBlockingQueue }
 import java.util.concurrent.TimeUnit.MILLISECONDS
-import scala.math.min
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
@@ -16,7 +15,7 @@ object SpiToTcp {
     val spiController = SpiController()
 
     val maxBytesToTransfer: Int Refined Positive = 100
-    val delayMs = 100
+    val delayMs = 100L
 
     val serverSocket = new ServerSocket(args(0).toInt, 0)
     println(s"Listening on ${serverSocket.getLocalPort}")

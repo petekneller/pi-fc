@@ -5,7 +5,6 @@ import eu.timepit.refined.numeric.Positive
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
-import cats.syntax.either._
 import fc.device.controller.spi.{SpiRegisterController, SpiAddress}
 
 class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {

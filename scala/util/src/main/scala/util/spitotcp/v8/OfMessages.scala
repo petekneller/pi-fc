@@ -3,12 +3,8 @@ package util.spitotcp.v8
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
 import java.nio.channels.AsynchronousChannelGroup
-import java.util.concurrent.TimeUnit.MILLISECONDS
-import java.util.concurrent.atomic.AtomicReference
-import java.time.{ Instant, Duration }
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import scala.math.max
 import org.slf4j.LoggerFactory
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
@@ -16,7 +12,6 @@ import eu.timepit.refined.numeric.{ Interval, Positive }
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import cats.effect.{ IO, Timer }
 import fs2.{ Stream, Pipe, Chunk, Pull }
-import fs2.concurrent.SignallingRef
 import fs2.io.tcp.Socket
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 import fc.device.gps.{ Message, MessageParser, CompositeParser }
@@ -74,7 +69,7 @@ object OfMessages {
 
   def printMessages[A <: Message](s: Stream[IO, Byte], dir: String, parser: MessageParser[A]): Pull[IO, Message, Unit] = {
     s.pull.uncons1.flatMap {
-      case None => Pull.pure(None)
+      case None => Pull.done
       case Some((byte, rest)) => parser.consume(byte) match {
         case Unconsumed(_) => printMessages(rest, dir, parser)
         case Proceeding(nextParser) => printMessages(rest, dir, nextParser)

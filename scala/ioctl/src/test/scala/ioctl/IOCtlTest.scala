@@ -2,13 +2,13 @@ package ioctl
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalactic.TypeCheckedTripleEquals
-import com.sun.jna.{NativeLong, Native, Platform}
+import com.sun.jna.{NativeLong, Platform}
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.LITTLE_ENDIAN
-import syntax._
 import macros.IOR
 import IOCtl._
+import syntax.ToUnsignedInt
 
 class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 
@@ -24,8 +24,8 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 
     val bb = ByteBuffer.allocate(8)
     bb.order(LITTLE_ENDIAN)
-    ioctl(fd, new NativeLong(op), bb) should === (0)
-    close(fd)
+    ioctl(fd, new NativeLong(op.unsigned), bb) should === (0)
+    val _ = close(fd)
 
     val version = bb.asLongBuffer.get
     version should be >(0L)

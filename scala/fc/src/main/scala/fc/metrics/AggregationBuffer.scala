@@ -13,7 +13,7 @@ import eu.timepit.refined.auto.autoUnwrap
 case class AggregationBuffer[A](numSamples: Int Refined Positive) {
   private val buffer: AtomicReference[Vector[A]] = new AtomicReference(Vector.empty)
 
-  def record(a: A): Unit = buffer.updateAndGet{ b => (b :+ a).takeRight(numSamples) }
+  def record(a: A): Unit = { buffer.updateAndGet( b => (b :+ a).takeRight(numSamples) ); () }
 
   def retrieve: Seq[A] = buffer.get()
 }

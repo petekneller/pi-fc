@@ -4,7 +4,6 @@ import java.net.ServerSocket
 import java.util.concurrent.{ LinkedBlockingQueue, Executors }
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.HOURS
-import scala.math.min
 import scala.concurrent.{ ExecutionContext, Future }
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
@@ -18,7 +17,7 @@ object SpiToTcp {
     val spiController = SpiController()
 
     val maxBytesToTransfer: Int Refined Positive = 100
-    val delayMs = 100
+    val delayMs = 100L
 
     val serverSocket = new ServerSocket(args(0).toInt, 0)
     println(s"Listening on ${serverSocket.getLocalPort}")
@@ -69,7 +68,7 @@ object SpiToTcp {
     task3()
 
     // Clearly this isn't a long-term solution
-    executor.awaitTermination(1, HOURS)
+    val _ = executor.awaitTermination(1, HOURS)
   }
 
 }

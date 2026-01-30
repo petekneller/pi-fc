@@ -1,6 +1,5 @@
 package fc.device.controller.spi
 
-import cats.syntax.either._
 import eu.timepit.refined.auto.autoRefineV
 import fc.device.api._
 

@@ -1,6 +1,5 @@
 package fc.device.controller.filesystem
 
-import cats.syntax.either._
 import fc.device.api._
 
 object NumericConfiguration {

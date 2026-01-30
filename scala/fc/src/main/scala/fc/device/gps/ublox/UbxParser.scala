@@ -23,7 +23,6 @@ object Empty extends UbxParser {
 }
 
 object AwaitingPreamble2 extends UbxParser {
-  import UbxParser._
   def consume(byte: Byte): ParseState[UbxMessage] = byte match {
     case UbxParser.preamble2 => Proceeding(AwaitingClass)
     case _ => Unconsumed(Seq(UbxParser.preamble1, byte))

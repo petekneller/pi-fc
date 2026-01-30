@@ -2,9 +2,8 @@ package fc.task
 
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit.MICROS
-import cats.syntax.either._
 import cats.effect.IO
-import _root_.fs2.{ Stream, Sink, Pipe, Pull }
+import _root_.fs2.{ Stream, Pipe, Pull }
 import squants.time.{ Time, Seconds, Microseconds }
 import fc.device.api.DeviceResult
 import fc.device.rc.{ RcInput, RcReceiver, RcChannel }
@@ -27,7 +26,7 @@ package object fs2 {
   def sleep(period: Time): Stream[IO, Nothing] = Stream.eval(IO.delay{ Thread.sleep(period.toMilliseconds.toLong) }).flatMap(_ => Stream.empty.covaryAll[IO, Nothing])
 
   def motorTest(esc: ESC): Stream[IO, String] = {
-    def sleep = fs2.sleep(Seconds(0.5)).map(_ => s"sleep for 0.5 seconds")
+    def sleep = Stream.emit("sleep for 0.5 seconds") ++ fs2.sleep(Seconds(0.5))
     def throttleMessage(ppm: DeviceResult[Int]) = s"ESC [${esc.name}] ppm: ${ppm.toString}"
     def armMessage(ppm: DeviceResult[Int]) = s"ESC [${esc.name}] armed: ${ppm.toString}"
     val throttleCommand = Run(0.05)
@@ -42,7 +41,7 @@ package object fs2 {
   def motorsTest(escs: ESC*): Stream[IO, String] =
     escs.foldLeft(Stream.empty.covaryAll[IO, String])((stream, esc) => stream ++ motorTest(esc))
 
-  def printToConsole[A]: Sink[IO, A] = s => s.flatMap(a => Stream.eval(IO.delay{ println(a.toString) }))
+  def printToConsole[A]: Pipe[IO, A, Unit] = s => s.flatMap(a => Stream.eval(IO.delay{ println(a.toString) }))
 
   def zip2[A, B](a: Stream[IO, DeviceResult[A]], b: Stream[IO, DeviceResult[B]]): Stream[IO, DeviceResult[(A, B)]] =
     (a zip b) map { case (aDR, bDR) =>
@@ -125,7 +124,7 @@ package object fs2 {
 
   def computeTimeDelta(tMinus1: LocalTime, s: Stream[IO, LocalTime]): Pull[IO, Time, Unit] =
     s.pull.uncons1.flatMap {
-      case None => Pull.pure(None)
+      case None => Pull.done
       case Some((t, rest)) => Pull.output1(Microseconds(tMinus1.until(t, MICROS))) >> computeTimeDelta(t, rest)
     }
 

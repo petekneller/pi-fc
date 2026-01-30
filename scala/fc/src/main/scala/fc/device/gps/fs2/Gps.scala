@@ -49,7 +49,7 @@ object Gps {
   def parseStream[M <: Message](newParser: () => MessageParser[M]): Pipe[IO, Byte, M] = {
     def parse0(s: Stream[IO, Byte], parser: MessageParser[M]): Pull[IO, M, Unit] = {
       s.pull.uncons1 flatMap {
-        case None => Pull.pure(None)
+        case None => Pull.done
         case Some((byte, rest)) => parser.consume(byte) match {
           case Unconsumed(_) => parse0(rest, newParser())
           case Proceeding(next) => parse0(rest, next)

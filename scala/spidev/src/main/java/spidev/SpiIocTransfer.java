@@ -22,7 +22,7 @@ public class SpiIocTransfer extends Structure {
     public short pad;
 
     @Override
-    protected List getFieldOrder() {
+    protected List<String> getFieldOrder() {
         return Arrays.asList(
                              "tx_buf",
                              "rx_buf",

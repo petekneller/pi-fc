@@ -1,6 +1,5 @@
 package fc
 
-import cats.syntax.either._
 import eu.timepit.refined.auto.autoRefineV
 import fs2.Stream
 import device.controller.filesystem.FileSystemController
@@ -41,9 +40,9 @@ object Navio2 {
 
   /* Tasks */
 
-  def initESCs = tasks.initESCs(escs.one, escs.two, escs.three, escs.four) to tasks.printToConsole
+  def initESCs = tasks.initESCs(escs.one, escs.two, escs.three, escs.four) through tasks.printToConsole
 
-  def motorsTest = tasks.motorsTest(escs.one, escs.two, escs.three, escs.four) to tasks.printToConsole
+  def motorsTest = tasks.motorsTest(escs.one, escs.two, escs.three, escs.four) through tasks.printToConsole
 
   def displayRcChannels = tasks.zip6(
     tasks.looptime().map(Right(_)),
@@ -55,7 +54,7 @@ object Navio2 {
   ) map (dr => dr.map {
     case (looptime, one, two, three, four, six) =>
       s"${tasks.formatLooptime(looptime)} | ${tasks.formatRcChannels(one, two, three, four, six)}"
-  }) to tasks.printToConsole
+  }) through tasks.printToConsole
 
   def displayGyro = tasks.zip2(
     tasks.looptime().map(Right(_)),
@@ -63,7 +62,7 @@ object Navio2 {
   ) map (dr => dr map {
     case (looptime, (x, y, z)) =>
       s"${tasks.formatLooptime(looptime)} | ${tasks.formatGyro(x, y, z)}"
-  }) to tasks.printToConsole
+  }) through tasks.printToConsole
 
   def flightLoop(feedbackController: tasks.FeedbackController, mixer: tasks.Mixer) =
     tasks.zip4(
@@ -86,7 +85,7 @@ object Navio2 {
     flightLoop(feedbackController, mixer) map (dr => dr.map {
       case (looptime, armed, throttle, gyro, controlSignals, escOutput) =>
         s"${tasks.formatLooptime(looptime)} | ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}"
-    }) to tasks.printToConsole
+    }) through tasks.printToConsole
 
   def runFlightLoop(feedbackController: tasks.FeedbackController = tasks.PControllerTargetZero(0.01), mixer: tasks.Mixer = tasks.BasicMixer()) =
     flightLoop(feedbackController, mixer) flatMap (dr => dr.fold({
@@ -98,6 +97,6 @@ object Navio2 {
         tasks.motorRun(escs.three, esc3).map(_ => "") ++
         tasks.motorRun(escs.four, esc4).map(_ => "") ++
         Stream(s"${tasks.formatLooptime(looptime)} | ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}")
-    })) to tasks.printToConsole
+    })) through tasks.printToConsole
 
 }

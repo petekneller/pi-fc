@@ -1,6 +1,5 @@
 package fc.device.controller.filesystem
 
-import cats.syntax.either._
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive

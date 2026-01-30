@@ -4,7 +4,6 @@ import java.net.ServerSocket
 import java.util.concurrent.{ LinkedBlockingQueue, Executors }
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.HOURS
-import scala.math.min
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
@@ -17,7 +16,7 @@ object SpiToTcp {
     val spiController = SpiController()
 
     val maxBytesToTransfer: Int Refined Positive = 100
-    val delayMs = 100
+    val delayMs = 100L
 
     val serverSocket = new ServerSocket(args(0).toInt, 0)
     println(s"Listening on ${serverSocket.getLocalPort}")
@@ -44,7 +43,7 @@ object SpiToTcp {
       def run(): Unit = {
         val dataFromTcp = clientInput.read.toByte
         spiInputQueue.add(dataFromTcp)
-        executor.submit(task1())
+        val _ = executor.submit(task1())
       }
     }
 
@@ -59,7 +58,7 @@ object SpiToTcp {
         ).fold(l => throw new RuntimeException(l.toString), identity)
 
         dataFromSpi foreach spiOutputQueue.add
-        executor.submit(task2())
+        val _ = executor.submit(task2())
       }
     }
 
@@ -67,16 +66,16 @@ object SpiToTcp {
       def run(): Unit = {
         val dataFromQueue = spiOutputQueue.take()
         clientOutput.write(Array(dataFromQueue))
-        executor.submit(task3())
+        val _ = executor.submit(task3())
       }
     }
 
-    executor.submit(task1())
-    executor.submit(task2())
-    executor.submit(task3())
+    { executor.submit(task1()); () }
+    { executor.submit(task2()); () }
+    { executor.submit(task3()); () }
 
     // Clearly this isn't a long-term solution
-    executor.awaitTermination(1, HOURS)
+    { executor.awaitTermination(1, HOURS); () }
   }
 
 }

@@ -57,7 +57,7 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
     data.asIntBuffer.put(0, originalSpeed)
     ioctl(fd, new NativeLong(SPI_IOC_WR_MAX_SPEED_HZ.unsigned), data)
 
-    close(fd)
+    val _ = close(fd)
   }
 
 
@@ -71,7 +71,7 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
       ioctl(fd, new NativeLong(command.unsigned), data)
       data
     } finally {
-      close(fd)
+      val _ = close(fd)
     }
   }
 
