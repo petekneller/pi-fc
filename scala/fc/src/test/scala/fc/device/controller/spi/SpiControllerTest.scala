@@ -372,7 +372,7 @@ class SpiControllerTest extends AnyFlatSpec with Matchers with TypeCheckedTriple
       actualNumBytes + 1
     }
 
-    controller.receive(device, register, refineV[Positive](expectedNumBytes).right.get) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
+    controller.receive(device, register, refineV[Positive](expectedNumBytes).toOption.get) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
   }
 
   "transmit" should "return an error if less bytes were written than specified" in {
@@ -409,7 +409,7 @@ class SpiControllerTest extends AnyFlatSpec with Matchers with TypeCheckedTriple
       actualNumBytes
     }
 
-    controller.receive(device, refineV[Positive](expectedNumBytes).right.get) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
+    controller.receive(device, refineV[Positive](expectedNumBytes).toOption.get) should === (Left(IncompleteDataException(expectedNumBytes, actualNumBytes)))
   }
 
 

@@ -129,7 +129,7 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiFullD
     val begin = Instant.now()
     val result = actionUnderObservation()
     val end = Instant.now()
-    val numBytesRead = result.right.toOption.map{ case (_, nb) => nb }.getOrElse(0)
+    val numBytesRead = result.toOption.map{ case (_, nb) => nb }.getOrElse(0)
     val duration = FiniteDuration(Duration.between(begin, end).toMillis, MILLISECONDS)
     transferHook.notify(TransferEvent(begin, duration, numBytesToWrite, numBytesRead))
     result.map{ case (bytes, _) => bytes }

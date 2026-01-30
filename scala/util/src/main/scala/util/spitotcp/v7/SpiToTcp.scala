@@ -51,9 +51,9 @@ object SpiToTcp {
   val maxBytesToTransfer: Int Refined Positive = 100
   val delay = 100.milliseconds
 
-  def spiTransfer(bytes: Seq[Byte]): IO[Seq[Byte]] = IO.delay{ spiController.transfer(gps, bytes).right.get }
+  def spiTransfer(bytes: Seq[Byte]): IO[Seq[Byte]] = IO.delay{ spiController.transfer(gps, bytes).toOption.get }
 
-  def spiReceive(): IO[Seq[Byte]] = IO.delay{ spiController.receive(gps, maxBytesToTransfer).right.get }
+  def spiReceive(): IO[Seq[Byte]] = IO.delay{ spiController.receive(gps, maxBytesToTransfer).toOption.get }
 
   def receiveFromClient(client: Socket[IO]): Stream[IO, Byte] =
     client.reads(maxBytesToTransfer).onFinalize(client.endOfOutput)
