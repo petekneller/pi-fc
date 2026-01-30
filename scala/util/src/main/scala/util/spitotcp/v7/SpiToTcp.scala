@@ -2,12 +2,11 @@ package util.spitotcp.v7
 
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
-import java.nio.channels.AsynchronousChannelGroup
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import cats.effect.{ IO, Timer }
+import cats.effect.{ Blocker, IO, Timer }
 import fs2.{ Stream, Pipe, Chunk }
-import fs2.io.tcp.Socket
+import fs2.io.tcp.{Socket, SocketGroup}
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
@@ -35,10 +34,10 @@ object SpiToTcp {
       (receiveFromClient(client).chunks.map(_.toArray: Seq[Byte]) either ping) through transferViaSpi through transmitToClient(client)
     }
 
-    implicit val acg = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool())
-
     val app = for {
-      clientResource <- Socket.server[IO](new InetSocketAddress("0.0.0.0", args(0).toInt))
+      blocker <- Stream.resource(Blocker[IO])
+      socketGroup <- Stream.resource(SocketGroup[IO](blocker))
+      clientResource <- socketGroup.server[IO](new InetSocketAddress("0.0.0.0", args(0).toInt))
       clientSocket <- Stream.resource(clientResource)
       _ <- transferToPeer(clientSocket)
     } yield ()

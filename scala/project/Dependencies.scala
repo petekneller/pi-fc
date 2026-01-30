@@ -8,11 +8,11 @@ object Dependencies {
 
   val jna = "net.java.dev.jna" % "jna" % "5.3.1"
 
-  val cats = "org.typelevel" %% "cats-core" % "1.6.1"
-  val catsEffect = "org.typelevel" %% "cats-effect" % "1.3.1"
+  val cats = "org.typelevel" %% "cats-core" % "2.10.0"
+  val catsEffect = "org.typelevel" %% "cats-effect" % "2.5.5"
 
-  val fs2 = "co.fs2" %% "fs2-core" % "1.0.5"
-  val fs2io = "co.fs2" %% "fs2-io" % "1.0.5"
+  val fs2 = "co.fs2" %% "fs2-core" % "2.5.12"
+  val fs2io = "co.fs2" %% "fs2-io" % "2.5.12"
 
   def compilerDep(scalaVersion: String) = "org.scala-lang" % "scala-compiler" % scalaVersion % Provided
 
