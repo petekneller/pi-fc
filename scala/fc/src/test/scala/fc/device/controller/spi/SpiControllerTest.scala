@@ -1,7 +1,7 @@
 package fc.device.controller.spi
 
 import java.nio.ByteBuffer
-import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
+import eu.timepit.refined.auto.autoRefineV
 import eu.timepit.refined.refineV
 import eu.timepit.refined.numeric.Positive
 import spire.syntax.literals._

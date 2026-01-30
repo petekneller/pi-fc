@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit.HOURS
 import scala.concurrent.{ ExecutionContext, Future }
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
+import eu.timepit.refined.auto.autoRefineV
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 
 object SpiToTcp {

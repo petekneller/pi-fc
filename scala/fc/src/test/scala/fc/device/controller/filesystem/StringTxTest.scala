@@ -1,6 +1,5 @@
 package fc.device.controller.filesystem
 
-import eu.timepit.refined.auto.autoUnwrap
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals

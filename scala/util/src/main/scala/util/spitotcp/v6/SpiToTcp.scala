@@ -8,7 +8,7 @@ import cats.effect.IO
 import fs2.Stream
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
+import eu.timepit.refined.auto.autoRefineV
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 import cats.effect.ContextShift
 
