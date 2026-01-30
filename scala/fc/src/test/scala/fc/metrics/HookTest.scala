@@ -1,10 +1,11 @@
 package fc.metrics
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 
-class HookTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class HookTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   "Hook" should "pass calls to each registered observer" in {
     val hook = Hook[Foo]()

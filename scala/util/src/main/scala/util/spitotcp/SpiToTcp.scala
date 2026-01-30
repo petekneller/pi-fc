@@ -2,7 +2,6 @@ package util.spitotcp
 
 import java.net.InetSocketAddress
 import java.util.concurrent.{ Executors, BlockingQueue }
-import java.nio.channels.AsynchronousChannelGroup
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.time.Instant
 import scala.concurrent.duration._
@@ -11,9 +10,9 @@ import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.{ Interval, Positive }
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
-import cats.effect.IO
+import cats.effect.{ Blocker, IO }
 import fs2.{ Stream, Pipe, Chunk }
-import fs2.io.tcp.Socket
+import fs2.io.tcp.{Socket, SocketGroup}
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 import SpiController.{ TransferEvent => SpiTransferEvent }
 import fc.device.gps.{ CompositeParser, CompositeMessage, Right => UbxMsg }
@@ -61,9 +60,10 @@ object SpiToTcp {
   }
 
   private def createSocket(port: Port): Stream[IO, Socket[IO]] = {
-    implicit val acg = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool())
     for {
-      clientResource <- Socket.server[IO](new InetSocketAddress("0.0.0.0", port))
+      blocker <- Stream.resource(Blocker[IO])
+      socketGroup <- Stream.resource(SocketGroup[IO](blocker))
+      clientResource <- socketGroup.server[IO](new InetSocketAddress("0.0.0.0", port))
       clientSocket <- Stream.resource(clientResource)
     } yield clientSocket
   }

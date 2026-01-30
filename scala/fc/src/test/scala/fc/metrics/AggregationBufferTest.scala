@@ -1,10 +1,11 @@
 package fc.metrics
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.{ TypeCheckedTripleEquals }
 import eu.timepit.refined.auto.autoRefineV
 
-class AggregationBufferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class AggregationBufferTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "an aggregation buffer" should "record up to the specified number of records" in {
     val buffer = AggregationBuffer[Int](3)

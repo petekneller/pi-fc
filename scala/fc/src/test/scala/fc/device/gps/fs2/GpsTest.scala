@@ -1,12 +1,13 @@
 package fc.device.gps.fs2
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import fs2.{ Stream, Chunk }
 import fc.device.gps.nmea.{ NmeaMessage, NmeaParser }
 import fc.device.gps.nmea.examples.{ PubxTimeOfDayPoll, PubxTimeOfDay }
 
-class GpsTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class GpsTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "parseStream" should "successfully parse input messages" in {
     val input = Stream.chunk(Chunk.seq(PubxTimeOfDayPoll.bytes)) ++

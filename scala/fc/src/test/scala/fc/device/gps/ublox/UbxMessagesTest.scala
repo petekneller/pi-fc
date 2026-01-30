@@ -1,9 +1,10 @@
 package fc.device.gps.ublox
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 
-class UbxMessagesTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class UbxMessagesTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   // Unknown
   testsForToBytes(exampleUnknown, "Unknown")

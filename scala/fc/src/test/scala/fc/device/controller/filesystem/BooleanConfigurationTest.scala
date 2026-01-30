@@ -2,11 +2,12 @@ package fc.device.controller.filesystem
 
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 
-class BooleanConfigurationTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class BooleanConfigurationTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = new FileSystemAddress { def toFilename = "unused" }
   implicit val mockController = stub[FileSystemController]

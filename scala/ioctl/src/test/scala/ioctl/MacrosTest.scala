@@ -1,11 +1,12 @@
 package ioctl
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import syntax._
 import macros._
 
-class MacrosTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class MacrosTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "the IOx macros" should "place the direction identifier in the highest 2 bits" in {
     val a = rand.toByte

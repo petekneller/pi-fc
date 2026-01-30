@@ -1,6 +1,7 @@
 package spidev
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import java.io.File
 import java.nio.ByteBuffer
@@ -10,7 +11,7 @@ import ioctl.syntax._
 import ioctl.IOCtl._
 import Spidev._
 
-class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class IOCtlTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "ioctl" should "support fetch of SPI mode (8 bit value)" in {
     // NB when originally written the mode was returned at 0

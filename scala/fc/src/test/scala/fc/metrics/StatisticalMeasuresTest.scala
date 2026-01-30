@@ -1,9 +1,10 @@
 package fc.metrics
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.{ TypeCheckedTripleEquals }
 
-class StatisticalMeasuresTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class StatisticalMeasuresTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "a statistical measure" should "calculate the median of the provided values" in {
     StatisticalMeasures(Seq(1, 3, 2), 0).median should === (2)

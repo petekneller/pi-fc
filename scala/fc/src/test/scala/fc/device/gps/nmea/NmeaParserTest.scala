@@ -1,11 +1,12 @@
 package fc.device.gps.nmea
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import fc.device.gps.{ MessageParser, ParserTestSupport }
 import MessageParser.Proceeding
 
-class NmeaParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
+class NmeaParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
   // TODO checksum doesn't match
 

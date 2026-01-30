@@ -1,11 +1,12 @@
 package fc.device.esc
 
 import eu.timepit.refined.auto.autoRefineV
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 
-class PwmAddressTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class PwmAddressTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   "PwmAddress" should "resolve to the correct device file" in {
     PwmAddress(1, 2).toFilename should ===("/sys/class/pwm/pwmchip1/pwm2")

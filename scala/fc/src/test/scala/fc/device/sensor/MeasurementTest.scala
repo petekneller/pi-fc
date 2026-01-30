@@ -2,12 +2,13 @@ package fc.device.sensor
 
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import fc.device.controller.spi.{SpiRegisterController, SpiAddress}
 
-class MeasurementTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class MeasurementTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val address = SpiAddress(0, 0)
   implicit val mockController = stub[SpiRegisterController]

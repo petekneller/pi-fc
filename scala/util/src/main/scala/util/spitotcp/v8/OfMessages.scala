@@ -2,7 +2,6 @@ package util.spitotcp.v8
 
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
-import java.nio.channels.AsynchronousChannelGroup
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import org.slf4j.LoggerFactory
@@ -10,9 +9,9 @@ import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.{ Interval, Positive }
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
-import cats.effect.{ IO, Timer }
+import cats.effect.{ Blocker, IO, Timer }
 import fs2.{ Stream, Pipe, Chunk, Pull }
-import fs2.io.tcp.Socket
+import fs2.io.tcp.{Socket, SocketGroup}
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 import fc.device.gps.{ Message, MessageParser, CompositeParser }
 import MessageParser._
@@ -32,9 +31,10 @@ object OfMessages {
 
   def apply(port: Port): Unit = {
 
-    implicit val acg = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool())
     val app = for {
-      clientResource <- Socket.server[IO](new InetSocketAddress("0.0.0.0", port))
+      blocker <- Stream.resource(Blocker[IO])
+      socketGroup <- Stream.resource(SocketGroup[IO](blocker))
+      clientResource <- socketGroup.server[IO](new InetSocketAddress("0.0.0.0", port))
       clientSocket <- Stream.resource(clientResource)
       _ <- handlePeer(clientSocket)
     } yield ()

@@ -5,14 +5,15 @@ import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import eu.timepit.refined.refineV
 import eu.timepit.refined.numeric.Positive
 import spire.syntax.literals._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import ioctl.syntax._
 import ioctl.IOCtl.O_RDWR
 import fc.device.api._
 
-class SpiControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class SpiControllerTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val mockApi = stub[SpiApi]
   val controller = new SpiControllerImpl(mockApi)

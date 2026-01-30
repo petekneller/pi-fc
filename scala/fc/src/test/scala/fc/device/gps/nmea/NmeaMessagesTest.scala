@@ -1,9 +1,10 @@
 package fc.device.gps.nmea
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 
-class NmeaMessagesTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class NmeaMessagesTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   // TODO verify checksum
 
