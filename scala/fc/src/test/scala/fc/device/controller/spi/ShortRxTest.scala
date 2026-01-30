@@ -10,7 +10,7 @@ import org.scalamock.scalatest.MockFactory
 class ShortRxTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = SpiAddress(0, 0)
-  implicit val mockController = stub[SpiRegisterController]
+  implicit val mockController: SpiRegisterController = stub[SpiRegisterController]
 
   val loByteRegister = 0x40.toByte
   val hiByteRegister = 0x41.toByte

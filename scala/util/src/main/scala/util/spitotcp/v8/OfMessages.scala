@@ -17,6 +17,7 @@ import fc.device.gps.{ Message, MessageParser, CompositeParser }
 import MessageParser._
 import fc.device.gps.ublox.UbxParser
 import fc.device.gps.nmea.NmeaParser
+import cats.effect.ContextShift
 
 object OfMessages {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
@@ -24,7 +25,7 @@ object OfMessages {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
-  implicit val cs = IO.contextShift(ExecutionContext.global)
+  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
   val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
   val spiController = SpiController()

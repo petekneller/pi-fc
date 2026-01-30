@@ -8,11 +8,12 @@ import device.rc.{RcAddress, RcReceiver, RcChannel}
 import device.sensor.Mpu9250
 import device.esc.{PwmChannel, ESC}
 import task.{fs2 => tasks}
+import fc.device.controller.spi.SpiRegisterController
 
 object Navio2 {
 
-  implicit val spiController = SpiController()
-  implicit val fileController = FileSystemController()
+  implicit val spiController: SpiRegisterController = SpiController()
+  implicit val fileController: FileSystemController = FileSystemController()
 
   /* Devices */
 

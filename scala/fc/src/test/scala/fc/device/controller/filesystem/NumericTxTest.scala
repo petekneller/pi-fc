@@ -9,7 +9,7 @@ import org.scalamock.scalatest.MockFactory
 class NumericTxTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = new FileSystemAddress { def toFilename = "unused" }
-  implicit val mockController = stub[FileSystemController]
+  implicit val mockController: FileSystemController = stub[FileSystemController]
   val register = "foo"
 
   "NumericTx" should "transform a long into a sequence of character bytes" in {

@@ -11,13 +11,14 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import fc.device.controller.spi.{ SpiAddress, SpiController }
+import cats.effect.ContextShift
 
 object SpiToTcp {
 
   def main(args: Array[String]): Unit = {
 
     implicit val t: Timer[IO] = IO.timer(ExecutionContext.global)
-    implicit val cs = IO.contextShift(ExecutionContext.global)
+    implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
     val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
     def transferToPeer(client: Socket[IO]): Stream[IO, Unit] = {

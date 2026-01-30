@@ -11,7 +11,7 @@ import fc.device.controller.spi.{SpiRegisterController, SpiAddress}
 class MeasurementTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val address = SpiAddress(0, 0)
-  implicit val mockController = stub[SpiRegisterController]
+  implicit val mockController: SpiRegisterController = stub[SpiRegisterController]
   val register1 = 1.toByte
   val register2 = 2.toByte
 

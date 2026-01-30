@@ -15,6 +15,7 @@ import fs2.{ Stream, Pipe, Chunk }
 import fs2.concurrent.SignallingRef
 import fs2.io.tcp.{Socket, SocketGroup}
 import fc.device.controller.spi.{ SpiAddress, SpiController }
+import cats.effect.ContextShift
 
 object OfBytes {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
@@ -22,7 +23,7 @@ object OfBytes {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
-  implicit val cs = IO.contextShift(ExecutionContext.global)
+  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
   val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
   def apply(port: Port): Unit = {

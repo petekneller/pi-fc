@@ -14,7 +14,7 @@ trait PwmChannel extends HalfDuplexDevice {
 object PwmChannel {
   def apply(chipNumber: Int Refined GreaterEqual[W.`0`.T], channelNumber: Int Refined GreaterEqual[W.`0`.T])(implicit c: FileSystemController): PwmChannel = new PwmChannel {
     val address = PwmAddress(chipNumber, channelNumber)
-    implicit val controller = c
+    implicit val controller: FileSystemController = c
   }
 
   object configs {

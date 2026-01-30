@@ -10,7 +10,7 @@ import org.scalamock.scalatest.MockFactory
 class ByteConfigurationTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = SpiAddress(0, 0)
-  implicit val mockController = stub[SpiRegisterController]
+  implicit val mockController: SpiRegisterController = stub[SpiRegisterController]
   val register = 0x35.toByte
 
   "read" should "make a read request for that register" in {

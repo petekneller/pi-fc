@@ -9,7 +9,7 @@ import org.scalamock.scalatest.MockFactory
 class StringTxTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = new FileSystemAddress { def toFilename = "unused" }
-  implicit val mockController = stub[FileSystemController]
+  implicit val mockController: FileSystemController = stub[FileSystemController]
   val register = "foo"
 
   "StringTx" should "convert the input string into a sequence of bytes, where each byte is an ANSI character" in {

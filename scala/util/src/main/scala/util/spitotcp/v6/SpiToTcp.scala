@@ -10,6 +10,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import fc.device.controller.spi.{ SpiAddress, SpiController }
+import cats.effect.ContextShift
 
 object SpiToTcp {
 
@@ -41,7 +42,7 @@ object SpiToTcp {
 
     val executor = Executors.newCachedThreadPool()
     val ec = ExecutionContext.fromExecutor(executor)
-    implicit val cs = IO.contextShift(ec)
+    implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
     val task1: Stream[IO, Unit] = Stream.eval_(IO.delay{
       val dataFromTcp = clientInput.read.toByte

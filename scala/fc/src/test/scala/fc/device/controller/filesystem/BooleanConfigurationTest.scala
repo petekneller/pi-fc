@@ -10,7 +10,7 @@ import org.scalamock.scalatest.MockFactory
 class BooleanConfigurationTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val device = new FileSystemAddress { def toFilename = "unused" }
-  implicit val mockController = stub[FileSystemController]
+  implicit val mockController: FileSystemController = stub[FileSystemController]
   val register = "foo"
 
   "BooleanConfiguration.read" should "transform the strings '1' and '0' into a boolean value" in {

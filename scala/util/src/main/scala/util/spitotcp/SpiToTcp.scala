@@ -22,6 +22,7 @@ import fc.device.gps.fs2.Gps
 import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
 import squants.information.{ DataRate, BytesPerSecond }
 import squants.time.{ Frequency, Hertz }
+import cats.effect.{ContextShift, Timer}
 
 /*
  * Remimder of how to run this from the ammonite repl:
@@ -148,8 +149,8 @@ object SpiToTcp {
     OutgoingMessagesObservation(messageRate, dataRate, size)
   }
 
-  private implicit val timer = IO.timer(ExecutionContext.global)
-  private implicit val cs = IO.contextShift(ExecutionContext.global)
+  private implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
+  private implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
   private val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   private val spiController = SpiController()
   private val maxBytesToTransfer: Int Refined Positive = 100

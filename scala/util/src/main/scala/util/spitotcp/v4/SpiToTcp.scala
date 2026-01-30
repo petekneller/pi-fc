@@ -39,7 +39,7 @@ object SpiToTcp {
     val spiOutputQueue = new LinkedBlockingQueue[Byte]()
 
     val executor = Executors.newCachedThreadPool()
-    implicit val ec = ExecutionContext.fromExecutor(executor)
+    implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(executor)
 
     def task1()(implicit ec: ExecutionContext): Unit = Future {
       val dataFromTcp = clientInput.read.toByte
