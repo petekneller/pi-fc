@@ -1,9 +1,10 @@
 package fc.device.rc
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 
-class RcInputTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class RcInputTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "ppm" should "echo the PPM value that was originally captured" in {
     RcInput.fromPpm(1, unused, unused, unused).ppm should === (1)

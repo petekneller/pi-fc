@@ -1,9 +1,10 @@
 package fc.device.gps
 
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 
-class CompositeParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
+class CompositeParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
   "a composite parser" should "return Unconsumed if neither of its member parsers consumes the input" in {
     val p1 = parserReturning(MessageParser.Unconsumed(Seq(b)))

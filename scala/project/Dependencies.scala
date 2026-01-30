@@ -2,9 +2,9 @@ import sbt._
 
 object Dependencies {
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.0.5"
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19"
 
-  val scalaMock = "org.scalamock" %% "scalamock" % "4.1.0"
+  val scalaMock = "org.scalamock" %% "scalamock" % "5.2.0"
 
   val jna = "net.java.dev.jna" % "jna" % "5.3.1"
 

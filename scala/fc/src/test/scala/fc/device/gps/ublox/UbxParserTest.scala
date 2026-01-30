@@ -1,11 +1,12 @@
 package fc.device.gps.ublox
 
 import spire.syntax.literals._
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import fc.device.gps.ParserTestSupport
 
-class UbxParserTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
+class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
   // TODO checksum doesn't match
 

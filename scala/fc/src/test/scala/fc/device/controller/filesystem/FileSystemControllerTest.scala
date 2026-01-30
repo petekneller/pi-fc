@@ -4,14 +4,15 @@ import eu.timepit.refined.auto.autoRefineV
 import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
 import spire.syntax.literals._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalamock.scalatest.MockFactory
 import ioctl.IOCtl.{O_RDONLY, O_WRONLY}
 import ioctl.IOCtlImpl.size_t
 import fc.device.api._
 
-class FileSystemControllerTest extends FlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
+class FileSystemControllerTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with MockFactory {
 
   val mockApi = stub[FileApi]
   val controller = new FileSystemControllerImpl(mockApi)

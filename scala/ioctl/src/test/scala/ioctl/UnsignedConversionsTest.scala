@@ -1,10 +1,11 @@
 package ioctl
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import syntax._
 
-class UnsignedConversionsTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class UnsignedConversionsTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "unsigned conversion of a short" should "widen to int, preserving the original number" in {
     val doesntFitInAShort = 0x8000.toShort

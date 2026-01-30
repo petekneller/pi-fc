@@ -2,12 +2,13 @@ package spidev
 
 import java.nio.ByteBuffer
 import java.io.File
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import ioctl.IOCtl.{open, close, O_RDONLY}
 import Spidev._
 
-class TransferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class TransferTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "SPI_MSGSIZE" should "return sizes in multiples of 32 bit" in {
     SPI_MSGSIZE(0) should === (0)

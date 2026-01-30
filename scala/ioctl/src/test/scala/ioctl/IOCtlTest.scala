@@ -1,6 +1,7 @@
 package ioctl
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import com.sun.jna.{NativeLong, Platform}
 import java.io.File
@@ -10,7 +11,7 @@ import macros.IOR
 import IOCtl._
 import syntax.ToUnsignedInt
 
-class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
+class IOCtlTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
   "ioctl" should "succeed with FS_IOC_GETFLAGS on a valid file" in {
     val tempfile = File.createTempFile("aaaa", null, new File("target")).getCanonicalPath
