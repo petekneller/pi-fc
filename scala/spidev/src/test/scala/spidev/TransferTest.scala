@@ -24,7 +24,7 @@ class TransferTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
   }
 
   "transfer" should "succeed in fetching the WHOAMI from the MPU9250 on the navio2" in {
-    assert(new File("/dev/spidev0.1").exists)
+    assume(new File("/dev/spidev0.1").exists, "SPI device not available")
     val fd = open("/dev/spidev0.1", O_RDONLY)
 
     val tx = ByteBuffer.allocateDirect(2)

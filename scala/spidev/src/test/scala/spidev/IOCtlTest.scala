@@ -35,7 +35,7 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
   }
 
   it should "support get/set of SPI clock speed" in {
-    assert(new File(device0).exists)
+    assume(new File(device0).exists, "SPI device not available")
 
     val fd = open(device0, O_RDWR)
     val data = ByteBuffer.allocate(Native.getNativeSize(classOf[Int]))
@@ -62,7 +62,7 @@ class IOCtlTest extends FlatSpec with Matchers with TypeCheckedTripleEquals {
 
 
   def fetchCommandValue[A](command: Int, argumentSize: Class[A]): ByteBuffer = {
-    assert(new File(device0).exists)
+    assume(new File(device0).exists, "SPI device not available")
 
     val fd = open(device0, O_RDONLY)
     try {
