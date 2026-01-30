@@ -2,7 +2,7 @@ ThisBuild / organization := "com.github.petekneller"
 
 ThisBuild / version := "dev"
 
-ThisBuild / scalaVersion := "2.12.20"
+ThisBuild / scalaVersion := "2.13.18"
 
 ThisBuild / scalacOptions ++= Seq(
   // Standard warnings

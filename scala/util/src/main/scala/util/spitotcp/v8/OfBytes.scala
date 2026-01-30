@@ -48,7 +48,7 @@ object OfBytes {
 
     val ping = Stream.awakeEvery[IO](delay)
 
-    val chunksFromClient = receiveFromClient(client).chunks.map(_.toArray: Seq[Byte])
+    val chunksFromClient = receiveFromClient(client).chunks.map(_.toArray.toSeq)
     val withReceiveMetric = for {
       bytes <- chunksFromClient
       _ <- Stream.eval(receiveMetric.set(bytes.length))

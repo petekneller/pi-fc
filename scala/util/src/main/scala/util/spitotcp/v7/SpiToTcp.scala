@@ -31,7 +31,7 @@ object SpiToTcp {
         } flatMap { bytes => Stream.chunk(Chunk.seq(bytes))}
       }
 
-      (receiveFromClient(client).chunks.map(_.toArray: Seq[Byte]) either ping) through transferViaSpi through transmitToClient(client)
+      (receiveFromClient(client).chunks.map(_.toArray.toSeq) either ping) through transferViaSpi through transmitToClient(client)
     }
 
     val app = for {
