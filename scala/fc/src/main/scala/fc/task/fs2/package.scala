@@ -124,7 +124,7 @@ package object fs2 {
 
   def computeTimeDelta(tMinus1: LocalTime, s: Stream[IO, LocalTime]): Pull[IO, Time, Unit] =
     s.pull.uncons1.flatMap {
-      case None => Pull.pure(None)
+      case None => Pull.done
       case Some((t, rest)) => Pull.output1(Microseconds(tMinus1.until(t, MICROS))) >> computeTimeDelta(t, rest)
     }
 

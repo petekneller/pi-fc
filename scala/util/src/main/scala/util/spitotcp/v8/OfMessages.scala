@@ -69,7 +69,7 @@ object OfMessages {
 
   def printMessages[A <: Message](s: Stream[IO, Byte], dir: String, parser: MessageParser[A]): Pull[IO, Message, Unit] = {
     s.pull.uncons1.flatMap {
-      case None => Pull.pure(None)
+      case None => Pull.done
       case Some((byte, rest)) => parser.consume(byte) match {
         case Unconsumed(_) => printMessages(rest, dir, parser)
         case Proceeding(nextParser) => printMessages(rest, dir, nextParser)
