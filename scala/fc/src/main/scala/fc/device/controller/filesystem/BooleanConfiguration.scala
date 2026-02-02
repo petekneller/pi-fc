@@ -4,7 +4,7 @@ import eu.timepit.refined.refineMV
 import eu.timepit.refined.numeric.Positive
 import fc.device.api._
 
-case class BooleanConfiguration(register: String) extends Configuration {
+case class BooleanConfiguration(register: FileSystemRegister) extends Configuration {
   type T = Boolean
   type Ctrl = FileSystemController
 

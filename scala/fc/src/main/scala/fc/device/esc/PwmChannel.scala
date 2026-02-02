@@ -30,9 +30,9 @@ object PwmChannel {
   }
 
   object registers {
-    val enable = "enable"
-    val period = "period"
-    val dutyCycle = "duty_cycle"
+    val enable = FileSystemRegister("enable")
+    val period = FileSystemRegister("period")
+    val dutyCycle = FileSystemRegister("duty_cycle")
   }
 
 }

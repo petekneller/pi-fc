@@ -9,7 +9,7 @@ class StringTxTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqual
 
   val device = new FileSystemAddress { def toFilename = "unused" }
   implicit val mockController: FileSystemController = stub[FileSystemController]
-  val register = "foo"
+  val register = FileSystemRegister("foo")
 
   "StringTx" should "convert the input string into a sequence of bytes, where each byte is an ANSI character" in {
     val tx = StringTx(register)

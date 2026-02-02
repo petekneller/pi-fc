@@ -10,7 +10,7 @@ class StringRxTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqual
 
   val device = new FileSystemAddress { def toFilename = "unused" }
   implicit val mockController: FileSystemController = stub[FileSystemController]
-  val register = "foo"
+  val register = FileSystemRegister("foo")
 
   "StringRx" should "consider each byte in the response to be an ANSI character" in {
     val rx = StringRx(register)

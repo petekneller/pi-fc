@@ -9,7 +9,7 @@ class NumericTxTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
 
   val device = new FileSystemAddress { def toFilename = "unused" }
   implicit val mockController: FileSystemController = stub[FileSystemController]
-  val register = "foo"
+  val register = FileSystemRegister("foo")
 
   "NumericTx" should "transform a long into a sequence of character bytes" in {
     (mockController.transmit _).when(*, *, *).returns(Right(()))

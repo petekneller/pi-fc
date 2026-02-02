@@ -5,7 +5,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import fc.device.api._
 
-case class StringRx(register: String, maxBytesToRead: Int Refined Positive = 32) extends Rx {
+case class StringRx(register: FileSystemRegister, maxBytesToRead: Int Refined Positive = 32) extends Rx {
   type T = String
   type Ctrl = FileSystemController
 

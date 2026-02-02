@@ -2,7 +2,7 @@ package fc.device.controller.filesystem
 
 import fc.device.api._
 
-case class NumericTx[A](register: String, f: A => Long = identity[Long] _) extends Tx {
+case class NumericTx[A](register: FileSystemRegister, f: A => Long = identity[Long] _) extends Tx {
   type T = A
   type Ctrl = FileSystemController
 

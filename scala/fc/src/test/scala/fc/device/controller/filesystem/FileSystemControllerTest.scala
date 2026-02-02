@@ -17,13 +17,13 @@ class FileSystemControllerTest extends AnyFlatSpec with Matchers with TypeChecke
   val mockApi = stub[FileApi]
   val controller = new FileSystemControllerImpl(mockApi)
   val device = new FileSystemAddress { def toFilename = "/address" }
-  val register = "foo"
+  val register = FileSystemRegister("foo")
   val fd = 2
 
   "receive" should "open the underlying file correctly" in {
     (mockApi.read _).when(*, *, *).returns(new size_t)
 
-    controller.receive(device, "register", 1) should === (Right(Seq.empty))
+    controller.receive(device, FileSystemRegister("register"), 1) should === (Right(Seq.empty))
     (mockApi.open _).verify("/address/register", O_RDONLY)
   }
 
@@ -52,7 +52,7 @@ class FileSystemControllerTest extends AnyFlatSpec with Matchers with TypeChecke
   "transmit" should "open the underlying file correctly" in {
     (mockApi.write _).when(*, *, *).returns(new size_t(1L))
 
-    controller.transmit(device, "register", Seq(b"1")) should === (Right(()))
+    controller.transmit(device, FileSystemRegister("register"), Seq(b"1")) should === (Right(()))
     (mockApi.open _).verify("/address/register", O_WRONLY)
   }
 

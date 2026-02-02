@@ -24,5 +24,5 @@ case class RcChannel(
   max: PpmValue = 2000,
   mid: PpmValue = 1500
 ) {
-  val register: String = s"ch${number}"
+  val register: FileSystemRegister = FileSystemRegister(s"ch${number}")
 }

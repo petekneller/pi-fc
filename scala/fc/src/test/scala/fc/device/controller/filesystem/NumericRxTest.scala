@@ -9,7 +9,7 @@ class NumericRxTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
 
   val device = new FileSystemAddress { def toFilename = "unused" }
   implicit val mockController: FileSystemController = stub[FileSystemController]
-  val register = "foo"
+  val register = FileSystemRegister("foo")
 
   "NumericRx" should "transform a sequence character bytes into an long value" in {
     (mockController.receive _).when(*, *, *).returns(Right(Seq('1'.toByte, '2'.toByte, '3'.toByte)))

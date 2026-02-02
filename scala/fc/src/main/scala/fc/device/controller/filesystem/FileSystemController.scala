@@ -15,13 +15,13 @@ trait FileSystemAddress extends Address {
 
 trait FileSystemController extends RegisterController {
   type Addr = FileSystemAddress
-  type Register = String
+  type Register = FileSystemRegister
 }
 
 // TODO Ugh! I hate XyzImpl's. Must think of a better name
 class FileSystemControllerImpl(api: FileApi) extends FileSystemController {
 
-  def receive(device: FileSystemAddress, register: String, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
+  def receive(device: FileSystemAddress, register: FileSystemRegister, numBytes: Int Refined Positive): DeviceResult[Seq[Byte]] =
     withFileDescriptor(device, register, IOCtl.O_RDONLY, { fd =>
       val rxBuffer = ByteBuffer.allocateDirect(numBytes)
       for {
@@ -30,7 +30,7 @@ class FileSystemControllerImpl(api: FileApi) extends FileSystemController {
       } yield data
     })
 
-  def transmit(device: FileSystemAddress, register: String, data: Seq[Byte]): DeviceResult[Unit] =
+  def transmit(device: FileSystemAddress, register: FileSystemRegister, data: Seq[Byte]): DeviceResult[Unit] =
     withFileDescriptor(device, register, IOCtl.O_WRONLY, { fd =>
       val numBytes = data.length
       val txBuffer = ByteBuffer.allocateDirect(numBytes)
@@ -44,8 +44,8 @@ class FileSystemControllerImpl(api: FileApi) extends FileSystemController {
 
   // Internal API from here on down
 
-  private def open(device: FileSystemAddress, register: String, fileMode: Int): Either[FileUnavailableException, Int] =
-    Either.catchNonFatal{ api.open(s"${device.toFilename}/${register}", fileMode) }.leftMap(FileUnavailableException(device, register, _))
+  private def open(device: FileSystemAddress, register: FileSystemRegister, fileMode: Int): Either[FileUnavailableException, Int] =
+    Either.catchNonFatal{ api.open(register.toFilename(device), fileMode) }.leftMap(FileUnavailableException(register.toFilename(device), _))
 
   private def read(fileDescriptor: Int, rxBuffer: ByteBuffer, numBytes: Int): Either[TransferFailedException, Int] =
     Either.catchNonFatal{
@@ -57,7 +57,7 @@ class FileSystemControllerImpl(api: FileApi) extends FileSystemController {
       api.write(fileDescriptor, txBuffer, new size_t(numBytes.toLong)).intValue
     }.leftMap(TransferFailedException(_))
 
-  private def withFileDescriptor[A](device: FileSystemAddress, register: String, fileMode: Int, f: Int => DeviceResult[A]): DeviceResult[A] = for {
+  private def withFileDescriptor[A](device: FileSystemAddress, register: FileSystemRegister, fileMode: Int, f: Int => DeviceResult[A]): DeviceResult[A] = for {
     fd <- open(device, register, fileMode)
     result <- f(fd).bimap({ l => api.close(fd); l }, { r => api.close(fd); r })
   } yield result
@@ -81,4 +81,4 @@ object FileSystemController {
   })
 }
 
-case class FileUnavailableException(device: FileSystemAddress, register: String, cause: Throwable) extends DeviceException
+case class FileUnavailableException(device: String, cause: Throwable) extends DeviceException

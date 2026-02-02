@@ -2,7 +2,7 @@ package fc.device.controller.filesystem
 
 import fc.device.api._
 
-case class StringTx(register: String) extends Tx {
+case class StringTx(register: FileSystemRegister) extends Tx {
   type T = String
   type Ctrl = FileSystemController
 
