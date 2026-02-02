@@ -1,17 +1,16 @@
 package util.spitotcp.v5
 
 import java.net.ServerSocket
-import java.util.concurrent.{ LinkedBlockingQueue, Executors }
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit.MILLISECONDS
-import scala.concurrent.ExecutionContext
 import cats.instances.list._
 import cats.syntax.parallel._
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.autoRefineV
 import fc.device.controller.spi.{ SpiAddress, SpiController }
-import cats.effect.ContextShift
 
 object SpiToTcp {
 
@@ -41,16 +40,12 @@ object SpiToTcp {
     val spiInputQueue = new LinkedBlockingQueue[Byte]()
     val spiOutputQueue = new LinkedBlockingQueue[Byte]()
 
-    val executor = Executors.newCachedThreadPool()
-    val ec = ExecutionContext.fromExecutor(executor)
-    implicit val cs: ContextShift[IO] = IO.contextShift(ec)
-
-    def task1(): IO[Unit] = IO {
+    def task1(): IO[Unit] = IO.blocking {
       val dataFromTcp = clientInput.read.toByte
       spiInputQueue.add(dataFromTcp)
     } flatMap (_ => task1())
 
-    def task2(): IO[Unit] = IO {
+    def task2(): IO[Unit] = IO.blocking {
       val dataFromQueue = Option(spiInputQueue.poll(delayMs, MILLISECONDS))
 
       val dataFromSpi = dataFromQueue.fold(
@@ -62,7 +57,7 @@ object SpiToTcp {
       dataFromSpi foreach spiOutputQueue.add
     } flatMap (_ => task2())
 
-    def task3(): IO[Unit] = IO {
+    def task3(): IO[Unit] = IO.blocking {
       val dataFromQueue = spiOutputQueue.take()
       clientOutput.write(Array(dataFromQueue))
     } flatMap (_ => task3())

@@ -1,16 +1,15 @@
 package util.spitotcp.v6
 
 import java.net.ServerSocket
-import java.util.concurrent.{ LinkedBlockingQueue, Executors }
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit.MILLISECONDS
-import scala.concurrent.ExecutionContext
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import fs2.Stream
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.autoRefineV
 import fc.device.controller.spi.{ SpiAddress, SpiController }
-import cats.effect.ContextShift
 
 object SpiToTcp {
 
@@ -40,16 +39,13 @@ object SpiToTcp {
     val spiInputQueue = new LinkedBlockingQueue[Byte]()
     val spiOutputQueue = new LinkedBlockingQueue[Byte]()
 
-    val executor = Executors.newCachedThreadPool()
-    val ec = ExecutionContext.fromExecutor(executor)
-    implicit val cs: ContextShift[IO] = IO.contextShift(ec)
-
-    val task1: Stream[IO, Unit] = Stream.eval_(IO.delay{
+    val task1: Stream[IO, Unit] = Stream.exec(IO.blocking{
       val dataFromTcp = clientInput.read.toByte
       spiInputQueue.add(dataFromTcp)
+      ()
     }).repeat
 
-    val task2: Stream[IO, Unit] = Stream.eval(IO.delay {
+    val task2: Stream[IO, Unit] = Stream.eval(IO.blocking {
       val dataFromQueue = Option(spiInputQueue.poll(delayMs, MILLISECONDS))
 
       val dataFromSpi = dataFromQueue.fold(
@@ -61,7 +57,7 @@ object SpiToTcp {
       dataFromSpi foreach spiOutputQueue.add
     }).repeat
 
-    val task3: Stream[IO, Unit] = Stream.eval(IO.delay {
+    val task3: Stream[IO, Unit] = Stream.exec(IO.blocking {
       val dataFromQueue = spiOutputQueue.take()
       clientOutput.write(Array(dataFromQueue))
     }).repeat

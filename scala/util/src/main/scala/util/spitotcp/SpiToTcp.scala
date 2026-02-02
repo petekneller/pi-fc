@@ -1,18 +1,18 @@
 package util.spitotcp
 
-import java.net.InetSocketAddress
-import java.util.concurrent.{ Executors, BlockingQueue }
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.time.Instant
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.{ Interval, Positive }
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
-import cats.effect.{ Blocker, IO }
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+import com.comcast.ip4s._
 import fs2.{ Stream, Pipe, Chunk }
-import fs2.io.tcp.{Socket, SocketGroup}
+import fs2.io.net.{ Network, Socket }
 import fc.device.controller.spi.{ SpiAddress, SpiController }
 import SpiController.{ TransferEvent => SpiTransferEvent }
 import fc.device.gps.{ CompositeParser, CompositeMessage, Right => UbxMsg }
@@ -22,7 +22,6 @@ import fc.device.gps.fs2.Gps
 import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
 import squants.information.{ DataRate, BytesPerSecond }
 import squants.time.{ Frequency, Hertz }
-import cats.effect.{ContextShift, Timer}
 
 /*
  * Remimder of how to run this from the ammonite repl:
@@ -40,41 +39,29 @@ object SpiToTcp {
       SpiAddress(busNumber = 0, chipSelect = 0),
       100.milliseconds,
       maxBytesToTransfer,
-      newParser _,
-      blockingIO
+      newParser _
     )(
-      spiController,
-      timer,
-      cs
+      spiController
     )
 
     spiController.addTransferCallback(spiObservationsBuffer.record _)
 
-    val app = for {
-      clientSocket <- createSocket(port)
-      inputStream = receiveFromClient(clientSocket, gpsInput)
-      outputStream = gpsOutput through transmitToClient(clientSocket)
-      _ <- Stream((inputStream :: outputStream :: metricStreams(gpsInput)): _*).parJoinUnbounded
-    } yield ()
+    val p = com.comcast.ip4s.Port.fromInt(port).get
+    val app = Network[IO].server(address = Some(ip"0.0.0.0"), port = Some(p)).flatMap { clientSocket =>
+      val inputStream = receiveFromClient(clientSocket, gpsInput)
+      val outputStream = gpsOutput through transmitToClient(clientSocket)
+      Stream((inputStream :: outputStream :: metricStreams(gpsInput)): _*).parJoinUnbounded
+    }
 
     app.compile.drain.unsafeRunSync()
   }
 
-  private def createSocket(port: Port): Stream[IO, Socket[IO]] = {
-    for {
-      blocker <- Stream.resource(Blocker[IO])
-      socketGroup <- Stream.resource(SocketGroup[IO](blocker))
-      clientResource <- socketGroup.server[IO](new InetSocketAddress("0.0.0.0", port))
-      clientSocket <- Stream.resource(clientResource)
-    } yield clientSocket
-  }
-
   private def receiveFromClient(client: Socket[IO], gpsInput: BlockingQueue[Msg]): Stream[IO, Unit] = {
-    val bytesFromClient = client.reads(maxBytesToTransfer).onFinalize(client.endOfOutput)
+    val bytesFromClient = client.reads.onFinalize(client.endOfOutput)
     val messagesFromClient = bytesFromClient through parseMessages()
 
     messagesFromClient flatMap {
-      msg => Stream.eval_(IO.delay{ gpsInput.put(msg) })
+      msg => Stream.exec(IO.blocking{ gpsInput.put(msg) })
     }
   }
 
@@ -84,9 +71,9 @@ object SpiToTcp {
   private def transmitToClient(client: Socket[IO]): Pipe[IO, Msg, Unit] = (input: Stream[IO, Msg]) =>
     input flatMap { msg =>
       val bytes = msg.toBytes
-      Stream.eval_(IO.delay{ messageObservationsBuffer.record(MessageOutgoing(Instant.now(), bytes.length)) }) ++
-        Stream.chunk(Chunk.seq(bytes))
-    } through client.writes()
+      Stream.exec(IO.blocking{ messageObservationsBuffer.record(MessageOutgoing(Instant.now(), bytes.length)) }) ++
+        Stream.chunk(Chunk.from(bytes))
+    } through client.writes
 
   private case class SpiTransfersObservation(transferRate: Frequency, duration: StatisticalMeasures[FiniteDuration], writeBytes: StatisticalMeasures[Int], writeRate: DataRate, readBytes: StatisticalMeasures[Int], readRate: DataRate) {
     override def toString(): String =
@@ -97,11 +84,11 @@ object SpiToTcp {
     s"[${stats.min};${stats.median};${stats.p90};${stats.max}]"
 
   private def metricStreams(gpsInput: BlockingQueue[Msg]): List[Stream[IO, Unit]] = {
-    val gpsStatusPolling = Stream.awakeEvery[IO](100.milliseconds) >> { Stream.eval_(IO.delay{
+    val gpsStatusPolling = Stream.awakeEvery[IO](100.milliseconds) >> { Stream.exec(IO.blocking{
       gpsInput.put(UbxMsg(RxBufferPoll))
       gpsInput.put(UbxMsg(TxBufferPoll))
     }) }
-    val observations = Stream.awakeEvery[IO](1.second) >> { Stream.eval_(IO.delay{
+    val observations = Stream.awakeEvery[IO](1.second) >> { Stream.exec(IO.blocking{
       println(observeSpiTransfers())
       println(observeOutgoingMessages())
     })}
@@ -149,9 +136,6 @@ object SpiToTcp {
     OutgoingMessagesObservation(messageRate, dataRate, size)
   }
 
-  private implicit val timer: Timer[IO] = IO.timer(ExecutionContext.global)
-  private implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
-  private val blockingIO = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   private val spiController = SpiController()
   private val maxBytesToTransfer: Int Refined Positive = 100
   private val spiObservationsBuffer = AggregationBuffer[SpiTransferEvent](10)

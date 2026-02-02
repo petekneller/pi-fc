@@ -2,11 +2,10 @@ package fc.device.gps.fs2
 
 import java.util.concurrent.{ BlockingQueue, LinkedBlockingQueue }
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.ExecutionContext
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import org.slf4j.LoggerFactory
-import cats.effect.{ IO, Timer, ContextShift }
+import cats.effect.IO
 import fs2.{ Stream, Pull, Pipe, Chunk }
 import fc.device.controller.spi.{ SpiFullDuplexController, SpiAddress }
 import fc.device.gps.{ Message, MessageParser }
@@ -22,25 +21,22 @@ object Gps {
     address: SpiAddress,
     pollInterval: FiniteDuration,
     numPollingBytes: Int Refined Positive,
-    newParser: () => MessageParser[M],
-    blockingIO: ExecutionContext
+    newParser: () => MessageParser[M]
   )(
-    implicit spi: SpiFullDuplexController,
-    timer: Timer[IO],
-    cs: ContextShift[IO]
+    implicit spi: SpiFullDuplexController
   ): (BlockingQueue[M], Stream[IO, M]) = {
 
     val inputQueue = new LinkedBlockingQueue[M]()
-    val input = Stream.eval(cs.evalOn(blockingIO)(IO.delay{ inputQueue.take() })).repeat
+    val input = Stream.eval(IO.blocking{ inputQueue.take() }).repeat
 
     val polling = Stream.awakeEvery[IO](pollInterval)
 
     val outputStream = (input either polling) flatMap {
-      case Left(msg) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spi.transfer(address, msg.toBytes) }))
-      case Right(_) => Stream.eval(cs.evalOn(blockingIO)(IO.delay{ spi.receive(address, numPollingBytes) }))
+      case Left(msg) => Stream.eval(IO.blocking{ spi.transfer(address, msg.toBytes) })
+      case Right(_) => Stream.eval(IO.blocking{ spi.receive(address, numPollingBytes) })
     } flatMap {
-      case Left(cause) => Stream.eval_(IO.delay{ logger.error(s"Device exception reading GPS: ${cause.toString}") })
-      case Right(bytes) => Stream.chunk(Chunk.seq(bytes))
+      case Left(cause) => Stream.exec(IO.delay{ logger.error(s"Device exception reading GPS: ${cause.toString}") })
+      case Right(bytes) => Stream.chunk(Chunk.from(bytes))
     } through parseStream(newParser)
 
     (inputQueue, outputStream)
