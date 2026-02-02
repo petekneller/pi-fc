@@ -14,14 +14,10 @@ import ESC.{ Command, Run, Arm, Disarm }
 package object fs2 {
 
   def initESCs(escs: ESC*): Stream[IO, String] = {
-    def initESC(esc: ESC): Stream[IO, String] = Stream.eval(IO.delay{ esc.init() }) map ( dr => dr.fold(_.toString, _ => s"ESC ${esc.name} initialized") )
+    def initESC(esc: ESC): Stream[IO, String] = esc.init() map ( dr => dr.fold(_.toString, _ => s"ESC ${esc.name} initialized") )
 
     escs.foldLeft(Stream.empty.covaryAll[IO, String])((stream, esc) => stream ++ initESC(esc))
   }
-
-  def motorArm(esc: ESC, arm: Boolean): Stream[IO, DeviceResult[Int]] = Stream.eval(IO.delay{ esc.arm(arm) })
-
-  def motorRun(esc: ESC, command: Command): Stream[IO, DeviceResult[Int]] = Stream.eval(IO.delay{ esc.run(command) })
 
   def sleep(period: Time): Stream[IO, Nothing] = Stream.eval(IO.delay{ Thread.sleep(period.toMilliseconds.toLong) }).flatMap(_ => Stream.empty.covaryAll[IO, Nothing])
 
@@ -31,11 +27,11 @@ package object fs2 {
     def armMessage(ppm: DeviceResult[Int]) = s"ESC [${esc.name}] armed: ${ppm.toString}"
     val throttleCommand = Run(0.05)
 
-    motorArm(esc, true).map(armMessage) ++ sleep ++
-    motorRun(esc, throttleCommand).map(throttleMessage) ++ sleep ++
-    motorRun(esc, throttleCommand).map(throttleMessage) ++ sleep ++
-    motorRun(esc, throttleCommand).map(throttleMessage) ++ sleep ++
-    motorArm(esc, false).map(armMessage) ++ sleep
+    esc.arm(true).map(armMessage) ++ sleep ++
+    esc.run(throttleCommand).map(throttleMessage) ++ sleep ++
+    esc.run(throttleCommand).map(throttleMessage) ++ sleep ++
+    esc.run(throttleCommand).map(throttleMessage) ++ sleep ++
+    esc.arm(false).map(armMessage) ++ sleep
   }
 
   def motorsTest(escs: ESC*): Stream[IO, String] =

@@ -91,10 +91,10 @@ object Navio2 {
       failure => Stream(failure.toString)
     }, {
       case (looptime, armed, throttle, gyro, controlSignals, escOutput@(esc1, esc2, esc3, esc4)) =>
-        tasks.motorRun(escs.one, esc1).map(_ => "") ++
-        tasks.motorRun(escs.two, esc2).map(_ => "") ++
-        tasks.motorRun(escs.three, esc3).map(_ => "") ++
-        tasks.motorRun(escs.four, esc4).map(_ => "") ++
+        escs.one.run(esc1).map(_ => "") ++
+        escs.two.run(esc2).map(_ => "") ++
+        escs.three.run(esc3).map(_ => "") ++
+        escs.four.run(esc4).map(_ => "") ++
         Stream(s"${tasks.formatLooptime(looptime)} | ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}")
     })) through tasks.printToConsole
 

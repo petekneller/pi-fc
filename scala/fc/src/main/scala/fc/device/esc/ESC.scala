@@ -2,6 +2,8 @@ package fc.device.esc
 
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import squants.time.{Hertz, Microseconds}
+import cats.effect.IO
+import fs2.Stream
 import fc.device.api._
 import fc.device.rc.PpmValue
 
@@ -16,29 +18,29 @@ case class ESC(
 
   import ESC.{Command, Disarm, Arm, Run}
 
-  def init(): DeviceResult[Unit] = for {
-    _ <- pwmChannel.write(PwmChannel.configs.frequency)(Hertz(50))
-    _ <- disarm()
-  } yield ()
+  def init(): Stream[IO, DeviceResult[Unit]] = {
+    val configFreq = Stream.eval(IO.blocking{ pwmChannel.write(PwmChannel.configs.frequency)(Hertz(50)) })
+    configFreq ++ disarm().map(_.map(_ => ()))
+  }
 
-  def arm(arming: Boolean = true): DeviceResult[Int] = setValue(if (arming) armValue else disarmValue)
-  def disarm(): DeviceResult[Int] = arm(false)
+  def arm(arming: Boolean = true): Stream[IO, DeviceResult[Int]] = setValue(if (arming) armValue else disarmValue)
+  def disarm(): Stream[IO, DeviceResult[Int]] = arm(false)
 
-  def run(throttle: Double): DeviceResult[Int] = {
+  def run(throttle: Double): Stream[IO, DeviceResult[Int]] = {
     val boundedThrottle = throttle.min(1.0).max(0.0)
     val ppmValue = minValue + (boundedThrottle * pulseRange).round
     setValue(ppmValue.toInt)
   }
 
-  def run(command: Command): DeviceResult[Int] = command match {
+  def run(command: Command): Stream[IO, DeviceResult[Int]] = command match {
     case Disarm => disarm()
     case Arm => arm()
     case Run(value) => run(value)
   }
 
-  private def setValue(pulseWidth: Int): DeviceResult[Int] = {
+  private def setValue(pulseWidth: Int): Stream[IO, DeviceResult[Int]] = Stream.eval(IO.blocking{
     pwmChannel.write(PwmChannel.configs.pulseWidth)(Microseconds(pulseWidth)) map (_ => pulseWidth)
-  }
+  })
 
   private val pulseRange = maxValue - minValue
 
