@@ -13,13 +13,13 @@ import cats.effect.unsafe.implicits.global
 import com.comcast.ip4s._
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.io.net.{ Network, Socket }
-import fc.device.controller.spi.{ SpiAddress, SpiController }
+import core.device.controller.spi.{ SpiAddress, SpiController }
 import SpiController.{ TransferEvent => SpiTransferEvent }
-import fc.device.gps.{ CompositeParser, CompositeMessage, Right => UbxMsg }
-import fc.device.gps.ublox.{ UbxParser, UbxMessage, RxBufferPoll, TxBufferPoll }
-import fc.device.gps.nmea.{ NmeaParser, NmeaMessage }
-import fc.device.gps.fs2.Gps
-import fc.metrics.{ StatisticalMeasures, AggregationBuffer }
+import core.device.gps.{ CompositeParser, CompositeMessage, Right => UbxMsg }
+import core.device.gps.ublox.{ UbxParser, UbxMessage, RxBufferPoll, TxBufferPoll }
+import core.device.gps.nmea.{ NmeaParser, NmeaMessage }
+import core.device.gps.fs2.Gps
+import core.metrics.{ StatisticalMeasures, AggregationBuffer }
 import squants.information.{ DataRate, BytesPerSecond }
 import squants.time.{ Frequency, Hertz }
 

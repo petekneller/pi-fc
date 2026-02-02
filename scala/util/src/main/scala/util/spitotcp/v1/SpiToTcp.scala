@@ -5,7 +5,7 @@ import scala.math.min
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
-import fc.device.controller.spi.{ SpiAddress, SpiController }
+import core.device.controller.spi.{ SpiAddress, SpiController }
 
 object SpiToTcp {
 

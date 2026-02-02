@@ -11,11 +11,11 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import fs2.{ Stream, Pipe, Chunk, Pull }
 import fs2.io.net.{ Network, Socket }
-import fc.device.controller.spi.{ SpiAddress, SpiController }
-import fc.device.gps.{ Message, MessageParser, CompositeParser }
+import core.device.controller.spi.{ SpiAddress, SpiController }
+import core.device.gps.{ Message, MessageParser, CompositeParser }
 import MessageParser._
-import fc.device.gps.ublox.UbxParser
-import fc.device.gps.nmea.NmeaParser
+import core.device.gps.ublox.UbxParser
+import core.device.gps.nmea.NmeaParser
 
 object OfMessages {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]

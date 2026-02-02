@@ -12,7 +12,7 @@ import cats.effect.unsafe.implicits.global
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.concurrent.SignallingRef
 import fs2.io.net.{ Network, Socket }
-import fc.device.controller.spi.{ SpiAddress, SpiController }
+import core.device.controller.spi.{ SpiAddress, SpiController }
 
 object OfBytes {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]

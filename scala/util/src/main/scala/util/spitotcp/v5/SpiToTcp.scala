@@ -10,7 +10,7 @@ import cats.effect.unsafe.implicits.global
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.autoRefineV
-import fc.device.controller.spi.{ SpiAddress, SpiController }
+import core.device.controller.spi.{ SpiAddress, SpiController }
 
 object SpiToTcp {
 

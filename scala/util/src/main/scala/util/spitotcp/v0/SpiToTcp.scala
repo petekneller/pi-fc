@@ -2,7 +2,7 @@ package util.spitotcp.v0
 
 import java.net.ServerSocket
 import eu.timepit.refined.auto.{autoRefineV}
-import fc.device.controller.spi.{ SpiAddress, SpiController }
+import core.device.controller.spi.{ SpiAddress, SpiController }
 
 /*
  See README.md in util.spitotcp
