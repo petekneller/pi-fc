@@ -19,7 +19,7 @@ object Navio2 {
 
   val mpu9250 = Mpu9250(SpiAddress(busNumber = 0, chipSelect = 1))
 
-  val receiver = RcReceiver(RcAddress("/sys/kernel/rcio/rcin"))
+  val receiver = RcReceiver(RcAddress())
 
   object rcChannels {
     val one =   RcChannel(0)

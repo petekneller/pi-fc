@@ -2,6 +2,6 @@ package fc.device.rc
 
 import fc.device.controller.filesystem.FileSystemAddress
 
-case class RcAddress(deviceFile: String) extends FileSystemAddress {
-  def toFilename = deviceFile
+case class RcAddress() extends FileSystemAddress {
+  def toFilename = "/sys/kernel/rcio/rcin"
 }
