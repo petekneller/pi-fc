@@ -6,7 +6,7 @@ import cats.effect.IO
 import _root_.fs2.{ Stream, Pipe, Pull }
 import squants.time.{ Time, Seconds, Microseconds }
 import fc.device.api.DeviceResult
-import fc.device.rc.{ RcInput, RcReceiver, RcChannel }
+import fc.device.rc.{ RcInput, RcChannel }
 import fc.device.sensor.Mpu9250
 import fc.device.esc.ESC
 import ESC.{ Command, Run, Arm, Disarm }
@@ -94,7 +94,7 @@ package object fs2 {
       } yield (a, b, c, d, e, f)
     }
 
-  def readChannel(receiver: RcReceiver, channel: RcChannel): Stream[IO, DeviceResult[RcInput]] = Stream.eval(IO.delay{ receiver.readChannel(channel) }).repeat
+  def readChannel(channel: RcChannel): Stream[IO, DeviceResult[RcInput]] = Stream.eval(IO.delay{ channel.read(channel.rx) }).repeat
 
   def readGyro(mpu: Mpu9250): Stream[IO, DeviceResult[(Double, Double, Double)]] = Stream.eval(IO.delay{ mpu.readGyro(Mpu9250.enums.GyroFullScale.dps250) }).repeat
 

@@ -4,7 +4,7 @@ import eu.timepit.refined.auto.autoRefineV
 import fs2.Stream
 import device.controller.filesystem.FileSystemController
 import device.controller.spi.{SpiController, SpiAddress}
-import device.rc.{RcAddress, RcReceiver, RcChannel}
+import device.rc.RcChannel
 import device.sensor.Mpu9250
 import device.esc.{PwmChannel, ESC}
 import task.{fs2 => tasks}
@@ -18,8 +18,6 @@ object Navio2 {
   /* Devices */
 
   val mpu9250 = Mpu9250(SpiAddress(busNumber = 0, chipSelect = 1))
-
-  val receiver = RcReceiver(RcAddress())
 
   object rcChannels {
     val one =   RcChannel(0)
@@ -47,11 +45,11 @@ object Navio2 {
 
   def displayRcChannels = tasks.zip6(
     tasks.looptime().map(Right(_)),
-    tasks.readChannel(receiver, rcChannels.one),
-    tasks.readChannel(receiver, rcChannels.two),
-    tasks.readChannel(receiver, rcChannels.three),
-    tasks.readChannel(receiver, rcChannels.four),
-    tasks.readChannel(receiver, rcChannels.six)
+    tasks.readChannel(rcChannels.one),
+    tasks.readChannel(rcChannels.two),
+    tasks.readChannel(rcChannels.three),
+    tasks.readChannel(rcChannels.four),
+    tasks.readChannel(rcChannels.six)
   ) map (dr => dr.map {
     case (looptime, one, two, three, four, six) =>
       s"${tasks.formatLooptime(looptime)} | ${tasks.formatRcChannels(one, two, three, four, six)}"
@@ -68,8 +66,8 @@ object Navio2 {
   def flightLoop(feedbackController: tasks.FeedbackController, mixer: tasks.Mixer) =
     tasks.zip4(
       tasks.looptime().map(Right(_)),
-      tasks.readChannel(receiver, rcChannels.six) map (dr => dr map (tasks.isArmed _)),
-      tasks.readChannel(receiver, rcChannels.one),
+      tasks.readChannel(rcChannels.six) map (dr => dr map (tasks.isArmed _)),
+      tasks.readChannel(rcChannels.one),
       tasks.readGyro(mpu9250)
     ) map (dr => dr.map {
       case (looptime, armed, throttle, gyro) =>
