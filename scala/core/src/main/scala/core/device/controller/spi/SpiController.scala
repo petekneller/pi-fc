@@ -2,8 +2,8 @@ package core.device.controller.spi
 
 import java.nio.ByteBuffer
 import java.time.{ Instant, Duration }
-import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import scala.concurrent.duration._
 import cats.syntax.either._
 import eu.timepit.refined.api.{ Refined, RefType }
 import eu.timepit.refined.numeric.{ Positive, NonNegative }
@@ -16,6 +16,7 @@ import ioctl.syntax._
 import spidev.Spidev
 import core.device.api._
 import core.metrics.Hook
+import core.device.controller.{TransferEvent, ControllerMetrics }
 
 case class SpiAddress(busNumber: Int, chipSelect: Int) extends Address {
   def toFilename: String = s"/dev/spidev${busNumber}.${chipSelect}"
@@ -31,7 +32,7 @@ trait SpiFullDuplexController extends FullDuplexController {
 }
 
 // TODO Ugh! I hate XyzImpl's. Must think of a better name
-class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiFullDuplexController {
+class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiFullDuplexController with ControllerMetrics {
   override type Addr = SpiAddress
 
   // API for RegisterController
@@ -103,8 +104,7 @@ class SpiControllerImpl(api: SpiApi) extends SpiRegisterController with SpiFullD
   }
 
   // Metrics API
-  import SpiController.TransferEvent
-  def addTransferCallback(callback: TransferEvent => Unit): Unit = transferHook.callbacks.add(callback)
+  override def addTransferCallback(callback: TransferEvent => Unit): Unit = transferHook.callbacks.add(callback)
 
   // Internal API from here on down
 
@@ -144,11 +144,10 @@ trait SpiApi {
 }
 
 object SpiController {
-  def apply() = new SpiControllerImpl(new SpiApi {
+  def apply(): SpiRegisterController with SpiFullDuplexController with ControllerMetrics = new SpiControllerImpl(new SpiApi {
     def transfer(fileDescriptor: Int, txBuffer: ByteBuffer, rxBuffer: ByteBuffer, numBytes: Int, clockSpeedHz: Int) = Spidev.transfer(fileDescriptor, txBuffer, rxBuffer, numBytes, clockSpeedHz)
     def open(filename: String, flags: Int) = IOCtl.open(filename, flags)
     def close(fileDescriptor: Int) = IOCtl.close(fileDescriptor)
   })
 
-  case class TransferEvent(timestamp: Instant, duration: FiniteDuration, writeBytes: Int, readBytes: Int)
 }

@@ -1,17 +1,22 @@
 package core
 
+import scala.concurrent.duration._
 import eu.timepit.refined.auto.autoRefineV
+import cats.effect.IO
+import fs2.Stream
+import device.controller.{ ControllerMetrics, TransfersObservation }
 import device.controller.filesystem.FileSystemController
-import device.controller.spi.{SpiController, SpiAddress}
+import device.controller.spi.{SpiController, SpiAddress, SpiFullDuplexController, SpiRegisterController }
 import device.rc.RcChannel
 import device.sensor.Mpu9250
 import device.esc.{PwmChannel, ESC}
-import core.device.controller.spi.SpiRegisterController
 
 object Navio2 {
 
-  implicit val spiController: SpiRegisterController = SpiController()
+  implicit val spiController: SpiRegisterController with SpiFullDuplexController with ControllerMetrics = SpiController()
   implicit val fileController: FileSystemController = FileSystemController()
+
+  val spiMetrics: Stream[IO, TransfersObservation] = ControllerMetrics(spiController, 1.second)
 
   /* Devices */
 
@@ -34,4 +39,5 @@ object Navio2 {
     val three = ESC("3", PwmChannel(chipNumber = 0, channelNumber = 5)) // pin 6
     val four =  ESC("4", PwmChannel(chipNumber = 0, channelNumber = 7)) // pin 8
   }
+
 }
