@@ -1,13 +1,11 @@
 package core
 
 import eu.timepit.refined.auto.autoRefineV
-import fs2.Stream
 import device.controller.filesystem.FileSystemController
 import device.controller.spi.{SpiController, SpiAddress}
 import device.rc.RcChannel
 import device.sensor.Mpu9250
 import device.esc.{PwmChannel, ESC}
-import task.{fs2 => tasks}
 import core.device.controller.spi.SpiRegisterController
 
 object Navio2 {
@@ -36,66 +34,4 @@ object Navio2 {
     val three = ESC("3", PwmChannel(chipNumber = 0, channelNumber = 5)) // pin 6
     val four =  ESC("4", PwmChannel(chipNumber = 0, channelNumber = 7)) // pin 8
   }
-
-  /* Tasks */
-
-  def initESCs = tasks.initESCs(escs.one, escs.two, escs.three, escs.four) through tasks.printToConsole
-
-  def motorsTest = tasks.motorsTest(escs.one, escs.two, escs.three, escs.four) through tasks.printToConsole
-
-  def displayRcChannels = tasks.zip6(
-    tasks.looptime().map(Right(_)),
-    tasks.readChannel(rcChannels.one),
-    tasks.readChannel(rcChannels.two),
-    tasks.readChannel(rcChannels.three),
-    tasks.readChannel(rcChannels.four),
-    tasks.readChannel(rcChannels.six)
-  ) map (dr => dr.map {
-    case (looptime, one, two, three, four, six) =>
-      s"${tasks.formatLooptime(looptime)} | ${tasks.formatRcChannels(one, two, three, four, six)}"
-  }) through tasks.printToConsole
-
-  def displayGyro = tasks.zip2(
-    tasks.looptime().map(Right(_)),
-    tasks.readGyro(mpu9250)
-  ) map (dr => dr map {
-    case (looptime, (x, y, z)) =>
-      s"${tasks.formatLooptime(looptime)} | ${tasks.formatGyro(x, y, z)}"
-  }) through tasks.printToConsole
-
-  def flightLoop(feedbackController: tasks.FeedbackController, mixer: tasks.Mixer) =
-    tasks.zip4(
-      tasks.looptime().map(Right(_)),
-      tasks.readChannel(rcChannels.six) map (dr => dr map (tasks.isArmed _)),
-      tasks.readChannel(rcChannels.one),
-      tasks.readGyro(mpu9250)
-    ) map (dr => dr.map {
-      case (looptime, armed, throttle, gyro) =>
-        (looptime, armed, throttle, gyro, (feedbackController.run _).tupled(gyro))
-    }) map (dr => dr map {
-      case (looptime, armed, throttle, gyro, controlSignals@(x, y, z)) =>
-        (looptime, armed, throttle, gyro, controlSignals, mixer.run(throttle, x, y, z))
-    }) map( dr => dr map {
-      case (looptime, armed, throttle, gyro, controlSignals, (esc1, esc2, esc3, esc4)) =>
-        (looptime, armed, throttle, gyro, controlSignals, tasks.armingOverride(armed, throttle, esc1, esc2, esc3, esc4))
-    })
-
-  def displayFlightLoop(feedbackController: tasks.FeedbackController = tasks.PControllerTargetZero(0.01), mixer: tasks.Mixer = tasks.BasicMixer()) =
-    flightLoop(feedbackController, mixer) map (dr => dr.map {
-      case (looptime, armed, throttle, gyro, controlSignals, escOutput) =>
-        s"${tasks.formatLooptime(looptime)} | ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}"
-    }) through tasks.printToConsole
-
-  def runFlightLoop(feedbackController: tasks.FeedbackController = tasks.PControllerTargetZero(0.01), mixer: tasks.Mixer = tasks.BasicMixer()) =
-    flightLoop(feedbackController, mixer) flatMap (dr => dr.fold({
-      failure => Stream(failure.toString)
-    }, {
-      case (looptime, armed, throttle, gyro, controlSignals, escOutput@(esc1, esc2, esc3, esc4)) =>
-        escs.one.run(esc1).map(_ => "") ++
-        escs.two.run(esc2).map(_ => "") ++
-        escs.three.run(esc3).map(_ => "") ++
-        escs.four.run(esc4).map(_ => "") ++
-        Stream(s"${tasks.formatLooptime(looptime)} | ARM: $armed | THR: [${"%4d".format(throttle.ppm)}] | ${(tasks.formatGyro _).tupled(gyro)} | ${(tasks.formatGyro _).tupled(controlSignals)} | ${(tasks.formatOutputs _).tupled(escOutput)}")
-    })) through tasks.printToConsole
-
 }

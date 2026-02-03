@@ -1,14 +1,14 @@
-name := "util"
+name := "fc"
 
 import Dependencies._
 
 libraryDependencies ++= Seq(
   cats,
   catsEffect,
-  compilerDep(scalaVersion.value),
-  slf4j,
-  logback,
   fs2,
-  fs2io,
+  compilerDep(scalaVersion.value),
+  refined,
+  slf4j,
+  spire,
   squants
 )

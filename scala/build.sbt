@@ -51,12 +51,15 @@ lazy val spidev = project.in(file("spidev")).
   dependsOn(ioctl)
 
 lazy val core = project.in(file("core")).
-  settings(ammonite()).
   dependsOn(ioctl, spidev)
+
+lazy val fc = project.in(file("fc")).
+  settings(ammonite()).
+  dependsOn(ioctl, spidev, core)
 
 lazy val util = project.in(file("util")).
   settings(ammonite()).
   dependsOn(ioctl, spidev, core)
 
 lazy val root = project.in(file(".")).
-  aggregate(ioctl, spidev, core, util)
+  aggregate(ioctl, spidev, core, fc, util)
