@@ -13,7 +13,7 @@ import com.comcast.ip4s._
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.io.net.{ Network, Socket }
 import core.device.controller.spi.SpiAddress
-import core.device.gps.{ CompositeParser, CompositeMessage, CRight => UbxMsg }
+import core.device.gps.{ MessageParser, CompositeParser, CompositeMessage, CRight => UbxMsg }
 import core.device.gps.ublox.{ UbxParser, UbxMessage, RxBufferPoll, TxBufferPoll }
 import core.device.gps.nmea.{ NmeaParser, NmeaMessage }
 import core.device.gps.Gps
@@ -33,6 +33,8 @@ object SpiToTcp {
 
   type Msg = CompositeMessage[NmeaMessage, UbxMessage]
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
+
+  private def newParser() = CompositeParser(NmeaParser(), UbxParser())
 
   def apply(port: Port): Unit = {
     val gps = Gps(
@@ -54,15 +56,12 @@ object SpiToTcp {
 
   private def receiveFromClient(client: Socket[IO], gpsInput: BlockingQueue[Msg]): Stream[IO, Unit] = {
     val bytesFromClient = client.reads.onFinalize(client.endOfOutput)
-    val messagesFromClient = bytesFromClient through parseMessages()
+    val messagesFromClient = bytesFromClient through MessageParser.pipe(newParser _)
 
     messagesFromClient flatMap {
       msg => Stream.exec(IO.blocking{ gpsInput.put(msg) })
     }
   }
-
-  private def newParser() = CompositeParser(NmeaParser(), UbxParser())
-  private def parseMessages(): Pipe[IO, Byte, Msg] = Gps.parseStream(newParser _)
 
   private def transmitToClient(client: Socket[IO]): Pipe[IO, Msg, Unit] = (input: Stream[IO, Msg]) =>
     input flatMap { msg =>

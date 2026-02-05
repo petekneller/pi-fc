@@ -7,9 +7,8 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto.autoRefineV
 import org.slf4j.LoggerFactory
 import cats.effect.IO
-import fs2.{ Stream, Pull, Pipe, Chunk }
+import fs2.{ Stream, Chunk }
 import core.device.controller.spi.{ SpiFullDuplexController, SpiAddress }
-import MessageParser.{ Unconsumed, Proceeding, Done, Failed }
 import scala.concurrent.duration.DurationInt
 
 /*
@@ -44,25 +43,7 @@ object Gps {
     } flatMap {
       case Left(cause) => Stream.exec(IO.delay{ logger.error(s"Device exception reading GPS: ${cause.toString}") })
       case Right(bytes) => Stream.chunk(Chunk.from(bytes))
-    } through parseStream(newParser)
-  }
-
-  def parseStream[M <: Message](newParser: () => MessageParser[M]): Pipe[IO, Byte, M] = {
-    def parse0(s: Stream[IO, Byte], parser: MessageParser[M]): Pull[IO, M, Unit] = {
-      s.pull.uncons1 flatMap {
-        case None => Pull.done
-        case Some((byte, rest)) => parser.consume(byte) match {
-          case Unconsumed(_) => parse0(rest, newParser())
-          case Proceeding(next) => parse0(rest, next)
-          case Done(msg) => Pull.output1(msg) >>
-            parse0(rest, newParser())
-          case Failed(cause) => Pull.eval(IO.delay{ logger.error(s"Message parsing failed: ${cause}") }) >>
-            parse0(rest, newParser())
-        }
-      }
-    }
-
-    s => parse0(s, newParser()).stream
+    } through MessageParser.pipe(newParser)
   }
 
   private val logger = LoggerFactory.getLogger(this.getClass)

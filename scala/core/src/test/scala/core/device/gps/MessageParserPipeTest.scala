@@ -8,12 +8,12 @@ import fs2.{ Stream, Chunk }
 import core.device.gps.nmea.{ NmeaMessage, NmeaParser }
 import core.device.gps.nmea.examples.{ PubxTimeOfDayPoll, PubxTimeOfDay }
 
-class GpsTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
+class MessageParserPipeTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
 
-  "parseStream" should "successfully parse input messages" in {
+  "MessageParser.pipe" should "successfully parse input messages" in {
     val input = Stream.chunk(Chunk.from(PubxTimeOfDayPoll.bytes)) ++
       Stream.chunk(Chunk.from(PubxTimeOfDay.bytes))
-    val s =  input through Gps.parseStream(() => NmeaParser())
+    val s =  input through MessageParser.pipe(() => NmeaParser())
     val msgs = s.compile.fold(Seq.empty[NmeaMessage])((acc, msg) => acc :+ msg).unsafeRunSync()
     msgs should ===(Seq(PubxTimeOfDayPoll.msg, PubxTimeOfDay.msg))
   }
