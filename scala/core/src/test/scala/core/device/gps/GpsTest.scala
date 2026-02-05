@@ -1,4 +1,4 @@
-package core.device.gps.fs2
+package core.device.gps
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

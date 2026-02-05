@@ -1,45 +1,50 @@
-package core.device.gps.fs2
+package core.device.gps
 
 import java.util.concurrent.{ BlockingQueue, LinkedBlockingQueue }
 import scala.concurrent.duration.FiniteDuration
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.auto.autoRefineV
 import org.slf4j.LoggerFactory
 import cats.effect.IO
 import fs2.{ Stream, Pull, Pipe, Chunk }
 import core.device.controller.spi.{ SpiFullDuplexController, SpiAddress }
-import core.device.gps.{ Message, MessageParser }
 import MessageParser.{ Unconsumed, Proceeding, Done, Failed }
+import scala.concurrent.duration.DurationInt
 
 /*
  * GPS-specific equivalent of the `Device` - a utility that binds GPS message parsing to the appropriate controller and address.
  * FS2 provides the layer to manage the parsing state between GPS accesses.
  */
+trait Gps[M <: Message] {
+
+  val input: BlockingQueue[M]
+  val output: Stream[IO, M]
+}
+
 object Gps {
 
   def apply[M <: Message](
     address: SpiAddress,
-    pollInterval: FiniteDuration,
-    numPollingBytes: Int Refined Positive,
-    newParser: () => MessageParser[M]
+    newParser: () => MessageParser[M],
+    pollInterval: FiniteDuration = 100.milliseconds,
+    numPollingBytes: Int Refined Positive = 100
   )(
     implicit spi: SpiFullDuplexController
-  ): (BlockingQueue[M], Stream[IO, M]) = {
+  ): Gps[M] = new Gps[M] {
 
-    val inputQueue = new LinkedBlockingQueue[M]()
-    val input = Stream.eval(IO.blocking{ inputQueue.take() }).repeat
+    override val input = new LinkedBlockingQueue[M]()
+    val inputStream = Stream.eval(IO.blocking{ input.take() }).repeat
 
     val polling = Stream.awakeEvery[IO](pollInterval)
 
-    val outputStream = (input either polling) flatMap {
+    override val output = (inputStream either polling) flatMap {
       case Left(msg) => Stream.eval(IO.blocking{ spi.transfer(address, msg.toBytes) })
       case Right(_) => Stream.eval(IO.blocking{ spi.receive(address, numPollingBytes) })
     } flatMap {
       case Left(cause) => Stream.exec(IO.delay{ logger.error(s"Device exception reading GPS: ${cause.toString}") })
       case Right(bytes) => Stream.chunk(Chunk.from(bytes))
     } through parseStream(newParser)
-
-    (inputQueue, outputStream)
   }
 
   def parseStream[M <: Message](newParser: () => MessageParser[M]): Pipe[IO, Byte, M] = {

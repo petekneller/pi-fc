@@ -3,10 +3,10 @@ package core.device.gps
 import MessageParser._
 
 sealed trait CompositeMessage[A <: Message, B <: Message] extends Message
-case class Left[A <: Message, B <: Message](msg: A) extends CompositeMessage[A, B] {
+case class CLeft[A <: Message, B <: Message](msg: A) extends CompositeMessage[A, B] {
   def toBytes: Seq[Byte] = msg.toBytes
 }
-case class Right[A <: Message, B <: Message](msg: B) extends CompositeMessage[A, B] {
+case class CRight[A <: Message, B <: Message](msg: B) extends CompositeMessage[A, B] {
   def toBytes: Seq[Byte] = msg.toBytes
 }
 
@@ -18,7 +18,7 @@ object CompositeParser {
     def consume(byte: Byte): ParseState[CompositeMessage[A, B]] = delegate.consume(byte) match {
       case Unconsumed(bytes) => unconsumed(bytes)
       case Proceeding(next) => Proceeding(new WrapperA(next))
-      case Done(msg) => Done(Left(msg))
+      case Done(msg) => Done(CLeft(msg))
       case Failed(cause) => failed(cause)
     }
   }
@@ -27,7 +27,7 @@ object CompositeParser {
     def consume(byte: Byte): ParseState[CompositeMessage[A, B]] = delegate.consume(byte) match {
       case Unconsumed(bytes) => unconsumed(bytes)
       case Proceeding(next) => Proceeding(new WrapperB(next))
-      case Done(msg) => Done(Right(msg))
+      case Done(msg) => Done(CRight(msg))
       case Failed(cause) => failed(cause)
     }
   }
@@ -44,11 +44,11 @@ class CompositeParser[A <: Message, B <: Message](a: MessageParser[A], b: Messag
     case Unconsumed(_) => b.consume(byte) match {
       case Unconsumed(bytes) => unconsumed(bytes)
       case Proceeding(next) => Proceeding(new WrapperB(next))
-      case Done(msg) => Done(Right(msg))
+      case Done(msg) => Done(CRight(msg))
       case Failed(cause) => failed(cause)
     }
     case Proceeding(next) => Proceeding(new WrapperA(next))
-    case Done(msg) => Done(Left(msg))
+    case Done(msg) => Done(CLeft(msg))
     case Failed(cause) => failed(cause)
   }
 }

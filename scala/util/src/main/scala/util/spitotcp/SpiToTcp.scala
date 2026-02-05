@@ -5,7 +5,7 @@ import java.time.Instant
 import scala.concurrent.duration._
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.{ Interval, Positive }
+import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
@@ -13,10 +13,10 @@ import com.comcast.ip4s._
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.io.net.{ Network, Socket }
 import core.device.controller.spi.SpiAddress
-import core.device.gps.{ CompositeParser, CompositeMessage, Right => UbxMsg }
+import core.device.gps.{ CompositeParser, CompositeMessage, CRight => UbxMsg }
 import core.device.gps.ublox.{ UbxParser, UbxMessage, RxBufferPoll, TxBufferPoll }
 import core.device.gps.nmea.{ NmeaParser, NmeaMessage }
-import core.device.gps.fs2.Gps
+import core.device.gps.Gps
 import core.metrics.{ StatisticalMeasures, AggregationBuffer }
 import squants.information.{ DataRate, BytesPerSecond }
 import squants.time.{ Frequency, Hertz }
@@ -35,10 +35,8 @@ object SpiToTcp {
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
 
   def apply(port: Port): Unit = {
-    val (gpsInput, gpsOutput) = Gps(
+    val gps = Gps(
       SpiAddress(busNumber = 0, chipSelect = 0),
-      100.milliseconds,
-      maxBytesToTransfer,
       newParser _
     )(
       spiController
@@ -46,9 +44,9 @@ object SpiToTcp {
 
     val p = com.comcast.ip4s.Port.fromInt(port).get
     val app = Network[IO].server(address = Some(ip"0.0.0.0"), port = Some(p)).flatMap { clientSocket =>
-      val inputStream = receiveFromClient(clientSocket, gpsInput)
-      val outputStream = gpsOutput through transmitToClient(clientSocket)
-      Stream((inputStream :: outputStream :: metricStreams(gpsInput)): _*).parJoinUnbounded
+      val inputStream = receiveFromClient(clientSocket, gps.input)
+      val outputStream = gps.output through transmitToClient(clientSocket)
+      Stream((inputStream :: outputStream :: metricStreams(gps.input)): _*).parJoinUnbounded
     }
 
     app.compile.drain.unsafeRunSync()
@@ -109,6 +107,5 @@ object SpiToTcp {
   }
 
   private val spiController: SpiFullDuplexController = Navio2.spiController
-  private val maxBytesToTransfer: Int Refined Positive = 100
   private val messageObservationsBuffer = AggregationBuffer[MessageOutgoing](10)
 }
