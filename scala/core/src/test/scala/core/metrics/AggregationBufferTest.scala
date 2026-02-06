@@ -24,4 +24,13 @@ class AggregationBufferTest extends AnyFlatSpec with Matchers with TypeCheckedTr
     buffer.retrieve should contain only (2, 3, 4)
   }
 
+  it should "be empty after the contents are retrieved" in {
+    val buffer = AggregationBuffer[Int](3)
+    buffer.record(1)
+    buffer.record(2)
+    buffer.record(3)
+    val _ = buffer.retrieve
+    buffer.retrieve should be(empty)
+  }
+
 }

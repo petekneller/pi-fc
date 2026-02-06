@@ -15,5 +15,5 @@ case class AggregationBuffer[A](numSamples: Int Refined Positive) {
 
   def record(a: A): Unit = { buffer.updateAndGet( b => (b :+ a).takeRight(numSamples) ); () }
 
-  def retrieve: Seq[A] = buffer.get()
+  def retrieve: Seq[A] = buffer.getAndUpdate(_ => Vector.empty)
 }
