@@ -5,17 +5,16 @@ import scala.concurrent.duration._
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Interval
-import eu.timepit.refined.auto.{autoRefineV, autoUnwrap}
+import eu.timepit.refined.auto.{ autoUnwrap, autoRefineV }
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import com.comcast.ip4s._
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.io.net.{ Network, Socket }
 import core.device.controller.spi.SpiAddress
-import core.device.gps.{ MessageParser, CompositeParser, CompositeMessage, CRight => UbxMsg }
-import core.device.gps.ublox.{ UbxParser, UbxMessage, RxBufferPoll, TxBufferPoll }
-import core.device.gps.nmea.{ NmeaParser, NmeaMessage }
-import core.device.gps.Gps
+import core.device.gps.{ MessageParser, CompositeParser, CRight => UbxMsg }
+import core.device.gps.ublox.{ UbxParser, RxBufferPoll, TxBufferPoll, UbloxM8N }
+import core.device.gps.nmea.NmeaParser
 import core.Navio2
 
 /*
@@ -26,15 +25,11 @@ import core.Navio2
 
 object SpiToTcp {
 
-  type Msg = CompositeMessage[NmeaMessage, UbxMessage]
   type Port = Int Refined Interval.Closed[W.`1`.T, W.`65535`.T]
 
-  private def newParser() = CompositeParser(NmeaParser(), UbxParser())
-
   def apply(port: Port): Unit = {
-    val gps = Gps(
+    val gps = UbloxM8N(
       SpiAddress(busNumber = 0, chipSelect = 0),
-      newParser _,
       pollInterval = 100.milliseconds,
       numPollingBytes = 100,
       metricInterval = 1.seconds
@@ -52,7 +47,8 @@ object SpiToTcp {
     app.compile.drain.unsafeRunSync()
   }
 
-  private def receiveFromClient(client: Socket[IO], gpsInput: BlockingQueue[Msg]): Stream[IO, Unit] = {
+  private def newParser() = CompositeParser(NmeaParser(), UbxParser())
+  private def receiveFromClient(client: Socket[IO], gpsInput: BlockingQueue[UbloxM8N.Message]): Stream[IO, Unit] = {
     val bytesFromClient = client.reads.onFinalize(client.endOfOutput)
     val messagesFromClient = bytesFromClient through MessageParser.pipe(newParser _)
 
@@ -61,12 +57,12 @@ object SpiToTcp {
     }
   }
 
-  private def transmitToClient(client: Socket[IO]): Pipe[IO, Msg, Unit] = input =>
+  private def transmitToClient(client: Socket[IO]): Pipe[IO, UbloxM8N.Message, Unit] = input =>
     input flatMap { msg =>
       Stream.chunk(Chunk.from(msg.toBytes))
     } through client.writes
 
-  private def metricStreams(gps: Gps[Msg]): List[Stream[IO, Unit]] = {
+  private def metricStreams(gps: UbloxM8N): List[Stream[IO, Unit]] = {
     val gpsStatusPolling = Stream.awakeEvery[IO](100.milliseconds) >> {
       Stream.exec(IO.blocking{
         gps.input.put(UbxMsg(RxBufferPoll))
