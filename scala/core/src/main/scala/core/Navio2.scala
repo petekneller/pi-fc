@@ -10,6 +10,7 @@ import device.controller.spi.{SpiController, SpiAddress, SpiFullDuplexController
 import device.rc.RcChannel
 import device.sensor.Mpu9250
 import device.esc.{PwmChannel, ESC}
+import device.gps.ublox.UbloxM8N
 
 object Navio2 {
 
@@ -39,5 +40,12 @@ object Navio2 {
     val three = ESC("3", PwmChannel(chipNumber = 0, channelNumber = 5)) // pin 6
     val four =  ESC("4", PwmChannel(chipNumber = 0, channelNumber = 7)) // pin 8
   }
+
+  val gps = UbloxM8N(
+      SpiAddress(busNumber = 0, chipSelect = 0),
+      pollInterval = 100.milliseconds,
+      numPollingBytes = 100,
+      metricInterval = 1.seconds
+  )
 
 }
