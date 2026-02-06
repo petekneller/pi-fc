@@ -1,7 +1,6 @@
 package util.spitotcp
 
 import java.util.concurrent.BlockingQueue
-import java.time.Instant
 import scala.concurrent.duration._
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
@@ -17,10 +16,6 @@ import core.device.gps.{ MessageParser, CompositeParser, CompositeMessage, CRigh
 import core.device.gps.ublox.{ UbxParser, UbxMessage, RxBufferPoll, TxBufferPoll }
 import core.device.gps.nmea.{ NmeaParser, NmeaMessage }
 import core.device.gps.Gps
-import core.metrics.{ StatisticalMeasures, AggregationBuffer }
-import squants.information.{ DataRate, BytesPerSecond }
-import squants.time.{ Frequency, Hertz }
-import core.device.controller.spi.SpiFullDuplexController
 import core.Navio2
 
 /*
@@ -39,16 +34,19 @@ object SpiToTcp {
   def apply(port: Port): Unit = {
     val gps = Gps(
       SpiAddress(busNumber = 0, chipSelect = 0),
-      newParser _
+      newParser _,
+      pollInterval = 100.milliseconds,
+      numPollingBytes = 100,
+      metricInterval = 1.seconds
     )(
-      spiController
+      Navio2.spiController
     )
 
     val p = com.comcast.ip4s.Port.fromInt(port).get
     val app = Network[IO].server(address = Some(ip"0.0.0.0"), port = Some(p)).flatMap { clientSocket =>
       val inputStream = receiveFromClient(clientSocket, gps.input)
       val outputStream = gps.output through transmitToClient(clientSocket)
-      Stream((inputStream :: outputStream :: metricStreams(gps.input)): _*).parJoinUnbounded
+      Stream((inputStream :: outputStream :: metricStreams(gps)): _*).parJoinUnbounded
     }
 
     app.compile.drain.unsafeRunSync()
@@ -63,21 +61,21 @@ object SpiToTcp {
     }
   }
 
-  private def transmitToClient(client: Socket[IO]): Pipe[IO, Msg, Unit] = (input: Stream[IO, Msg]) =>
+  private def transmitToClient(client: Socket[IO]): Pipe[IO, Msg, Unit] = input =>
     input flatMap { msg =>
-      val bytes = msg.toBytes
-      Stream.exec(IO.blocking{ messageObservationsBuffer.record(MessageOutgoing(Instant.now(), bytes.length)) }) ++
-        Stream.chunk(Chunk.from(bytes))
+      Stream.chunk(Chunk.from(msg.toBytes))
     } through client.writes
 
-  private def metricStreams(gpsInput: BlockingQueue[Msg]): List[Stream[IO, Unit]] = {
-    val gpsStatusPolling = Stream.awakeEvery[IO](100.milliseconds) >> { Stream.exec(IO.blocking{
-      gpsInput.put(UbxMsg(RxBufferPoll))
-      gpsInput.put(UbxMsg(TxBufferPoll))
-    }) }
-    val messageObservations = Stream.awakeEvery[IO](1.second) >> { Stream.exec(IO.blocking{
-      println(observeOutgoingMessages())
-    })}
+  private def metricStreams(gps: Gps[Msg]): List[Stream[IO, Unit]] = {
+    val gpsStatusPolling = Stream.awakeEvery[IO](100.milliseconds) >> {
+      Stream.exec(IO.blocking{
+        gps.input.put(UbxMsg(RxBufferPoll))
+        gps.input.put(UbxMsg(TxBufferPoll))
+      })
+    }
+    val messageObservations = gps.metricStream flatMap { observation =>
+      Stream.exec(IO.blocking{ println(observation) })
+    }
     val spiObservations = Navio2.spiMetrics flatMap { observation =>
       Stream.exec(IO.blocking{ println(observation) })
     }
@@ -85,26 +83,4 @@ object SpiToTcp {
     gpsStatusPolling :: messageObservations :: spiObservations :: Nil
   }
 
-  private case class MessageOutgoing(timestamp: Instant, size: Int)
-  private case class OutgoingMessagesObservation(messageRate: Frequency, dataRate: DataRate, size: StatisticalMeasures[Int])
-
-  private def observeOutgoingMessages(): OutgoingMessagesObservation = {
-    val events = messageObservationsBuffer.retrieve
-
-    val timeSpanOfEventsDoubleSeconds = (for {
-      oldest <- events.headOption
-      newest <- events.lastOption
-    } yield {
-      val span = newest.timestamp.toEpochMilli() - oldest.timestamp.toEpochMilli()
-      span.toDouble / 1000.0
-    })
-
-    val messageRate = Hertz(timeSpanOfEventsDoubleSeconds.map(span => events.size.toDouble / span).getOrElse(0.0))
-    val dataRate = BytesPerSecond(timeSpanOfEventsDoubleSeconds.map(span => events.map(_.size).sum.toDouble / span).getOrElse(0.0))
-    val size = StatisticalMeasures(events.map(_.size), 0)
-    OutgoingMessagesObservation(messageRate, dataRate, size)
-  }
-
-  private val spiController: SpiFullDuplexController = Navio2.spiController
-  private val messageObservationsBuffer = AggregationBuffer[MessageOutgoing](10)
 }
