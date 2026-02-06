@@ -12,8 +12,8 @@ import com.comcast.ip4s._
 import fs2.{ Stream, Pipe, Chunk }
 import fs2.io.net.{ Network, Socket }
 import core.device.controller.spi.SpiAddress
-import core.device.gps.{ MessageParser, CompositeParser, CRight => UbxMsg }
-import core.device.gps.ublox.{ UbxParser, RxBufferPoll, TxBufferPoll, UbloxM8N }
+import core.device.gps.{ MessageParser, CompositeParser }
+import core.device.gps.ublox.{ UbxParser, UbloxM8N }
 import core.device.gps.nmea.NmeaParser
 import core.Navio2
 
@@ -63,20 +63,17 @@ object SpiToTcp {
     } through client.writes
 
   private def metricStreams(gps: UbloxM8N): List[Stream[IO, Unit]] = {
-    val gpsStatusPolling = Stream.awakeEvery[IO](100.milliseconds) >> {
-      Stream.exec(IO.blocking{
-        gps.input.put(UbxMsg(RxBufferPoll))
-        gps.input.put(UbxMsg(TxBufferPoll))
-      })
-    }
-    val messageObservations = gps.metricStream flatMap { observation =>
+    val (metricPolling, messageMetrics) = gps.metricStreams
+
+    val messageObservations = messageMetrics flatMap { observation =>
       Stream.exec(IO.blocking{ println(observation) })
     }
+
     val spiObservations = Navio2.spiMetrics flatMap { observation =>
       Stream.exec(IO.blocking{ println(observation) })
     }
 
-    gpsStatusPolling :: messageObservations :: spiObservations :: Nil
+    metricPolling :: messageObservations :: spiObservations :: Nil
   }
 
 }

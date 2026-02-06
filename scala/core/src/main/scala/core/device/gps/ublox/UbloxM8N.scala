@@ -7,7 +7,7 @@ import eu.timepit.refined.numeric.Positive
 import cats.effect.IO
 import fs2.Stream
 import core.device.controller.spi.{ SpiFullDuplexController, SpiAddress }
-import core.device.gps.{ Gps, CompositeMessage, CompositeParser }
+import core.device.gps.{ Gps, CompositeMessage, CompositeParser, CRight => UbxMsg }
 import Gps.OutgoingMessagesObservation
 import core.device.gps.nmea.{ NmeaMessage, NmeaParser }
 
@@ -16,7 +16,7 @@ trait UbloxM8N {
 
   val input: BlockingQueue[Message]
   val output: Stream[IO, Message]
-  val metricStream: Stream[IO, OutgoingMessagesObservation]
+  val metricStreams: (Stream[IO, Unit], Stream[IO, OutgoingMessagesObservation])
 }
 
 object UbloxM8N {
@@ -41,8 +41,15 @@ object UbloxM8N {
       metricInterval
     )
 
+    val gpsBufferPolling = Stream.awakeEvery[IO](100.milliseconds) >> {
+      Stream.exec(IO.blocking{
+        gps.input.put(UbxMsg(RxBufferPoll))
+        gps.input.put(UbxMsg(TxBufferPoll))
+      })
+    }
+
     override val input = gps.input
     override val output = gps.output
-    override val metricStream = gps.metricStream
+    override val metricStreams = (gpsBufferPolling, gps.metricStream)
   }
 }
