@@ -8,8 +8,6 @@ import MessageParser.Proceeding
 
 class NmeaParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
-  // TODO checksum doesn't match
-
   "An empty parser" should "not consume a byte that does not represent '$'" in {
     val f = 'f'.toByte
     NmeaParser().consume(f) should be (unconsumed(f))
@@ -39,7 +37,7 @@ class NmeaParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqu
     val a = 'a'.toByte; val b = 'b'.toByte; val c = 'c'.toByte; val d = 'd'.toByte
     val bytes = Seq('$'.toByte, a, b, c, d, '\r'.toByte, '\n'.toByte)
     val finalState = consume(NmeaParser(), bytes)
-    finalState should be (done)
+    finalState should be (done())
     finalState.asInstanceOf[Done].message should === (Unknown(Seq(a, b, c, d)))
   }
 
@@ -61,16 +59,8 @@ class NmeaParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqu
     state2 should be (failed)
   }
 
-  "A parser" should "successfully consumer a PUBX Time Of Day Poll message (as Unknown)" in {
-    consume(NmeaParser(), examples.PubxTimeOfDayPoll.bytes) should be (done)
-  }
-
-  it should "successfully consumer a PUBX Time Of Day message (as Unknown)" in {
-    consume(NmeaParser(), examples.PubxTimeOfDay.bytes) should be (done)
-  }
-
-  it should "successfully consumer a GNVTG message (as Unknown)" in {
-    consume(NmeaParser(), examples.GnVtg.bytes) should be (done)
+  "A done parser" should "successfully consume a test message" in {
+    consume(NmeaParser(), examples.unknown.bytes) should be (done(examples.unknown.msg))
   }
 
   type Msg = NmeaMessage

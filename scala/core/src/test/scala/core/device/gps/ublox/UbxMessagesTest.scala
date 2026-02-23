@@ -1,82 +1,79 @@
 package core.device.gps.ublox
 
-import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
+import core.device.gps.{ ExampleMessage, ParserTestSupport }
 
-class UbxMessagesTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals {
+class UbxMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
-  // Unknown
-  testsForToBytes(exampleUnknown, "Unknown")
+  describe("A generic message") {
+    describe(".toBytes") {
+      it("should have 0xB5 as the first byte") {
+        examples.unknown.msg.toBytes(0) should === (0xB5.toByte)
+      }
 
-  "Unknown" should "have the lo-byte of the length as the fifth byte" in {
-    exampleUnknown.msg.toBytes(4) should === (0x03.toByte)
-  }
+      it("should have 0x62 as the second byte") {
+        examples.unknown.msg.toBytes(1) should === (0x62.toByte)
+      }
 
-  it should "have the hi-byte of the length as the sixth byte" in {
-    exampleUnknown.msg.toBytes(5) should === (0x00.toByte)
-  }
+      it("should have the message class as the third byte") {
+        examples.unknown.msg.toBytes(2) should === (examples.unknown.clazz)
+      }
 
-  private lazy val exampleUnknown = {
-    val clazz = 0x01.toByte
-    val id = 0x02.toByte
-    val checksum1 = 0x06.toByte
-    val checksum2 = 0x07.toByte
-    val payload = Seq(0x03, 0x04, 0x05).map(_.toByte)
-    val payloadLength1 = 0x03.toByte
-    val payloadLength2 = 0x00.toByte
+      it("should have the message id as the fourth byte") {
+        examples.unknown.msg.toBytes(3) should === (examples.unknown.id)
+      }
 
-    Example(
-      bytes = Seq(0xB5.toByte, 0x62.toByte, clazz, id, payloadLength1, payloadLength2, checksum1, checksum2),
-      clazz = clazz,
-      id = id,
-      payload = payload,
-      payloadLength = (payloadLength1, payloadLength2),
-      checksum = (checksum1, checksum2),
-      msg = Unknown(clazz, id, payload, checksum1, checksum2)
-    )
-  }
+      it ("should have the lo-byte of the length as the fifth byte") {
+        examples.unknown.msg.toBytes(4) should === (0x03.toByte)
+      }
 
-  // Config/Power
-  testsForToBytes(examples.UbxConfigPowerPoll, "UBX-CFG-PWR poll")
+      it ("should have the hi-byte of the length as the sixth byte") {
+        examples.unknown.msg.toBytes(5) should === (0x00.toByte)
+      }
 
-  testsForToBytes(examples.UbxConfigPower, "UBX-CFG-PWR")
+      it("should have the first checksum byte as the second to last byte") {
+        examples.unknown.msg.toBytes.init.last should === (examples.unknown.checksum1)
+      }
 
-  // Ack/Ack
-  testsForToBytes(examples.UbxAckAck, "UBX-ACK-ACK")
-
-  // Monitor/RxBuffer
-  testsForToBytes(examples.UbxMonitorRxBufferPoll, "UBX-MON-RXBUF")
-
-  // Monitor/TxBuffer
-  testsForToBytes(examples.UbxMonitorTxBufferPoll, "UBX-MON-TXBUF")
-
-  // Internals
-  private def testsForToBytes(example: Example, msgName: String): Unit = {
-    val msgBytes = example.msg.toBytes
-    s"${msgName}.toBytes" should "have 0xB5 as the first byte" in {
-      msgBytes(0) should === (0xB5.toByte)
+      it("should have the second checksum byte as the last byte") {
+        examples.unknown.msg.toBytes.last should === (examples.unknown.checksum2)
+      }
     }
-
-    it should "have 0x62 as the second byte" in {
-      msgBytes(1) should === (0x62.toByte)
-    }
-
-    it should "have the message class as the third byte" in {
-      msgBytes(2) should === (example.clazz)
-    }
-
-    it should "have the message id as the fourth byte" in {
-      msgBytes(3) should === (example.id)
-    }
-
-    it should "have the first checksum byte as the second to last byte" in {
-      msgBytes.init.last should === (example.checksum._1)
-    }
-
-    it should "have the second checksum byte as the last byte" in {
-      msgBytes.last should === (example.checksum._2)
+    describe("when parsed from test data") {
+      it("should match the expected message") {
+        consume(UbxParser(), examples.unknown.bytes) should be (done(examples.unknown.msg))
+      }
     }
   }
 
+  examples.all.foreach { case ExampleMessage(name, msg, bytes) =>
+    describe(name) {
+      describe(".toBytes") {
+        it("should have 0xB5 as the first byte") {
+          msg.toBytes(0) should === (0xB5.toByte)
+        }
+
+        it("should have 0x62 as the second byte") {
+          msg.toBytes(1) should === (0x62.toByte)
+        }
+
+        it("should have the message class as the third byte") {
+          msg.toBytes(2) should === (msg.clazz)
+        }
+
+        it("should have the message id as the fourth byte") {
+          msg.toBytes(3) should === (msg.id)
+        }
+      }
+      describe("when parsed from test data") {
+        it("should match the expected message") {
+          consume(UbxParser(), bytes) should be (done(msg))
+        }
+      }
+    }
+  }
+
+  type Msg = UbxMessage // ParserTestSupport
 }

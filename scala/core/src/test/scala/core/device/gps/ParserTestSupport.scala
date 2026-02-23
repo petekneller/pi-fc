@@ -52,13 +52,24 @@ trait ParserTestSupport {
     }
   }
 
-  def done = new BeMatcher[ParseState] {
+  def done() = new BeMatcher[ParseState] {
     def apply(left: ParseState) = {
       val success = left match {
         case OrigDone(_) => true
         case _ => false
       }
       MatchResult(success, s"$left is not Done", s"$left is Done"
+      )
+    }
+  }
+
+  def done(expected: Msg) = new BeMatcher[ParseState] {
+    def apply(left: ParseState) = {
+      val success = left match {
+        case OrigDone(actual) => actual == expected
+        case _ => false
+      }
+      MatchResult(success, s"$left is not Done(${expected})", s"$left is Done(${expected})"
       )
     }
   }

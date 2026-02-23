@@ -8,8 +8,6 @@ import core.device.gps.ParserTestSupport
 
 class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
-  // TODO checksum doesn't match
-
   "An empty parser" should "not consume a byte that is not 0xB5" in {
     UbxParser().consume(b) should be (unconsumed(b))
   }
@@ -65,25 +63,8 @@ class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
     state2 should === (Done(Unknown(b, c, Seq.empty[Byte], b, d)))
   }
 
-  "A parser" should "successfully parse a Config Power poll message (as Unknown)" in {
-    val expected = examples.UbxConfigPowerPoll
-    consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum._1, expected.checksum._2))
-    )
-  }
-
-  it should "successfully parse a Config Power message (as Unknown)" in {
-    val expected = examples.UbxConfigPower
-    consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum._1, expected.checksum._2))
-    )
-  }
-
-  it should "successfully parse an Ack message (as Unknown)" in {
-    val expected = examples.UbxAckAck
-    consume(UbxParser(), expected.bytes) should === (
-      Done(Unknown(expected.clazz, expected.id, expected.payload, expected.checksum._1, expected.checksum._2))
-    )
+  "A done parser" should "successfully consume a test message" in {
+    consume(UbxParser(), examples.unknown.bytes) should be (done(examples.unknown.msg))
   }
 
   type Msg = UbxMessage
