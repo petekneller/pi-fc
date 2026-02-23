@@ -10,5 +10,6 @@ libraryDependencies ++= Seq(
   refined,
   slf4j,
   spire,
-  squants
+  squants,
+  scalaTest % Test
 )
