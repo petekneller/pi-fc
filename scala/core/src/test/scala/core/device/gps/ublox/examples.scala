@@ -16,6 +16,13 @@ object examples {
     val msg = Unknown(clazz, id, payload, checksum1, checksum2)
   }
 
+  val UbxMonitorRxBufferPoll =
+    ex(
+      "UBX-MON-RXBUF poll", // B5 62 0A 07 00 00 11 3D
+      RxBufferPoll,
+      Seq(0xB5, 0x62, 0x0A, 0x07, 0x00, 0x00, 0x11, 0x3D).map(_.toByte)
+    )
+
   val all: Seq[ExampleMessage[UbxMessage]] = Seq(
     ex(
       "UBX-CFG-PWR poll",
@@ -31,24 +38,16 @@ object examples {
       "UBX-ACK-ACK", // B5 62 05 01 02 00 06 57 65 8E
       Unknown(0x05.toByte, 0x01.toByte, Seq(0x06, 0x57).map(_.toByte), 0x65.toByte, 0x8E.toByte),
       Seq(0xB5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x06, 0x57, 0x65, 0x8E).map(_.toByte)
+    ),
+    UbxMonitorRxBufferPoll,
+    ex(
+      "UBX-MON-TXBUF poll",
+      TxBufferPoll, // B5 62 0A 08 00 00 12 40
+      Seq(0xB5, 0x62, 0x0A, 0x08, 0x00, 0x00, 0x12, 0x40).map(_.toByte)
     )
   )
 
   // unused for now here on down
-
-  val UbxMonitorRxBufferPoll =
-    ex(
-      "UBX-MON-RXBUF", // B5 62 0A 07 00 00 11 3D
-      RxBufferPoll,
-      Seq(0xB5, 0x62, 0x0A, 0x07, 0x00, 0x00, 0x11, 0x3D).map(_.toByte)
-    )
-
-  val UbxMonitorTxBufferPoll =
-    ex(
-      "UBX-MON-TXBUF",
-      TxBufferPoll,
-      Seq(0xB5, 0x62, 0x0A, 0x08, 0x00, 0x00, 0x12, 0x40).map(_.toByte)
-    )
 
   val UbxMonitorRxBuffer = {
     // B5 62 0A 07 18 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 29 45
