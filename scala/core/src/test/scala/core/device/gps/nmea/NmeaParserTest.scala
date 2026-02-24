@@ -37,8 +37,7 @@ class NmeaParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqu
     val a = 'a'.toByte; val b = 'b'.toByte; val c = 'c'.toByte; val d = 'd'.toByte
     val bytes = Seq('$'.toByte, a, b, c, d, '\r'.toByte, '\n'.toByte)
     val finalState = consume(NmeaParser(), bytes)
-    finalState should be (done())
-    finalState.asInstanceOf[Done].message should === (Unknown(Seq(a, b, c, d)))
+    finalState should be (Done(Unknown(Seq(a, b, c, d))))
   }
 
   it should "continue past <cr>'s that are not followed by <lf>" in {
@@ -60,7 +59,7 @@ class NmeaParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqu
   }
 
   "A done parser" should "successfully consume a test message" in {
-    consume(NmeaParser(), examples.unknown.bytes) should be (done(examples.unknown.msg))
+    consume(NmeaParser(), examples.unknown.bytes) should be (Done(examples.unknown.msg))
   }
 
   type Msg = NmeaMessage

@@ -64,7 +64,7 @@ class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
   }
 
   "A done parser" should "successfully consume a test message" in {
-    consume(UbxParser(), examples.unknown.bytes) should be (done(examples.unknown.msg))
+    consume(UbxParser(), examples.unknown.bytes) should be (Done(examples.unknown.msg))
   }
 
   type Msg = UbxMessage

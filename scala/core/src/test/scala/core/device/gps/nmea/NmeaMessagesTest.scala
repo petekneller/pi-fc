@@ -22,7 +22,7 @@ class NmeaMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEq
       }
       describe("when parsed from test data") {
         it("should match the expected message") {
-          consume(NmeaParser(), bytes) should be (done(msg))
+          consume(NmeaParser(), bytes) should be (Done(msg))
         }
       }
     }

@@ -43,7 +43,7 @@ class UbxMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEqu
     }
     describe("when parsed from test data") {
       it("should match the expected message") {
-        consume(UbxParser(), examples.unknown.bytes) should be (done(examples.unknown.msg))
+        consume(UbxParser(), examples.unknown.bytes) should be (Done(examples.unknown.msg))
       }
     }
   }
@@ -69,7 +69,7 @@ class UbxMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEqu
       }
       describe("when parsed from test data") {
         it("should match the expected message") {
-          consume(UbxParser(), bytes) should be (done(msg))
+          consume(UbxParser(), bytes) should be (Done(msg))
         }
       }
     }
