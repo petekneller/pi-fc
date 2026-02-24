@@ -40,6 +40,9 @@ class UbxMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEqu
       it("should have the second checksum byte as the last byte") {
         examples.unknown.msg.toBytes.last should === (examples.unknown.checksum2)
       }
+      it("should match the value of the recorded bytes") {
+        examples.unknown.msg.toBytes should === (examples.unknown.bytes)
+      }
     }
     describe("when parsed from test data") {
       it("should match the expected message") {
@@ -65,6 +68,9 @@ class UbxMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEqu
 
         it("should have the message id as the fourth byte") {
           msg.toBytes(3) should === (msg.id)
+        }
+        it("should match the value of the recorded bytes") {
+          msg.toBytes should === (bytes)
         }
       }
       describe("when parsed from test data") {

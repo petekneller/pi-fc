@@ -19,6 +19,9 @@ class NmeaMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEq
           msg.toBytes.last should === ('\n'.toByte)
           msg.toBytes.init.last should === ('\r'.toByte)
         }
+        it("should match the value of the recorded bytes") {
+          msg.toBytes should === (bytes)
+        }
       }
       describe("when parsed from test data") {
         it("should match the expected message") {
