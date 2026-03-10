@@ -57,11 +57,18 @@ object examples {
 
   val UbxMonitorRxBuffer = {
     // B5 62 0A 07 18 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 29 45
+    // spi: 0%, 0%, 0 bytes waiting
+    // total: "
   }
 
   val UbxMonitorTxBuffer = {
     // B5 62 0A 08 1C 00 00 00 00 00 00 00 00 00 9F 02 00 00 00 00 00 00 0A 00 00 00 00 00 1B 00 0A 1B 00 00 19 A5
-    // spi: ~25% ~10% 671
+    // I2C, UART1, UART2, USB, SPI
+    // spi: ~10% usage last period, ~25% peak, 671 bytes waiting
+    // total: "
+
+    // B5 62 0A 08 1C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 15 00 06 15 00 00 64 9D
+    // spi: ~10% usage last period, ~22% peak, 0 bytes waiting
     // total: "
   }
 
