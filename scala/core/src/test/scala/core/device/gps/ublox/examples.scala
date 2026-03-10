@@ -50,6 +50,14 @@ object examples {
       "UBX-MON-TXBUF poll",
       TxBufferPoll, // B5 62 0A 08 00 00 12 40
       Seq(0xB5, 0x62, 0x0A, 0x08, 0x00, 0x00, 0x12, 0x40).map(_.toByte)
+    ),
+    ex(
+      "UBX-MON-TXBUF",
+      // B5 62 0A 08 1C 00 00 00 00 00 00 00 00 00 9F 02 00 00 00 00 00 00 0A 00 00 00 00 00 1B 00 0A 1B 00 00 19 A5
+      // spi: 10% usage last period, 27% peak, 671 bytes waiting
+      // total: "
+      TxBuffer(671, 10, 27, 0x00.toByte, 0x00.toByte),
+      Seq(0xB5, 0x62, 0x0A, 0x08, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9F, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B, 0x00, 0x0A, 0x1B, 0x00, 0x00, 0x19, 0xA5).map(_.toByte)
     )
   )
 
@@ -60,18 +68,6 @@ object examples {
     // spi: 0%, 0%, 0 bytes waiting
     // total: "
   }
-
-  val UbxMonitorTxBuffer = {
-    // B5 62 0A 08 1C 00 00 00 00 00 00 00 00 00 9F 02 00 00 00 00 00 00 0A 00 00 00 00 00 1B 00 0A 1B 00 00 19 A5
-    // I2C, UART1, UART2, USB, SPI
-    // spi: ~10% usage last period, ~25% peak, 671 bytes waiting
-    // total: "
-
-    // B5 62 0A 08 1C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 00 00 00 00 00 15 00 06 15 00 00 64 9D
-    // spi: ~10% usage last period, ~22% peak, 0 bytes waiting
-    // total: "
-  }
-
 
   private def ex(name: String, msg: UbxMessage, bytes: Seq[Byte]) = ExampleMessage.apply[UbxMessage](name, msg, bytes)
 }
