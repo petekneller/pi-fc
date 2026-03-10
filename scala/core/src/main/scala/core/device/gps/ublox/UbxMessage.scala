@@ -19,7 +19,6 @@ sealed trait UbxMessage extends Message {
 
 object UbxMessage {
   def parse(clazz: Byte, id: Byte, payload: Seq[Byte]): Either[String, UbxMessage] = (clazz, id) match {
-    case (RxBufferPoll.clazz, RxBufferPoll.id) => Right(RxBufferPoll)
     case (TxBufferPoll.clazz, TxBufferPoll.id) if (payload.length == 0) => Right(TxBufferPoll)
     case (TxBuffer.clazz, TxBuffer.id) => Right(TxBuffer(payload))
     case _ => Right(Unknown(clazz, id, payload))
@@ -38,12 +37,6 @@ object UbxMessage {
 
 case class Unknown(clazz: Byte, id: Byte, payload: Seq[Byte]) extends UbxMessage {
   override def toString(): String = s"Unknown[UBX](class=$clazz, id=$id)"
-}
-
-case object RxBufferPoll extends UbxMessage {
-  val clazz: Byte = 0x0A.toByte
-  val id: Byte = 0x07.toByte
-  def payload: Seq[Byte] = Seq.empty[Byte]
 }
 
 case object TxBufferPoll extends UbxMessage {

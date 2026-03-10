@@ -43,7 +43,6 @@ object UbloxM8N {
 
     val gpsBufferPolling = Stream.awakeEvery[IO](100.milliseconds) >> {
       Stream.exec(IO.blocking{
-        gps.input.put(UbxMsg(RxBufferPoll))
         gps.input.put(UbxMsg(TxBufferPoll))
       })
     }

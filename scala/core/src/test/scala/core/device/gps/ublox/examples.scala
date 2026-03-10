@@ -16,11 +16,11 @@ object examples {
     val msg = Unknown(clazz, id, payload)
   }
 
-  val UbxMonitorRxBufferPoll =
+  val UbxMonitorTxBufferPoll =
     ex(
-      "UBX-MON-RXBUF poll", // B5 62 0A 07 00 00 11 3D
-      RxBufferPoll,
-      Seq(0xB5, 0x62, 0x0A, 0x07, 0x00, 0x00, 0x11, 0x3D).map(_.toByte)
+      "UBX-MON-TXBUF(poll)",
+      TxBufferPoll, // B5 62 0A 08 00 00 12 40
+      Seq(0xB5, 0x62, 0x0A, 0x08, 0x00, 0x00, 0x12, 0x40).map(_.toByte)
     )
 
   val UbxConfigPower =
@@ -45,12 +45,7 @@ object examples {
       Unknown(0x05.toByte, 0x01.toByte, Seq(0x06, 0x57).map(_.toByte)),
       Seq(0xB5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x06, 0x57, 0x65, 0x8E).map(_.toByte)
     ),
-    UbxMonitorRxBufferPoll,
-    ex(
-      "UBX-MON-TXBUF poll",
-      TxBufferPoll, // B5 62 0A 08 00 00 12 40
-      Seq(0xB5, 0x62, 0x0A, 0x08, 0x00, 0x00, 0x12, 0x40).map(_.toByte)
-    ),
+    UbxMonitorTxBufferPoll,
     ex(
       "UBX-MON-TXBUF",
       // B5 62 0A 08 1C 00 00 00 00 00 00 00 00 00 9F 02 00 00 00 00 00 00 0A 00 00 00 00 00 1B 00 0A 1B 00 00 19 A5
@@ -60,14 +55,6 @@ object examples {
       Seq(0xB5, 0x62, 0x0A, 0x08, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9F, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1B, 0x00, 0x0A, 0x1B, 0x00, 0x00, 0x19, 0xA5).map(_.toByte)
     )
   )
-
-  // unused for now here on down
-
-  val UbxMonitorRxBuffer = {
-    // B5 62 0A 07 18 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 29 45
-    // spi: 0%, 0%, 0 bytes waiting
-    // total: "
-  }
 
   private def ex(name: String, msg: UbxMessage, bytes: Seq[Byte]) = ExampleMessage.apply[UbxMessage](name, msg, bytes)
 }
