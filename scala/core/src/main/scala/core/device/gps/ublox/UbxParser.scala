@@ -45,7 +45,7 @@ case class AwaitingLength2(clazz: Byte, id: Byte, length1: Byte) extends UbxPars
   def consume(length2: Byte): ParseState[UbxMessage] = {
     val length = (length2.unsigned << 8) + length1.unsigned
     if (length === 0)
-      Proceeding(AwaitingChecksum1(clazz, id, Seq.empty[Byte]))
+      Proceeding(AwaitingCkA(clazz, id, Seq.empty[Byte]))
     else
       Proceeding(ConsumingPayload(clazz, id, length, Seq.empty[Byte]))
   }
@@ -56,18 +56,18 @@ case class ConsumingPayload(clazz: Byte, id: Byte, payloadBytesUnread: Int, payl
     if (payloadBytesUnread > 1)
       Proceeding(ConsumingPayload(clazz, id, payloadBytesUnread - 1, payload :+ byte))
     else
-      Proceeding(AwaitingChecksum1(clazz, id, payload :+ byte))
+      Proceeding(AwaitingCkA(clazz, id, payload :+ byte))
 
 }
 
-case class AwaitingChecksum1(clazz: Byte, id: Byte, payload: Seq[Byte]) extends UbxParser {
-  def consume(checksum1: Byte): ParseState[UbxMessage] = Proceeding(AwaitingChecksum2(clazz, id, payload, checksum1))
+case class AwaitingCkA(clazz: Byte, id: Byte, payload: Seq[Byte]) extends UbxParser {
+  def consume(ckA: Byte): ParseState[UbxMessage] = Proceeding(AwaitingCkB(clazz, id, payload, ckA))
 }
 
-case class AwaitingChecksum2(clazz: Byte, id: Byte, payload: Seq[Byte], checksum1: Byte) extends UbxParser {
-  def consume(checksum2: Byte): ParseState[UbxMessage] = {
+case class AwaitingCkB(clazz: Byte, id: Byte, payload: Seq[Byte], ckA: Byte) extends UbxParser {
+  def consume(ckB: Byte): ParseState[UbxMessage] = {
     val expectedChecksum = UbxChecksum(clazz, id, payload)
-    val actualChecksum = UbxChecksum(checksum1, checksum2)
+    val actualChecksum = UbxChecksum(ckA, ckB)
     if (actualChecksum != expectedChecksum)
       return Failed("Checksum not correct")
 
