@@ -6,7 +6,6 @@ sealed trait UbxMessage extends Message {
   val clazz: Byte
   val id: Byte
   def payload: Seq[Byte]
-  def payloadLength: Int
   def checksum: (Byte, Byte)
 }
 
@@ -28,7 +27,6 @@ object UbxMessage {
 
 case class Unknown(clazz: Byte, id: Byte, payload: Seq[Byte]) extends UbxMessage {
   override def toString(): String = s"Unknown[UBX](class=$clazz, id=$id)"
-  def payloadLength: Int = payload.length
   def checksum: (Byte, Byte) = { val checksum = UbxChecksum(clazz, id, payload); (checksum.ckA, checksum.ckB) }
 
   import UbxParser.{ preamble1, preamble2 }
@@ -42,7 +40,6 @@ case object RxBufferPoll extends UbxMessage {
   val clazz: Byte = 0x0A.toByte
   val id: Byte = 0x07.toByte
   def payload: Seq[Byte] = Seq.empty[Byte]
-  def payloadLength: Int = 0
   def checksum: (Byte, Byte) = (0x11.toByte, 0x3D.toByte)
 
   def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte]).toBytes
@@ -52,7 +49,6 @@ case object TxBufferPoll extends UbxMessage {
   val clazz: Byte = 0x0A.toByte
   val id: Byte = 0x08.toByte
   def payload: Seq[Byte] = Seq.empty[Byte]
-  def payloadLength: Int = 0
   def checksum: (Byte, Byte) = (0x12.toByte, 0x40.toByte)
 
   def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte]).toBytes
