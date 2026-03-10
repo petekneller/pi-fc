@@ -11,10 +11,10 @@ sealed trait UbxMessage extends Message {
 }
 
 object UbxMessage {
-  def parse(clazz: Byte, id: Byte, payload: Seq[Byte], checksum1: Byte, checksum2: Byte): Either[String, UbxMessage] = (clazz, id) match {
+  def parse(clazz: Byte, id: Byte, payload: Seq[Byte]): Either[String, UbxMessage] = (clazz, id) match {
     case (RxBufferPoll.clazz, RxBufferPoll.id) => Right(RxBufferPoll)
     case (TxBufferPoll.clazz, TxBufferPoll.id) => Right(TxBufferPoll)
-    case _ => Right(Unknown(clazz, id, payload, checksum1, checksum2))
+    case _ => Right(Unknown(clazz, id, payload))
   }
 
   object payloadLength {
@@ -26,15 +26,15 @@ object UbxMessage {
   }
 }
 
-case class Unknown(clazz: Byte, id: Byte, payload: Seq[Byte], checksum1: Byte, checksum2: Byte) extends UbxMessage {
+case class Unknown(clazz: Byte, id: Byte, payload: Seq[Byte]) extends UbxMessage {
   override def toString(): String = s"Unknown[UBX](class=$clazz, id=$id)"
   def payloadLength: Int = payload.length
-  def checksum: (Byte, Byte) = (checksum1, checksum2)
+  def checksum: (Byte, Byte) = { val checksum = UbxChecksum(clazz, id, payload); (checksum.ckA, checksum.ckB) }
 
   import UbxParser.{ preamble1, preamble2 }
   def toBytes: Seq[Byte] = {
     val Seq(length1, length2) = UbxMessage.payloadLength.toBytes(payload)
-    (preamble1 :: preamble2 :: clazz :: id :: length1 :: length2 :: payload.toList) :+ checksum1 :+ checksum2
+    (preamble1 :: preamble2 :: clazz :: id :: length1 :: length2 :: payload.toList) :+ checksum._1 :+ checksum._2
   }
 }
 
@@ -45,7 +45,7 @@ case object RxBufferPoll extends UbxMessage {
   def payloadLength: Int = 0
   def checksum: (Byte, Byte) = (0x11.toByte, 0x3D.toByte)
 
-  def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte], checksum._1, checksum._2).toBytes
+  def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte]).toBytes
 }
 
 case object TxBufferPoll extends UbxMessage {
@@ -55,5 +55,5 @@ case object TxBufferPoll extends UbxMessage {
   def payloadLength: Int = 0
   def checksum: (Byte, Byte) = (0x12.toByte, 0x40.toByte)
 
-  def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte], checksum._1, checksum._2).toBytes
+  def toBytes: Seq[Byte] = Unknown(clazz, id, Seq.empty[Byte]).toBytes
 }

@@ -60,7 +60,7 @@ class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
     state1 should be(proceeding)
 
     val state2 = state1.asInstanceOf[Proceeding].next.consume(d)
-    state2 should === (Done(Unknown(b, c, Seq.empty[Byte], b, d)))
+    state2 should === (Done(Unknown(b, c, Seq.empty[Byte])))
   }
 
   "A done parser" should "successfully consume a test message" in {

@@ -65,7 +65,7 @@ case class AwaitingChecksum1(clazz: Byte, id: Byte, payload: Seq[Byte]) extends 
 }
 
 case class AwaitingChecksum2(clazz: Byte, id: Byte, payload: Seq[Byte], checksum1: Byte) extends UbxParser {
-  def consume(checksum2: Byte): ParseState[UbxMessage] = UbxMessage.parse(clazz, id, payload, checksum1, checksum2) match {
+  def consume(checksum2: Byte): ParseState[UbxMessage] = UbxMessage.parse(clazz, id, payload) match {
     case Left(cause) => Failed(cause)
     case Right(msg) => Done(msg)
   }

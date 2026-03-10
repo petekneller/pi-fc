@@ -85,19 +85,19 @@ class UbxMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEqu
     describe(".parse()") {
       it("should return Right for a valid, recognised message") {
         val example = examples.UbxMonitorRxBufferPoll.msg
-        UbxMessage.parse(example.clazz, example.id, Seq.empty[Byte], example.checksum._1, example.checksum._2) should ===(Right(example))
+        UbxMessage.parse(example.clazz, example.id, Seq.empty[Byte]) should ===(Right(example))
       }
 
       it("should return Unknown when the class is not recognised") {
         val notAClazz = 0xFF.toByte
         val example = examples.UbxMonitorRxBufferPoll.msg
-        UbxMessage.parse(notAClazz, example.id, Seq.empty[Byte], example.checksum._1, example.checksum._2) should ===(Right(Unknown(notAClazz, example.id, Seq.empty[Byte], example.checksum._1, example.checksum._2)))
+        UbxMessage.parse(notAClazz, example.id, Seq.empty[Byte]) should ===(Right(Unknown(notAClazz, example.id, Seq.empty[Byte])))
       }
 
       it("should return Unknown when the id is not recognised") {
         val notAnId = 0xFF.toByte
         val example = examples.UbxMonitorRxBufferPoll.msg
-        UbxMessage.parse(example.clazz, notAnId, Seq.empty[Byte], example.checksum._1, example.checksum._2) should ===(Right(Unknown(example.clazz, notAnId, Seq.empty[Byte], example.checksum._1, example.checksum._2)))
+        UbxMessage.parse(example.clazz, notAnId, Seq.empty[Byte]) should ===(Right(Unknown(example.clazz, notAnId, Seq.empty[Byte])))
       }
       //TODO: it("should return Left when the underlying message cannot recognise its payload") {}
     }
