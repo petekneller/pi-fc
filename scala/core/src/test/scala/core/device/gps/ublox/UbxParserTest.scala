@@ -56,11 +56,20 @@ class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
   }
 
   it should "parse out the checksum" in {
-    val state1 = AwaitingChecksum1(b, c, Seq.empty[Byte]).consume(b)
+    val state1 = AwaitingChecksum1(b, c, Seq.empty[Byte]).consume(ckA)
     state1 should be(proceeding)
 
-    val state2 = state1.asInstanceOf[Proceeding].next.consume(d)
+    val state2 = state1.asInstanceOf[Proceeding].next.consume(ckB)
     state2 should === (Done(Unknown(b, c, Seq.empty[Byte])))
+  }
+
+  it should "fail when the checksum is incorrect" in {
+    val state1 = AwaitingChecksum1(b, c, Seq.empty[Byte]).consume(ckA)
+    state1 should be(proceeding)
+
+    val notCkB = 0x01.toByte
+    val state2 = state1.asInstanceOf[Proceeding].next.consume(notCkB)
+    state2 should === (Failed("Checksum not correct"))
   }
 
   "A done parser" should "successfully consume a test message" in {
@@ -71,6 +80,8 @@ class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
 
   private val b5 = 0xB5.toByte
   private val sixty2 = 0x62.toByte
+  private val ckA = 0xC5.toByte
+  private val ckB = 0xB1.toByte
   private val b = 'b'.toByte
   private val c = 'c'.toByte
   private val d = 'd'.toByte

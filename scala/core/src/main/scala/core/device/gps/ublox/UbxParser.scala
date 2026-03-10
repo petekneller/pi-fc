@@ -65,8 +65,15 @@ case class AwaitingChecksum1(clazz: Byte, id: Byte, payload: Seq[Byte]) extends 
 }
 
 case class AwaitingChecksum2(clazz: Byte, id: Byte, payload: Seq[Byte], checksum1: Byte) extends UbxParser {
-  def consume(checksum2: Byte): ParseState[UbxMessage] = UbxMessage.parse(clazz, id, payload) match {
-    case Left(cause) => Failed(cause)
-    case Right(msg) => Done(msg)
+  def consume(checksum2: Byte): ParseState[UbxMessage] = {
+    val expectedChecksum = UbxChecksum(clazz, id, payload)
+    val actualChecksum = UbxChecksum(checksum1, checksum2)
+    if (actualChecksum != expectedChecksum)
+      return Failed("Checksum not correct")
+
+    UbxMessage.parse(clazz, id, payload) match {
+      case Left(cause) => Failed(cause)
+      case Right(msg) => Done(msg)
+    }
   }
 }
