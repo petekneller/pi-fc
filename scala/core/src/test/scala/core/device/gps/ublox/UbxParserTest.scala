@@ -5,7 +5,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import core.device.gps.ParserTestSupport
-import UbxMessage.Unknown
 
 class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
@@ -61,7 +60,7 @@ class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEqua
     state1 should be(proceeding)
 
     val state2 = state1.asInstanceOf[Proceeding].next.consume(ckB)
-    state2 should === (Done(Unknown(b, c, Seq.empty[Byte])))
+    state2 should === (Done(UbxMessage.Unknown(UbxClass.Unknown(b), c, Seq.empty[Byte])))
   }
 
   it should "fail when the checksum is incorrect" in {

@@ -2,46 +2,50 @@ package core.device.gps.ublox
 
 import core.device.gps.Message
 import UbxTypes._
+import UbxClass.Monitor
 
 sealed trait UbxMessage extends Message {
-  val clazz: Byte
+  val clazz: UbxClass
   val id: Byte
   def payload: Seq[Byte]
 
   override def toBytes: Seq[Byte] = {
     val Seq(length1, length2) = UbxMessage.payloadLength.toBytes(payload)
-    val checksum = UbxChecksum(clazz, id, payload)
+    val checksum = UbxChecksum(clazz.byte, id, payload)
 
     import UbxParser.{ preamble1, preamble2 }
-    (preamble1 +: preamble2 +: clazz +: id +: length1 +: length2 +: payload) :+ checksum.ckA :+ checksum.ckB
+    (preamble1 +: preamble2 +: clazz.byte +: id +: length1 +: length2 +: payload) :+ checksum.ckA :+ checksum.ckB
   }
 }
 
 object UbxMessage {
-  def parse(clazz: Byte, id: Byte, payload: Seq[Byte]): Either[String, UbxMessage] = (clazz, id) match {
-    case (monitor.TxBufferPoll.clazz, monitor.TxBufferPoll.id) if (payload.length == 0) => Right(monitor.TxBufferPoll)
-    case (monitor.TxBuffer.clazz, monitor.TxBuffer.id) => Right(monitor.TxBuffer(payload))
-    case _ => Right(Unknown(clazz, id, payload))
+  def parse(rawClazz: Byte, id: Byte, payload: Seq[Byte]): Either[String, UbxMessage] = {
+    val clazz = UbxClass(rawClazz)
+    (clazz, id) match {
+      case (monitor.TxBufferPoll.clazz, monitor.TxBufferPoll.id) if (payload.length == 0) => Right(monitor.TxBufferPoll)
+      case (monitor.TxBuffer.clazz, monitor.TxBuffer.id) => Right(monitor.TxBuffer(payload))
+      case _ => Right(Unknown(clazz, id, payload))
+    }
   }
 
   /*
    *  Message definitions
    */
 
-  case class Unknown(clazz: Byte, id: Byte, payload: Seq[Byte]) extends UbxMessage {
-    override def toString(): String = s"Unknown[UBX](class=$clazz, id=$id)"
+  case class Unknown(clazz: UbxClass, id: Byte, payload: Seq[Byte]) extends UbxMessage {
+    override def toString(): String = s"Unknown[UBX](class=${clazz}, id=$id)"
   }
 
   object monitor {
 
     case object TxBufferPoll extends UbxMessage {
-      val clazz: Byte = TxBuffer.clazz
+      val clazz: UbxClass = TxBuffer.clazz
       val id: Byte = TxBuffer.id
       def payload: Seq[Byte] = Seq.empty[Byte]
     }
 
     case class TxBuffer(bytesWaiting: Int, usageLastPeriod: Int, usagePeak: Int, errors: Byte, reserved: Byte) extends UbxMessage {
-      val clazz: Byte = TxBuffer.clazz
+      val clazz: UbxClass = TxBuffer.clazz
       val id: Byte = TxBuffer.id
 
       def payload: Seq[Byte] = {
@@ -79,7 +83,7 @@ object UbxMessage {
     }
 
     object TxBuffer {
-      val clazz: Byte = 0x0A.toByte
+      val clazz: UbxClass = Monitor
       val id: Byte = 0x08.toByte
 
       def apply(payload: Seq[Byte]): TxBuffer = {

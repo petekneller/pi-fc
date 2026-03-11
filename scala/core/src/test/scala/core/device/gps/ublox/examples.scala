@@ -1,10 +1,12 @@
 package core.device.gps.ublox
 
 import core.device.gps.ExampleMessage
-import UbxMessage.Unknown
 import UbxMessage.monitor._
 
 object examples {
+
+  val M = UbxMessage
+  val C = UbxClass
 
   object unknown {
     val clazz = 0x01.toByte
@@ -15,7 +17,7 @@ object examples {
     val payloadLength1 = 0x03.toByte
     val payloadLength2 = 0x00.toByte
     val bytes = Seq(0xB5.toByte, 0x62.toByte, clazz, id, payloadLength1, payloadLength2) ++ payload ++ Seq(checksum1, checksum2)
-    val msg = Unknown(clazz, id, payload)
+    val msg = M.Unknown(C.Unknown(clazz), id, payload)
   }
 
   val UbxMonitorTxBufferPoll =
@@ -28,14 +30,14 @@ object examples {
   val UbxConfigPower =
     ex(
       "UBX-CFG-PWR", // B5 62 06 57 08 00 F2 17 00 00 00 40 00 00 AE 46
-      Unknown(0x06.toByte, 0x57.toByte, Seq(0xF2, 0x17, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00).map(_.toByte)),
+      M.Unknown(C.Unknown(0x06.toByte), 0x57.toByte, Seq(0xF2, 0x17, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00).map(_.toByte)),
       Seq(0xB5, 0x62, 0x06, 0x57, 0x08, 0x00, 0xF2, 0x17, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0xAE, 0x46).map(_.toByte)
     )
 
   val UbxConfigPowerPoll =
     ex(
       "UBX-CFG-PWR poll",
-      Unknown(0x06.toByte, 0x57.toByte, Seq.empty),
+      M.Unknown(C.Unknown(0x06.toByte), 0x57.toByte, Seq.empty),
       Seq(0xB5, 0x62, 0x06, 0x57, 0x00, 0x00, 0x5D, 0x1D).map(_.toByte)
     )
 
@@ -44,7 +46,7 @@ object examples {
     UbxConfigPower,
     ex(
       "UBX-ACK-ACK", // B5 62 05 01 02 00 06 57 65 8E
-      Unknown(0x05.toByte, 0x01.toByte, Seq(0x06, 0x57).map(_.toByte)),
+      M.Unknown(C.Unknown(0x05.toByte), 0x01.toByte, Seq(0x06, 0x57).map(_.toByte)),
       Seq(0xB5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x06, 0x57, 0x65, 0x8E).map(_.toByte)
     ),
     UbxMonitorTxBufferPoll,

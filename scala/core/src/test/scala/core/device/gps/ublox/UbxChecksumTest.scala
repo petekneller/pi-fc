@@ -13,14 +13,14 @@ class UbxChecksumTest extends AnyFunSpec with Matchers with TypeCheckedTripleEqu
       it(UbxConfigPower.name) {
         val msg = UbxConfigPower.msg
         val expected = UbxConfigPower.bytes.takeRight(2)
-        val actual = UbxChecksum(msg.clazz, msg.id, msg.payload)
+        val actual = UbxChecksum(msg.clazz.byte, msg.id, msg.payload)
         (actual.ckA, actual.ckB) should ===((expected(0), expected(1)))
       }
 
       it(UbxConfigPowerPoll.name) {
         val msg = UbxConfigPowerPoll.msg
         val expected = UbxConfigPowerPoll.bytes.takeRight(2)
-        val actual = UbxChecksum(msg.clazz, msg.id, msg.payload)
+        val actual = UbxChecksum(msg.clazz.byte, msg.id, msg.payload)
         (actual.ckA, actual.ckB) should ===((expected(0), expected(1)))
       }
     }
