@@ -35,8 +35,8 @@ object UbxMessage {
   object monitor {
 
     case object TxBufferPoll extends UbxMessage {
-      val clazz: Byte = 0x0A.toByte
-      val id: Byte = 0x08.toByte
+      val clazz: Byte = TxBuffer.clazz
+      val id: Byte = TxBuffer.id
       def payload: Seq[Byte] = Seq.empty[Byte]
     }
 
