@@ -5,6 +5,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import core.device.gps.ParserTestSupport
+import UbxMessage.Unknown
 
 class UbxParserTest extends AnyFlatSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 

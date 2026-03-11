@@ -10,6 +10,7 @@ import core.device.controller.spi.{ SpiFullDuplexController, SpiAddress }
 import core.device.gps.{ Gps, CompositeMessage, CompositeParser, CRight => UbxMsg }
 import Gps.OutgoingMessagesObservation
 import core.device.gps.nmea.{ NmeaMessage, NmeaParser }
+import UbxMessage.monitor.TxBufferPoll
 
 trait UbloxM8N {
   import UbloxM8N.Message

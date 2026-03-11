@@ -4,6 +4,7 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalactic.TypeCheckedTripleEquals
 import core.device.gps.{ ExampleMessage, ParserTestSupport }
+import UbxMessage.Unknown
 
 class UbxMessagesTest extends AnyFunSpec with Matchers with TypeCheckedTripleEquals with ParserTestSupport {
 
