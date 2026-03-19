@@ -54,7 +54,11 @@ object SpiToTcp {
     } through client.writes
 
   private def metricStreams(gps: UbloxM8N): List[Stream[IO, Unit]] = {
-    val (metricPolling, messageMetrics) = gps.metricStreams
+    val (txBufferMetrics, messageMetrics) = gps.metricStreams
+
+    val txBufferObservations = txBufferMetrics flatMap { observation =>
+      Stream.exec(IO.blocking{ println(observation) })
+    }
 
     val messageObservations = messageMetrics flatMap { observation =>
       Stream.exec(IO.blocking{ println(observation) })
@@ -64,7 +68,7 @@ object SpiToTcp {
       Stream.exec(IO.blocking{ println(observation) })
     }
 
-    metricPolling :: messageObservations :: spiObservations :: Nil
+    txBufferObservations :: messageObservations :: spiObservations :: Nil
   }
 
 }
